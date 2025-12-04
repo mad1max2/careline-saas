@@ -5,9 +5,9 @@
       "name": "Max (CareLine Driver)"
     }
   ],
-  "routes": [
-    {
-      "driverId": "driver1",
+
+  "routes": {
+    "driver1": {
       "stops": [
         {
           "stopId": "stop1",
@@ -23,5 +23,5 @@
         }
       ]
     }
-  ]
+  }
 }
