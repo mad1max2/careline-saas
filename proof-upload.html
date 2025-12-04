@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload Proof of Delivery — CareLine</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f3f6f9;
+      color: #12303f;
+    }
+
+    .header {
+      background: #00a8b5;
+      color: white;
+      padding: 16px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .header-sub {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .page {
+      max-width: 600px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input[type="number"],
+    input[type="file"] {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    button {
+      padding: 10px 16px;
+      background: #004b6b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #006593;
+    }
+
+    .message {
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .ok {
+      color: #15803d;
+    }
+
+    .error {
+      color: #b91c1c;
+    }
+
+    .preview {
+      margin-top: 16px;
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      font-size: 13px;
+      text-decoration: none;
+      color: #0369a1;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-title">Upload Proof of Delivery</div>
+    <div class="header-sub">Attach a photo or signed slip for this delivery</div>
+  </div>
+
+  <div class="page">
+    <a href="driver-dashboard.html" class="back-link">
+      ← Back to Dashboard
+    </a>
+
+    <div class="card">
+      <label for="deliveryId">Delivery ID</label>
+      <input type="number" id="deliveryId" min="1" value="1" />
+
+      <label for="proofFile">Proof (photo or signature image)</label>
+      <input type="file" id="proofFile" accept="image/*" />
+
+      <button onclick="uploadProof()">Upload Proof</button>
+
+      <div id="message" class="message"></div>
+
+      <img id="preview" class="preview" style="display:none;" />
+    </div>
+  </div>
+
+  <script>
+    function uploadProof() {
+      const deliveryId = document.getElementById("deliveryId").value;
+      const fileInput = document.getElementById("proofFile");
+      const message = document.getElementById("message");
+      const preview = document.getElementById("preview");
+
+      message.className = "message";
+      message.innerText = "";
+      preview.style.display = "none";
+
+      if (!deliveryId) {
+        message.classList.add("error");
+        message.innerText = "Please enter a Delivery ID.";
+        return;
+      }
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        message.classList.add("error");
+        message.innerText = "Please select a photo to upload.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("proof", fileInput.files[0]);
+
+      message.innerText = "Uploading...";
+
+      fetch("http://localhost:3000/deliveries/" + deliveryId + "/proof", {
+        method: "POST",
+        body: formData
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            return response.json().then(function (data) {
+              throw new Error(data.message || "Upload failed");
+            });
+          }
+          return response.json();
+        })
+        .then(function (data) {
+          message.classList.add("ok");
+          message.innerText = "Uploaded! Proof saved for Delivery #" + deliveryId;
+
+          if (data.delivery && data.delivery.proofUrl) {
+            preview.src = "http://localhost:3000" + data.delivery.proofUrl;
+            preview.style.display = "block";
+          }
+        })
+        .catch(function (error) {
+          message.classList.add("error");
+          message.innerText = error.message;
+        });
+    }
+  </script>
+
+</body>
+</html>

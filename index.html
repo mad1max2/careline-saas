@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareLine Control Center</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #f2f7f9);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .wrap {
+      max-width: 900px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 24px 20px 26px;
+      position: relative;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #004d60;
+    }
+    .sub {
+      font-size: 14px;
+      color: #607d8b;
+      margin-top: 4px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .card {
+      border-radius: 10px;
+      border: 1px solid #cfd8dc;
+      padding: 14px 12px 16px;
+      background-color: #f7fbfc;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card h3 {
+      margin: 0 0 6px 0;
+      font-size: 17px;
+      color: #006064;
+    }
+    .card p {
+      margin: 0;
+      font-size: 13px;
+      color: #546e7a;
+    }
+    .card button {
+      margin-top: 12px;
+      align-self: flex-start;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      background-color: #0097a7;
+      color: #ffffff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .card button:hover {
+      background-color: #007b83;
+    }
+    .footer-note {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 11px;
+      color: #90a4ae;
+    }
+
+    /* PIN overlay */
+    .pin-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.96);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 14px;
+    }
+    .pin-box {
+      max-width: 360px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+      padding: 20px 18px 18px;
+      border-top: 4px solid #0097a7;
+    }
+    .pin-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #004d60;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .pin-sub {
+      font-size: 13px;
+      color: #607d8b;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .pin-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .pin-row input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #b0bec5;
+      font-size: 16px;
+    }
+    .pin-row button {
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: none;
+      background-color: #0097a7;
+      color: #ffffff;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .pin-row button:hover {
+      background-color: #007b83;
+    }
+    .pin-error {
+      font-size: 12px;
+      color: #d32f2f;
+      min-height: 16px;
+      text-align: center;
+    }
+    .pin-hint {
+      font-size: 11px;
+      color: #90a4ae;
+      margin-top: 4px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="title">CareLine Control Center</div>
+      <div class="sub">
+        Quick access to driver, admin, customer, and facility views.<br>
+        Wound-Care &amp; Incontinence Supply Delivery — Baltimore, MD
+      </div>
+    </div>
+
+    <!-- Main app content -->
+    <div id="mainContent" style="opacity:0.3; pointer-events:none;">
+      <div class="grid">
+        <!-- Driver View -->
+        <div class="card">
+          <h3>🚚 Driver Route View</h3>
+          <p>
+            For CareLine drivers to see their route stops and upload proof-of-delivery photos
+            for each facility.
+          </p>
+          <button onclick="go('driver-route.html')">Open Driver Route</button>
+        </div>
+
+        <!-- Admin / Dispatch -->
+        <div class="card">
+          <h3>📊 Admin / Dispatch Report</h3>
+          <p>
+            View deliveries, filter by driver/facility/status, export CSV, and open proof photos
+            or tracking links.
+          </p>
+          <button onclick="go('route-report.html')">Open Route Report</button>
+        </div>
+
+        <!-- Customer Tracking -->
+        <div class="card">
+          <h3>📦 Customer Tracking</h3>
+          <p>
+            Look up a shipment using the CareLine Tracking ID (for patients, families,
+            or home-health contacts).
+          </p>
+          <button onclick="go('tracking.html')">Open Customer Tracking</button>
+        </div>
+
+        <!-- Facility / Hospital View -->
+        <div class="card">
+          <h3>🏥 Facility / Clinic View</h3>
+          <p>
+            Professional delivery confirmation screen for wound-care centers, hospitals, and
+            nursing facilities.
+          </p>
+          <button onclick="go('tracking-hospital.html')">Open Facility View</button>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Tip: Set this page as your browser start page on your dispatch laptop so CareLine opens here first.
+      </div>
+    </div>
+
+    <!-- PIN overlay -->
+    <div id="pinOverlay" class="pin-overlay">
+      <div class="pin-box">
+        <div class="pin-title">Admin PIN</div>
+        <div class="pin-sub">
+          Control Center access for CareLine staff only.<br>
+          Please enter your admin PIN to continue.
+        </div>
+        <div class="pin-row">
+          <input
+            id="pinInput"
+            type="password"
+            placeholder="Enter PIN"
+            onkeyup="handlePinKey(event)"
+          />
+          <button onclick="unlock()">Unlock</button>
+        </div>
+        <div id="pinError" class="pin-error"></div>
+        <div class="pin-hint">
+          This matches the PIN used on your Route Report (default: 2468).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PIN = '2468'; // keep in sync with route-report.html
+
+    function go(page) {
+      window.location.href = page;
+    }
+
+    function handlePinKey(event) {
+      if (event.key === 'Enter') {
+        unlock();
+      }
+    }
+
+    function unlock() {
+      const input = document.getElementById('pinInput');
+      const error = document.getElementById('pinError');
+      const overlay = document.getElementById('pinOverlay');
+      const main = document.getElementById('mainContent');
+
+      const value = input.value.trim();
+      if (!value) {
+        error.textContent = "Please enter your admin PIN.";
+        return;
+      }
+      if (value === ADMIN_PIN) {
+        error.textContent = "";
+        overlay.style.display = "none";
+        main.style.opacity = "1";
+        main.style.pointerEvents = "auto";
+      } else {
+        error.textContent = "Incorrect PIN. Please try again.";
+      }
+    }
+
+    window.addEventListener('load', () => {
+      const input = document.getElementById('pinInput');
+      if (input) input.focus();
+    });
+  </script>
+</body>
+</html>

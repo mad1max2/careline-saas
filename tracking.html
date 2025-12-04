@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareLine Tracking – Customer View</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f7f9;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #0097a7;
+      color: white;
+      text-align: center;
+      padding: 18px 10px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+      padding: 18px 16px 20px;
+    }
+    .intro {
+      font-size: 14px;
+      color: #455a64;
+      margin-bottom: 12px;
+    }
+    .form-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .form-row input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #b0bec5;
+      font-size: 14px;
+    }
+    .form-row button {
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      background-color: #0097a7;
+      color: #ffffff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .form-row button:hover {
+      background-color: #007b83;
+    }
+    .status-card {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #cfd8dc;
+      background-color: #f7fbfc;
+      font-size: 14px;
+      color: #455a64;
+    }
+    .status-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .status-ok {
+      color: #2e7d32;
+    }
+    .status-warn {
+      color: #f57c00;
+    }
+    .status-note {
+      font-size: 13px;
+      color: #607d8b;
+      margin-top: 4px;
+    }
+    .photo {
+      margin-top: 8px;
+    }
+    .photo img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+    .small {
+      font-size: 12px;
+      color: #90a4ae;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    CareLine Tracking – Customer
+  </header>
+
+  <div class="container">
+    <div class="intro">
+      Enter your <strong>CareLine Tracking ID</strong> to see the latest delivery update
+      for your wound-care or incontinence supplies.
+    </div>
+    <div class="form-row">
+      <input id="codeInput" type="text" placeholder="Example: CL-ABC123" onkeyup="handleKey(event)" />
+      <button onclick="lookup()">Track</button>
+    </div>
+    <div id="result"></div>
+    <div class="small">
+      If you have questions, please contact your home-health agency or CareLine support.
+    </div>
+  </div>
+
+  <script>
+    function getCodeFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('code') || '';
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter') lookup();
+    }
+
+    async function lookup() {
+      const input = document.getElementById('codeInput');
+      const code = input.value.trim();
+      const result = document.getElementById('result');
+
+      if (!code) {
+        result.innerHTML = '<div class="status-card">Please enter your tracking ID.</div>';
+        return;
+      }
+
+      result.innerHTML = '<div class="status-card">Looking up your delivery…</div>';
+
+      try {
+        const res = await fetch('http://localhost:3000/getProofByCode/' + encodeURIComponent(code));
+        const data = await res.json();
+
+        if (!data || data.length === 0) {
+          result.innerHTML = `
+            <div class="status-card">
+              We could not find a delivery for Tracking ID <strong>${code}</strong> yet.
+              It may not have been scanned by CareLine.
+            </div>
+          `;
+          return;
+        }
+
+        const entry = data[0];
+
+        const status = entry.status || 'Delivered';
+        const reason = entry.unableReason || '';
+        const facility = entry.facilityName || 'Your facility / clinic';
+        const driver = entry.driverName || 'CareLine Driver';
+        let timeText = entry.timestamp;
+        try {
+          const dt = new Date(entry.timestamp);
+          if (!isNaN(dt.getTime())) {
+            timeText = dt.toLocaleString();
+          }
+        } catch (e) {}
+
+        let statusClass = 'status-ok';
+        let mainLine = 'Your delivery has been completed.';
+        let extraNote = `Delivered to: <strong>${facility}</strong>`;
+
+        if (status === 'Attempted - No Answer') {
+          statusClass = 'status-warn';
+          mainLine = 'We attempted delivery but could not complete it.';
+          extraNote = reason
+            ? `Reason: <strong>${reason}</strong><br>Facility: <strong>${facility}</strong>`
+            : `Reason: Not available<br>Facility: <strong>${facility}</strong>`;
+        } else if (status === 'Left with Staff') {
+          extraNote = `Package was left with facility staff at: <strong>${facility}</strong>`;
+        }
+
+        const photoHtml = entry.fileUrl
+          ? `
+            <div class="photo">
+              <div class="status-note">Photo from driver:</div>
+              <img src="${entry.fileUrl}" alt="Delivery photo" />
+            </div>
+          `
+          : '';
+
+        result.innerHTML = `
+          <div class="status-card">
+            <div class="status-title ${statusClass}">
+              Tracking ID: ${entry.trackingCode}
+            </div>
+            <div>${mainLine}</div>
+            <div class="status-note">
+              Status: <strong>${status}</strong><br>
+              Driver: <strong>${driver}</strong><br>
+              Last update: <strong>${timeText}</strong><br>
+              ${extraNote}
+            </div>
+            ${photoHtml}
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+        result.innerHTML = `
+          <div class="status-card">
+            We’re having trouble loading your delivery right now. Please try again later.
+          </div>
+        `;
+      }
+    }
+
+    window.addEventListener('load', () => {
+      const fromUrl = getCodeFromUrl();
+      if (fromUrl) {
+        const input = document.getElementById('codeInput');
+        input.value = fromUrl;
+        lookup();
+      }
+    });
+  </script>
+</body>
+</html>

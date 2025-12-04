@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareLine Daily Route Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f7f9;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #0097a7;
+      color: white;
+      text-align: center;
+      padding: 20px 10px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    header .sub {
+      font-size: 14px;
+      font-weight: normal;
+      opacity: 0.9;
+    }
+    .container {
+      max-width: 900px;
+      margin: 25px auto 30px;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      padding: 20px;
+    }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .toolbar-left {
+      font-size: 14px;
+      color: #455a64;
+    }
+    .toolbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    button {
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      background-color: #0097a7;
+      color: #ffffff;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    button:hover {
+      background-color: #007b83;
+    }
+    label {
+      font-size: 13px;
+      color: #455a64;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      transform: scale(1.1);
+    }
+    select {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #b0bec5;
+      font-size: 13px;
+      background-color: #ffffff;
+    }
+    input[type="text"] {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #b0bec5;
+      font-size: 13px;
+      min-width: 150px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #cfd8dc;
+      padding: 8px 6px;
+      text-align: left;
+    }
+    th {
+      background-color: #e0f7fa;
+      color: #004d60;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background-color: #f7fbfc;
+    }
+    .center {
+      text-align: center;
+    }
+    .small {
+      font-size: 12px;
+      color: #607d8b;
+    }
+    .status-delivered {
+      color: #2e7d32;
+      font-weight: bold;
+    }
+    .status-attempted {
+      color: #f57c00;
+      font-weight: bold;
+    }
+    .status-left {
+      color: #1976d2;
+      font-weight: bold;
+    }
+    .link {
+      color: #00796b;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+    .no-data {
+      text-align: center;
+      padding: 20px 0;
+      color: #607d8b;
+      font-size: 14px;
+    }
+    .print-note {
+      font-size: 11px;
+      color: #90a4ae;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    /* Dashboard summary cards */
+    .dash-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+      margin-top: 4px;
+    }
+    .dash-card {
+      background-color: #f1fbfc;
+      border-radius: 8px;
+      border: 1px solid #cfd8dc;
+      padding: 8px 10px;
+    }
+    .dash-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #607d8b;
+      margin-bottom: 2px;
+    }
+    .dash-value {
+      font-size: 17px;
+      font-weight: bold;
+      color: #004d60;
+    }
+
+    /* PIN gate */
+    .pin-overlay {
+      max-width: 420px;
+      margin: 60px auto 0;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+      padding: 22px 18px 20px;
+      border-top: 4px solid #0097a7;
+    }
+    .pin-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #004d60;
+      margin-bottom: 6px;
+    }
+    .pin-sub {
+      font-size: 13px;
+      color: #607d8b;
+      margin-bottom: 14px;
+    }
+    .pin-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .pin-input-row input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #b0bec5;
+      font-size: 16px;
+    }
+    .pin-error {
+      font-size: 12px;
+      color: #d32f2f;
+      min-height: 16px;
+      margin-bottom: 4px;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff;
+      }
+      .container {
+        box-shadow: none;
+        margin: 0;
+        border-radius: 0;
+      }
+      .toolbar-controls,
+      .print-note {
+        display: none !important;
+      }
+      header {
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    CareLine Medical Logistics
+    <div class="sub">Daily Route Report — Wound-Care & Incontinence Deliveries</div>
+  </header>
+
+  <!-- PIN Gate -->
+  <div id="pinGate" class="pin-overlay">
+    <div class="pin-title">Admin Access</div>
+    <div class="pin-sub">
+      This report contains internal delivery data for CareLine dispatch and management.
+      Please enter your admin PIN to continue.
+    </div>
+    <div class="pin-input-row">
+      <input
+        id="pinInput"
+        type="password"
+        placeholder="Enter PIN"
+        onkeyup="handlePinKey(event)"
+      />
+      <button onclick="unlockReport()">Unlock</button>
+    </div>
+    <div id="pinError" class="pin-error"></div>
+    <div class="small">
+      Hint: You can change the PIN in the code later (look for <code>ADMIN_PIN</code> in the script).
+    </div>
+  </div>
+
+  <!-- App content -->
+  <div id="appContent" style="display:none;">
+    <div class="container">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div><strong>Generated:</strong> <span id="generatedLabel"></span></div>
+          <div class="small">This table shows deliveries from your CareLine tracking system.</div>
+        </div>
+        <div class="toolbar-controls">
+          <label>
+            <input type="checkbox" id="todayOnly" onchange="loadDeliveries()" />
+            Show today only
+          </label>
+          <label>
+            Driver:
+            <select id="driverFilter" onchange="loadDeliveries()">
+              <option value="ALL">All drivers</option>
+            </select>
+          </label>
+          <label>
+            Facility:
+            <select id="facilityFilter" onchange="loadDeliveries()">
+              <option value="ALL">All facilities</option>
+            </select>
+          </label>
+          <label>
+            Status:
+            <select id="statusFilter" onchange="loadDeliveries()">
+              <option value="ALL">All statuses</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Attempted - No Answer">Attempted – No Answer</option>
+              <option value="Left with Staff">Left with Staff</option>
+            </select>
+          </label>
+          <label>
+            Search:
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Tracking, facility, driver…"
+              onkeyup="handleSearchKey(event)"
+            />
+          </label>
+          <button onclick="loadDeliveries()">Refresh</button>
+          <button onclick="exportCSV()">Download CSV</button>
+          <button onclick="window.print()">Print report</button>
+        </div>
+      </div>
+
+      <!-- Dashboard summary -->
+      <div id="dashSummary" class="dash-summary"></div>
+
+      <div id="summary" class="small" style="margin-bottom: 8px;"></div>
+      <div class="print-note">
+        Tip: Use “Save as PDF” in your printer options to keep a digital copy.
+      </div>
+
+      <div id="tableWrapper"></div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PIN = '2468';
+
+    let lastFilteredDeliveries = [];
+
+    function updateGeneratedLabel() {
+      const el = document.getElementById('generatedLabel');
+      if (!el) return;
+      const now = new Date();
+      el.textContent = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+    }
+
+    window.addEventListener('load', () => {
+      updateGeneratedLabel();
+      const pinInput = document.getElementById('pinInput');
+      if (pinInput) pinInput.focus();
+    });
+
+    function handlePinKey(event) {
+      if (event.key === 'Enter') unlockReport();
+    }
+
+    function unlockReport() {
+      const pinInput = document.getElementById('pinInput');
+      const pinError = document.getElementById('pinError');
+      const pinGate = document.getElementById('pinGate');
+      const appContent = document.getElementById('appContent');
+
+      const value = pinInput.value.trim();
+      if (!value) {
+        pinError.textContent = "Please enter your admin PIN.";
+        return;
+      }
+      if (value === ADMIN_PIN) {
+        pinError.textContent = "";
+        pinGate.style.display = "none";
+        appContent.style.display = "block";
+        updateGeneratedLabel();
+        loadDeliveries();
+      } else {
+        pinError.textContent = "Incorrect PIN. Please try again.";
+      }
+    }
+
+    function handleSearchKey(event) {
+      if (event.key === 'Enter') {
+        loadDeliveries();
+      }
+    }
+
+    async function loadDeliveries() {
+      updateGeneratedLabel();
+      const wrapper = document.getElementById('tableWrapper');
+      const summary = document.getElementById('summary');
+      const todayOnly = document.getElementById('todayOnly').checked;
+      const driverSelect = document.getElementById('driverFilter');
+      const facilitySelect = document.getElementById('facilityFilter');
+      const statusSelect = document.getElementById('statusFilter');
+      const searchInput = document.getElementById('searchInput');
+
+      wrapper.innerHTML = "Loading deliveries...";
+      summary.textContent = "";
+
+      try {
+        const res = await fetch('http://localhost:3000/getAllDeliveries');
+        if (!res.ok) throw new Error("Server error");
+        let raw = await res.json();
+
+        buildDriverOptions(raw);
+        buildFacilityOptions(raw);
+
+        let data = raw;
+
+        if (todayOnly) {
+          const now = new Date();
+          const y = now.getFullYear();
+          const m = now.getMonth();
+          const d = now.getDate();
+
+          data = data.filter(del => {
+            if (!del.timestamp) return false;
+            const dt = new Date(del.timestamp);
+            return dt.getFullYear() === y &&
+                   dt.getMonth() === m &&
+                   dt.getDate() === d;
+          });
+        }
+
+        const selectedDriver = driverSelect.value;
+        if (selectedDriver !== 'ALL') {
+          data = data.filter(del => {
+            const name = del.driverName || 'CareLine Driver';
+            return name === selectedDriver;
+          });
+        }
+
+        const selectedFacility = facilitySelect.value;
+        if (selectedFacility !== 'ALL') {
+          data = data.filter(del => {
+            const fac = del.facilityName || '';
+            return fac === selectedFacility;
+          });
+        }
+
+        const selectedStatus = statusSelect.value;
+        if (selectedStatus !== 'ALL') {
+          data = data.filter(del => {
+            const st = del.status || 'Delivered';
+            return st === selectedStatus;
+          });
+        }
+
+        const searchText = searchInput.value.trim().toLowerCase();
+        if (searchText) {
+          data = data.filter(del => {
+            const code = (del.trackingCode || '').toLowerCase();
+            const fac = (del.facilityName || '').toLowerCase();
+            const drv = (del.driverName || 'CareLine Driver').toLowerCase();
+            const stopId = (del.stopId || '').toLowerCase();
+            const reason = (del.unableReason || '').toLowerCase();
+            return code.includes(searchText) ||
+                   fac.includes(searchText) ||
+                   drv.includes(searchText) ||
+                   stopId.includes(searchText) ||
+                   reason.includes(searchText);
+          });
+        }
+
+        renderTable(data, todayOnly, selectedDriver, selectedFacility, selectedStatus, searchText);
+      } catch (err) {
+        console.error(err);
+        wrapper.innerHTML = '<div class="no-data">Unable to load route report right now.</div>';
+      }
+    }
+
+    function buildDriverOptions(deliveries) {
+      const driverSelect = document.getElementById('driverFilter');
+      const currentValue = driverSelect.value || 'ALL';
+
+      const names = new Set();
+      deliveries.forEach(del => {
+        const name = del.driverName || 'CareLine Driver';
+        names.add(name);
+      });
+
+      const sortedNames = Array.from(names).sort();
+
+      driverSelect.innerHTML = '<option value="ALL">All drivers</option>';
+      sortedNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        driverSelect.appendChild(opt);
+      });
+
+      const optionsValues = Array.from(driverSelect.options).map(o => o.value);
+      driverSelect.value = optionsValues.includes(currentValue) ? currentValue : 'ALL';
+    }
+
+    function buildFacilityOptions(deliveries) {
+      const facilitySelect = document.getElementById('facilityFilter');
+      const currentValue = facilitySelect.value || 'ALL';
+
+      const names = new Set();
+      deliveries.forEach(del => {
+        const fac = del.facilityName || '';
+        if (fac) names.add(fac);
+      });
+
+      const sortedNames = Array.from(names).sort();
+
+      facilitySelect.innerHTML = '<option value="ALL">All facilities</option>';
+      sortedNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        facilitySelect.appendChild(opt);
+      });
+
+      const optionsValues = Array.from(facilitySelect.options).map(o => o.value);
+      facilitySelect.value = optionsValues.includes(currentValue) ? currentValue : 'ALL';
+    }
+
+    function renderTable(deliveries, todayOnly, selectedDriver, selectedFacility, selectedStatus, searchText) {
+      const wrapper = document.getElementById('tableWrapper');
+      const summary = document.getElementById('summary');
+      const dashSummary = document.getElementById('dashSummary');
+
+      lastFilteredDeliveries = deliveries.slice();
+
+      if (!deliveries || deliveries.length === 0) {
+        let msg = todayOnly
+          ? 'No deliveries recorded for today'
+          : 'No deliveries recorded yet';
+
+        if (selectedDriver && selectedDriver !== 'ALL') {
+          msg += ` for ${selectedDriver}`;
+        }
+        if (selectedFacility && selectedFacility !== 'ALL') {
+          msg += ` at ${selectedFacility}`;
+        }
+        if (selectedStatus && selectedStatus !== 'ALL') {
+          msg += ` with status “${selectedStatus}”`;
+        }
+        if (searchText) {
+          msg += ` matching “${searchText}”`;
+        }
+
+        wrapper.innerHTML = `<div class="no-data">${msg}.</div>`;
+        summary.textContent = "";
+        dashSummary.innerHTML = "";
+        return;
+      }
+
+      const total = deliveries.length;
+      const deliveredCount = deliveries.filter(d => (d.status || 'Delivered') === 'Delivered').length;
+      const attemptedCount = deliveries.filter(d => (d.status || 'Delivered') === 'Attempted - No Answer').length;
+      const leftCount = deliveries.filter(d => (d.status || 'Delivered') === 'Left with Staff').length;
+
+      const rangeText = todayOnly ? " (today)" : " (all time)";
+      const driverText =
+        selectedDriver && selectedDriver !== 'ALL'
+          ? ` | Driver: ${selectedDriver}`
+          : "";
+      const facilityText =
+        selectedFacility && selectedFacility !== 'ALL'
+          ? ` | Facility: ${selectedFacility}`
+          : "";
+      const statusTextInfo =
+        selectedStatus && selectedStatus !== 'ALL'
+          ? ` | Status: ${selectedStatus}`
+          : "";
+      const searchTextInfo =
+        searchText
+          ? ` | Search: “${searchText}”`
+          : "";
+
+      summary.textContent =
+        `Total deliveries${rangeText}: ${total} | Delivered: ${deliveredCount}${driverText}${facilityText}${statusTextInfo}${searchTextInfo}`;
+
+      dashSummary.innerHTML = `
+        <div class="dash-card">
+          <div class="dash-label">Total Deliveries (Current View)</div>
+          <div class="dash-value">${total}</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-label">Delivered</div>
+          <div class="dash-value">${deliveredCount}</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-label">Attempted – No Answer</div>
+          <div class="dash-value">${attemptedCount}</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-label">Left with Staff</div>
+          <div class="dash-value">${leftCount}</div>
+        </div>
+      `;
+
+      let rows = deliveries.map((d, index) => {
+        let timeText = d.timestamp;
+        try {
+          const dt = new Date(d.timestamp);
+          if (!isNaN(dt.getTime())) {
+            timeText = dt.toLocaleString();
+          }
+        } catch (e) {}
+
+        const statusRaw = d.status || 'Delivered';
+        let statusText = statusRaw;
+        let statusClass = 'status-delivered';
+        if (statusRaw === 'Delivered') {
+          statusText = 'Delivered ✔️';
+          statusClass = 'status-delivered';
+        } else if (statusRaw === 'Attempted - No Answer') {
+          statusText = 'Attempted – No Answer ⚠️';
+          statusClass = 'status-attempted';
+        } else if (statusRaw === 'Left with Staff') {
+          statusText = 'Left with Staff 🧑‍⚕️';
+          statusClass = 'status-left';
+        }
+
+        const code = d.trackingCode || '';
+        const facility = d.facilityName || '';
+        const driver = d.driverName || 'CareLine Driver';
+        const reason = d.unableReason || '';
+
+        const customerLink = code
+          ? `<a class="link" href="tracking.html?code=${encodeURIComponent(code)}" target="_blank">Customer</a>`
+          : '';
+
+        const clinicLink = code
+          ? `<a class="link" href="tracking-hospital.html?code=${encodeURIComponent(code)}" target="_blank">Facility</a>`
+          : '';
+
+        const proofLink = d.fileUrl
+          ? `<a class="link" href="${d.fileUrl}" target="_blank">View Photo</a>`
+          : '';
+
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${timeText}</td>
+            <td>${code}</td>
+            <td>${d.stopId || ''}</td>
+            <td>${facility}</td>
+            <td>${driver}</td>
+            <td class="${statusClass}">${statusText}</td>
+            <td>${reason}</td>
+            <td class="center">${proofLink}</td>
+            <td class="center">${customerLink}${customerLink && clinicLink ? ' | ' : ''}${clinicLink}</td>
+          </tr>
+        `;
+      }).join('');
+
+      wrapper.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date / Time</th>
+              <th>Tracking ID</th>
+              <th>Stop ID</th>
+              <th>Facility</th>
+              <th>Driver</th>
+              <th>Status</th>
+              <th>Unable Reason</th>
+              <th>Proof Photo</th>
+              <th>Links</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function csvEscape(value) {
+      if (value === null || value === undefined) return '""';
+      const s = String(value).replace(/"/g, '""');
+      return `"${s}"`;
+    }
+
+    function exportCSV() {
+      if (!lastFilteredDeliveries || lastFilteredDeliveries.length === 0) {
+        alert("No deliveries to export. Adjust your filters or refresh.");
+        return;
+      }
+
+      const header = [
+        "#",
+        "Date / Time",
+        "Tracking ID",
+        "Stop ID",
+        "Facility",
+        "Driver",
+        "Status Raw",
+        "Unable Reason",
+        "Photo URL"
+      ];
+
+      const rows = [header];
+
+      lastFilteredDeliveries.forEach((d, index) => {
+        let timeText = d.timestamp;
+        try {
+          const dt = new Date(d.timestamp);
+          if (!isNaN(dt.getTime())) {
+            timeText = dt.toLocaleString();
+          }
+        } catch (e) {}
+
+        const statusRaw = d.status || 'Delivered';
+
+        const row = [
+          index + 1,
+          timeText,
+          d.trackingCode || '',
+          d.stopId || '',
+          d.facilityName || '',
+          d.driverName || 'CareLine Driver',
+          statusRaw,
+          d.unableReason || '',
+          d.fileUrl || ''
+        ];
+
+        rows.push(row);
+      });
+
+      const csv = rows
+        .map(cols => cols.map(csvEscape).join(','))
+        .join('\r\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'careline-route-report.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

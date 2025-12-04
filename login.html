@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Driver Dashboard — CareLine</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f3f6f9;
+      color: #12303f;
+    }
+
+    .header {
+      background: #00a8b5;
+      color: white;
+      padding: 16px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .page {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #004b6b;
+    }
+
+    .welcome {
+      font-size: 18px;
+      font-weight: bold;
+      color: #004b6b;
+      margin-bottom: 16px;
+    }
+
+    .button-row {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    a.button {
+      display: inline-block;
+      padding: 12px 18px;
+      background: #004b6b;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    a.button:hover {
+      background: #006593;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">CareLine Driver Dashboard</div>
+
+  <div class="page">
+
+    <div class="card">
+      <div class="welcome" id="welcomeName">Welcome, Driver</div>
+
+      <p>You are now logged into the secure CareLine Driver Portal.</p>
+
+      <p>
+        From here you can:
+      </p>
+
+      <ul>
+        <li>📦 Track any delivery</li>
+        <li>📝 Update status (Delivered, Out for Delivery, etc.)</li>
+        <li>🚚 View your assigned route</li>
+      </ul>
+
+      <div class="button-row">
+        <a class="button" id="trackLink" href="tracking.html">Track a Delivery</a>
+        <a class="button" id="routeLink" href="driver-route.html">View Today’s Route</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Read driver name from URL
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get("name") || "Driver";
+
+    document.getElementById("welcomeName").innerText =
+      "Welcome, " + name;
+
+    // Pass driver name along to other pages (optional, for future use)
+    const trackLink = document.getElementById("trackLink");
+    const routeLink = document.getElementById("routeLink");
+
+    const nameParam = "?name=" + encodeURIComponent(name);
+
+    trackLink.href = "tracking.html" + nameParam;
+    routeLink.href = "driver-route.html" + nameParam;
+  </script>
+
+</body>
+</html>
