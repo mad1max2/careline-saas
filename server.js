@@ -67,6 +67,11 @@ function generateTrackingCode() {
   return 'CL-' + Date.now().toString(36).toUpperCase().slice(-6);
 }
 
+// Helper: build correct base URL (works local + Render)
+function getBaseUrl(req) {
+  return `${req.protocol}://${req.get('host')}`;
+}
+
 //---------------------------------------------------------------
 // API ROUTES
 //---------------------------------------------------------------
@@ -74,6 +79,7 @@ function generateTrackingCode() {
 // Upload Proof API
 app.post('/uploadProof', upload.single('photo'), (req, res) => {
   const trackingCode = generateTrackingCode();
+  const baseUrl = getBaseUrl(req);
 
   const entry = {
     stopId: req.body.stopId,
@@ -85,7 +91,7 @@ app.post('/uploadProof', upload.single('photo'), (req, res) => {
     facilityName: req.body.facilityName || '',
     status: req.body.status || 'Delivered',
     unableReason: req.body.unableReason || '',
-    fileUrl: `http://localhost:3000/uploads/${req.file.filename}`
+    fileUrl: `${baseUrl}/uploads/${req.file.filename}`
   };
 
   db.deliveries.push(entry);
