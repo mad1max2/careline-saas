@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Driver Route | CareLine Medical Logistics</title>
+  <title>CareLine Driver Route | CareLine Medical Logistics</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,360 +15,211 @@
       background-color: #0097a7;
       color: white;
       text-align: center;
-      padding: 20px 0;
+      padding: 18px 10px;
       font-size: 22px;
       font-weight: bold;
     }
+    .page-wrapper {
+      max-width: 900px;
+      margin: 25px auto 40px;
+      padding: 0 15px;
+    }
     .driver-select {
-      max-width: 700px;
-      margin: 15px auto 10px;
+      max-width: 400px;
+      margin: 0 auto 20px;
       background: #ffffff;
       padding: 15px;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      font-size: 15px;
-      color: #006064;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      color: #004d66;
+    }
+    .driver-select label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
     }
     .driver-select select {
       width: 100%;
-      padding: 10px;
+      padding: 8px 10px;
       border-radius: 6px;
-      font-size: 15px;
-      border: 1px solid #b0bec5;
-      margin-top: 6px;
-    }
-    .route-container {
-      max-width: 700px;
-      margin: 10px auto 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      padding: 18px 18px 20px;
-    }
-    .route-info {
-      background-color: #f1fbfc;
-      border-radius: 8px;
-      border: 1px solid #cfd8dc;
-      padding: 10px 12px;
-      margin-bottom: 14px;
-      font-size: 13px;
-      color: #455a64;
-    }
-    .route-info-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-    .route-name {
-      font-size: 15px;
-      font-weight: bold;
-      color: #004d60;
-    }
-    .route-meta {
-      font-size: 12px;
-      color: #607d8b;
-    }
-    .route-notes {
-      font-size: 12px;
-      color: #607d8b;
-      margin-top: 2px;
-    }
-    .stop {
-      background: #e0f7fa;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      padding: 15px;
-      cursor: pointer;
-    }
-    .stop h3 {
-      margin: 0;
-      color: #00796b;
-    }
-    .details {
-      display: none;
-      padding-top: 10px;
-    }
-    .show { display: block; }
-    .details p {
-      margin: 4px 0;
-    }
-    .status-select-label {
+      border: 1px solid #c2dfe6;
       font-size: 14px;
+    }
+    .route-card {
+      background: #ffffff;
+      padding: 16px 18px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      border-left: 5px solid #26a69a;
+    }
+    .route-card h2 {
+      margin: 0 0 8px;
+      color: #00796b;
+      font-size: 18px;
+    }
+    .route-card p {
+      margin: 3px 0;
+      font-size: 14px;
+      color: #444;
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
       margin-top: 6px;
-      color: #004d60;
+      background-color: #e0f2f1;
+      color: #00695c;
+      font-weight: bold;
     }
-    .status-select {
-      width: 100%;
-      margin-top: 2px;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid #b0bec5;
-      font-size: 13px;
-    }
-    button.upload-proof {
-      background-color: #0097a7;
+    .upload-button {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 14px;
+      background-color: #0077b6;
       color: white;
       border: none;
-      padding: 10px 16px;
       border-radius: 6px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    button.upload-proof:hover {
-      background-color: #007b83;
-    }
-    .thumbnail img {
-      margin-top: 10px;
-      border-radius: 8px;
-      width: 120px;
-    }
-    .customer-link {
-      display: inline-block;
-      margin-top: 8px;
-      text-decoration: none;
-      background-color: white;
-      border: 1px solid #0097a7;
-      color: #0097a7;
-      padding: 7px 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      margin-right: 4px;
-    }
-    .no-route {
-      text-align: center;
-      color: #607d8b;
       font-size: 14px;
-      padding-top: 8px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .upload-button:active {
+      transform: scale(0.98);
+    }
+    .route-summary {
+      text-align: center;
+      margin-bottom: 18px;
+      font-size: 14px;
+      color: #006064;
+    }
+    .empty-route {
+      text-align: center;
+      padding: 20px 14px;
+      border-radius: 10px;
+      background: #ffffff;
+      color: #607d8b;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
+  <header>🚚 CareLine Driver Route</header>
 
-<header>
-  🚚 CareLine Driver Route
-</header>
+  <div class="page-wrapper">
+    <div class="driver-select">
+      <label for="driverSelect">Who is driving?</label>
+      <select id="driverSelect">
+        <option value="">Loading drivers…</option>
+      </select>
+    </div>
 
-<div class="driver-select">
-  <strong>Who is driving?</strong>
-  <select id="driverName">
-    <option>Max (CareLine Driver)</option>
-    <option>Lena (CareLine Driver)</option>
-    <option>Chris (CareLine Driver)</option>
-    <option>James (CareLine Driver)</option>
-  </select>
-</div>
-
-<div class="route-container">
-  <div id="routeInfo" class="route-info">
-    Loading route info...
+    <div id="routeSummary" class="route-summary"></div>
+    <div id="routeContainer"></div>
   </div>
-  <div id="routeStops">
-    Loading route...
-  </div>
-</div>
 
-<script>
-  let allStops = [];
-  let routeMeta = {};
+  <script>
+    let routesData = null;
 
-  function getDriverName() {
-    return document.getElementById("driverName").value;
-  }
+    async function loadRoutes() {
+      try {
+        const res = await fetch('/routes.json');
+        if (!res.ok) throw new Error('Failed to fetch routes.json');
+        const data = await res.json();
+        routesData = data;
+        populateDrivers(data);
+      } catch (err) {
+        console.error('Error loading routes.json', err);
+        document.getElementById('routeSummary').textContent =
+          'Unable to load route info. Please contact dispatch.';
+      }
+    }
 
-  function toggleDetails(id) {
-    document.querySelectorAll('.details').forEach(d => d.classList.remove('show'));
-    const el = document.getElementById(id);
-    if (el) el.classList.add('show');
-  }
+    function populateDrivers(data) {
+      const driverSelect = document.getElementById('driverSelect');
+      driverSelect.innerHTML = '';
 
-  function formatStatusText(status) {
-    if (status === 'Delivered') return 'Status: Delivered ✔️';
-    if (status === 'Attempted - No Answer') return 'Status: Attempted – No Answer ⚠️';
-    if (status === 'Left with Staff') return 'Status: Left with Staff 🧑‍⚕️';
-    return 'Status: ' + status;
-  }
-
-  async function uploadProof(event, stopId, facilityName) {
-    event.stopPropagation();
-
-    const driver = getDriverName();
-    const statusSelect = document.getElementById("statusSelect-" + stopId);
-    const chosenStatus = statusSelect ? statusSelect.value : 'Delivered';
-
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.capture = "environment";
-
-    input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
-
-      let gps = { lat: null, lng: null };
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          pos => {
-            gps.lat = pos.coords.latitude;
-            gps.lng = pos.coords.longitude;
-          }
-        );
+      if (!data.drivers || data.drivers.length === 0) {
+        const opt = document.createElement('option');
+        opt.textContent = 'No drivers configured';
+        opt.value = '';
+        driverSelect.appendChild(opt);
+        return;
       }
 
-      await new Promise(r => setTimeout(r, 800));
-
-      const formData = new FormData();
-      formData.append("photo", file);
-      formData.append("stopId", stopId);
-      formData.append("timestamp", new Date().toISOString());
-      formData.append("lat", gps.lat);
-      formData.append("lng", gps.lng);
-      formData.append("facilityName", facilityName);
-      formData.append("driverName", driver);
-      formData.append("status", chosenStatus);
-
-      const res = await fetch("http://localhost:3000/uploadProof", {
-        method: "POST",
-        body: formData
+      data.drivers.forEach((driver) => {
+        const opt = document.createElement('option');
+        opt.value = driver.id;
+        opt.textContent = driver.name;
+        driverSelect.appendChild(opt);
       });
 
-      const data = await res.json();
-      alert("📸 Delivery Uploaded!");
+      // Default to first driver
+      driverSelect.value = data.drivers[0].id;
+      renderRouteForDriver(data.drivers[0].id);
 
-      const thumbEl = document.getElementById("thumb-" + stopId);
-      const statusTextEl = document.getElementById("statusText-" + stopId);
-      const trackingEl = document.getElementById("tracking-" + stopId);
-      const customerLinkEl = document.getElementById("link-" + stopId);
-      const clinicLinkEl = document.getElementById("clinic-" + stopId);
-
-      if (thumbEl) {
-        thumbEl.innerHTML = `<img src="${data.fileUrl}">`;
-      }
-      if (statusTextEl) {
-        statusTextEl.innerText = formatStatusText(data.status || chosenStatus);
-      }
-      if (trackingEl) {
-        trackingEl.innerText = "Tracking ID: " + data.trackingCode;
-      }
-      if (customerLinkEl) {
-        customerLinkEl.href = `tracking.html?code=${encodeURIComponent(data.trackingCode)}`;
-      }
-      if (clinicLinkEl) {
-        clinicLinkEl.href = `tracking-hospital.html?code=${encodeURIComponent(data.trackingCode)}`;
-      }
-    };
-
-    input.click();
-  }
-
-  function buildRouteUI() {
-    const routeInfoEl = document.getElementById('routeInfo');
-    const stopsContainer = document.getElementById('routeStops');
-    const currentDriver = getDriverName();
-
-    // Route header
-    const name = routeMeta.routeName || 'CareLine Route';
-    const date = routeMeta.routeDate || '';
-    const dispatcher = routeMeta.dispatcher || '';
-    const notes = routeMeta.notes || '';
-
-    // Filter stops by driver
-    let filtered = allStops;
-    if (currentDriver && filtered && filtered.length > 0) {
-      filtered = filtered.filter(stop => {
-        if (!stop.drivers || !Array.isArray(stop.drivers) || stop.drivers.length === 0) {
-          return true; // no drivers field = all drivers
-        }
-        return stop.drivers.includes(currentDriver);
+      driverSelect.addEventListener('change', (e) => {
+        renderRouteForDriver(e.target.value);
       });
     }
 
-    const stopCount = filtered.length;
+    function renderRouteForDriver(driverId) {
+      const container = document.getElementById('routeContainer');
+      const summary = document.getElementById('routeSummary');
+      container.innerHTML = '';
 
-    routeInfoEl.innerHTML = `
-      <div class="route-info-top">
-        <div class="route-name">${name}</div>
-        <div class="route-meta">
-          ${date ? `Date: ${date}` : ''}${date && dispatcher ? ' · ' : ''}${dispatcher ? `Dispatcher: ${dispatcher}` : ''}
-        </div>
-      </div>
-      <div class="route-meta">
-        Assigned driver: <strong>${currentDriver}</strong> · Stops on this route: <strong>${stopCount}</strong>
-      </div>
-      ${notes ? `<div class="route-notes">${notes}</div>` : ''}
-    `;
+      if (!routesData) return;
 
-    if (!filtered || filtered.length === 0) {
-      stopsContainer.innerHTML = `
-        <div class="no-route">
-          No stops assigned to <strong>${currentDriver}</strong> on this route.<br>
-          Check routes.json or choose a different driver.
-        </div>
-      `;
-      return;
+      const driver = routesData.drivers.find((d) => d.id === driverId);
+      const route = routesData.routes.find((r) => r.driverId === driverId);
+
+      if (!driver || !route || !route.stops || route.stops.length === 0) {
+        summary.textContent =
+          `No stops assigned to ${driver ? driver.name : 'this driver'} on this route.`;
+        const msg = document.createElement('div');
+        msg.className = 'empty-route';
+        msg.textContent = 'Check routes.json or choose a different driver.';
+        container.appendChild(msg);
+        return;
+      }
+
+      summary.textContent =
+        `Assigned driver: ${driver.name} • Stops on this route: ${route.stops.length}`;
+
+      route.stops.forEach((stop, index) => {
+        const card = document.createElement('div');
+        card.className = 'route-card';
+
+        const title = document.createElement('h2');
+        title.textContent = `Stop ${index + 1} — Delivery #${index + 1}`;
+        card.appendChild(title);
+
+        const loc = document.createElement('p');
+        loc.innerHTML = `<strong>Location:</strong> ${stop.location}`;
+        card.appendChild(loc);
+
+        const items = document.createElement('p');
+        items.innerHTML = `<strong>Items:</strong> ${stop.items}`;
+        card.appendChild(items);
+
+        const status = document.createElement('span');
+        status.className = 'status-pill';
+        status.textContent = stop.status || 'Scheduled';
+        card.appendChild(status);
+
+        const uploadLink = document.createElement('a');
+        uploadLink.className = 'upload-button';
+        uploadLink.href = `/proof-upload.html?stopId=${encodeURIComponent(stop.stopId)}`;
+        uploadLink.textContent = 'Upload Proof';
+        card.appendChild(uploadLink);
+
+        container.appendChild(card);
+      });
     }
 
-    // Build stops
-    stopsContainer.innerHTML = '';
-    filtered.forEach(stop => {
-      const safeFacility = (stop.facility || '').replace(/'/g, "\\'");
-      const html = `
-        <div class="stop" onclick="toggleDetails('${stop.id}')">
-          <h3>${stop.title}</h3>
-          <div class="details" id="${stop.id}">
-            <p><strong>Facility:</strong> ${stop.facility}</p>
-            <p><strong>Items:</strong> ${stop.items}</p>
-            <p id="statusText-${stop.id}">Status: Not Delivered ❌</p>
-            <p id="tracking-${stop.id}">Tracking ID: —</p>
-
-            <div class="status-select-label">Delivery Status:</div>
-            <select id="statusSelect-${stop.id}" class="status-select">
-              <option value="Delivered">Delivered</option>
-              <option value="Attempted - No Answer">Attempted – No Answer</option>
-              <option value="Left with Staff">Left with Staff</option>
-            </select>
-
-            <div class="thumbnail" id="thumb-${stop.id}"></div>
-            <button class="upload-proof" onclick="uploadProof(event, '${stop.id}', '${safeFacility}')">
-              📸 Upload Proof
-            </button>
-            <a id="link-${stop.id}" class="customer-link" href="#" target="_blank">View Customer</a>
-            <a id="clinic-${stop.id}" class="customer-link" href="#" target="_blank">Facility View</a>
-          </div>
-        </div>
-      `;
-      stopsContainer.insertAdjacentHTML('beforeend', html);
-    });
-  }
-
-  async function loadStops() {
-    const routeInfoEl = document.getElementById('routeInfo');
-    const stopsContainer = document.getElementById('routeStops');
-
-    routeInfoEl.textContent = 'Loading route info...';
-    stopsContainer.textContent = 'Loading route...';
-
-    try {
-      const res = await fetch('http://localhost:3000/routes.json');
-      if (!res.ok) throw new Error('Unable to load routes.json');
-      const data = await res.json();
-      allStops = data.stops || [];
-      routeMeta = data;
-      buildRouteUI();
-    } catch (err) {
-      console.error(err);
-      routeInfoEl.textContent = 'Unable to load route info.';
-      stopsContainer.innerHTML = '<div class="no-route">Unable to load route definition (routes.json).</div>';
-    }
-  }
-
-  window.addEventListener('load', () => {
-    loadStops();
-    const driverSelect = document.getElementById('driverName');
-    driverSelect.addEventListener('change', buildRouteUI);
-  });
-</script>
-
+    window.addEventListener('DOMContentLoaded', loadRoutes);
+  </script>
 </body>
 </html>
