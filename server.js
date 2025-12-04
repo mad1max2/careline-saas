@@ -6,23 +6,26 @@ const cors = require('cors');
 
 const app = express();
 
+//---------------------------------------------------------------
+// STATIC FILE HOSTING (Render + routes.json + HTML + uploads)
+//---------------------------------------------------------------
+
+// Allow CORS (needed for HTML pages calling the API)
 app.use(cors());
+
+// Allow JSON body data
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Serve static files (HTML, routes.json, etc.)
-app.use(express.static(__dirname));
-
-// Serve uploads
+// Serve uploads (photos)
 app.use('/uploads', express.static('uploads'));
 
-// Make sure uploads/ exists
-if (!fs.existsSync('./uploads')) {
-  fs.mkdirSync('./uploads');
-}
+// Serve ALL project files (HTML, JSON, CSS, JS, images)
+app.use('/', express.static(__dirname));
 
-// ------------------------------
-// Load deliveries.json
-// ------------------------------
+//---------------------------------------------------------------
+// LOAD deliveries.json
+//---------------------------------------------------------------
 const DB_FILE = './deliveries.json';
 
 let db = { deliveries: [] };
@@ -31,16 +34,23 @@ if (fs.existsSync(DB_FILE)) {
   try {
     const raw = fs.readFileSync(DB_FILE);
     db = JSON.parse(raw);
-    if (!db.deliveries) db = { deliveries: [] };
+    if (!db.deliveries) {
+      db = { deliveries: [] };
+    }
   } catch (err) {
-    console.error("❌ Error loading JSON, resetting file.");
+    console.error('❌ Error loading JSON, resetting file.', err);
     db = { deliveries: [] };
   }
 }
 
-// ------------------------------
-// Multer Storage
-// ------------------------------
+// Make sure uploads/ exists
+if (!fs.existsSync('./uploads')) {
+  fs.mkdirSync('./uploads');
+}
+
+//---------------------------------------------------------------
+// MULTER STORAGE (for photo uploads)
+//---------------------------------------------------------------
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/');
@@ -57,9 +67,11 @@ function generateTrackingCode() {
   return 'CL-' + Date.now().toString(36).toUpperCase().slice(-6);
 }
 
-// ------------------------------
+//---------------------------------------------------------------
+// API ROUTES
+//---------------------------------------------------------------
+
 // Upload Proof API
-// ------------------------------
 app.post('/uploadProof', upload.single('photo'), (req, res) => {
   const trackingCode = generateTrackingCode();
 
@@ -72,19 +84,18 @@ app.post('/uploadProof', upload.single('photo'), (req, res) => {
     driverName: req.body.driverName || 'CareLine Driver',
     facilityName: req.body.facilityName || '',
     status: req.body.status || 'Delivered',
-    unableReason: req.body.unableReason || '', // 🔹 NEW: store unableReason
+    unableReason: req.body.unableReason || '',
     fileUrl: `http://localhost:3000/uploads/${req.file.filename}`
   };
 
   db.deliveries.push(entry);
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 
-  console.log("📸 Saved Proof:", entry);
-
+  console.log('📸 Saved Proof:', entry);
   res.json(entry);
 });
 
-// Get proof by stop ID (internal/debug)
+// Get proof by stop ID
 app.get('/getProof/:stopId', (req, res) => {
   const stopId = req.params.stopId;
   const results = db.deliveries.filter(p => p.stopId === stopId);
@@ -108,9 +119,11 @@ app.get('/getAllDeliveries', (req, res) => {
   res.json(sorted);
 });
 
-// ------------------------------
-// Start Server
-// ------------------------------
-app.listen(3000, () => {
-  console.log("🚀 CareLine server running at http://localhost:3000");
+//---------------------------------------------------------------
+// START SERVER
+//---------------------------------------------------------------
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 CareLine server running on port ${PORT}`);
 });
