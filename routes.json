@@ -2,12 +2,12 @@
   "drivers": [
     {
       "id": "driver1",
-      "name": "Max (CareLine Driver)"
+      "name": "James (CareLine Driver)"
     }
   ],
-
-  "routes": {
-    "driver1": {
+  "routes": [
+    {
+      "driverId": "driver1",
       "stops": [
         {
           "stopId": "stop1",
@@ -23,5 +23,5 @@
         }
       ]
     }
-  }
+  ]
 }
