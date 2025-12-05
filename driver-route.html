@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🚚 CareLine Driver Route</title>
+    <title>CareLine Driver Route</title>
 
     <style>
         body {
@@ -18,50 +18,75 @@
             color: white;
             text-align: center;
             padding: 20px;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 20px auto;
-        }
-
-        .block {
-            background: white;
-            padding: 16px;
+        .driver-select {
+            max-width: 700px;
+            margin: 40px auto 10px auto;
+            background: #fff;
+            padding: 25px;
             border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
         }
 
         select {
             width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #aaa;
+            padding: 12px;
+            font-size: 15px;
+            border-radius: 5px;
+            border: 1px solid #00bec5;
+            margin-top: 8px;
+        }
+
+        .route-box {
+            max-width: 700px;
+            margin: 10px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
         }
 
         .route-card {
-            background: #fff;
-            border: 1px solid #ccc;
-            padding: 16px;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            margin-top: 18px;
+            padding: 15px;
+            background: #f5f9fa;
+            border-radius: 8px;
+            border-left: 6px solid #00bec5;
         }
 
         .route-card h2 {
-            margin: 0 0 10px 0;
+            margin: 0 0 6px 0;
+            font-size: 18px;
         }
 
         .upload-button {
             display: inline-block;
+            margin-top: 10px;
             padding: 8px 12px;
             background: #0097a7;
             color: white;
             text-decoration: none;
             border-radius: 6px;
+        }
+
+        .complete-button {
+            display: inline-block;
             margin-top: 10px;
+            margin-left: 8px;
+            padding: 8px 12px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .complete-button:disabled {
+            background: #2e7d32;
+            cursor: default;
         }
     </style>
 </head>
@@ -69,119 +94,162 @@
 <body>
 <header>🚚 CareLine Driver Route</header>
 
-<div class="container">
+<div class="driver-select">
+    <label><strong>Who is driving?</strong></label>
+    <select id="driverSelect"></select>
+</div>
 
-    <!-- DRIVER SELECTOR -->
-    <div class="block">
-        <label><b>Who is driving?</b></label>
-        <select id="driverSelect"></select>
-    </div>
-
-    <!-- ROUTE SUMMARY -->
-    <div class="block" id="routeSummary"></div>
-
-    <!-- ROUTE LIST -->
+<div class="route-box">
+    <p id="routeSummary"></p>
     <div id="routeContainer"></div>
-
 </div>
 
 <script>
-// Load routes.json from backend
-async function loadRoutes() {
+let routesData = null;
+
+// Load routes.json from server
+async function loadRoutesJSON() {
     try {
-        const res = await fetch('/routes.json');
+        const res = await fetch("/routes.json");
+        if (!res.ok) throw new Error("Failed to load routes.json");
         return await res.json();
-    } 
-    catch (err) {
-        console.error('Error loading routes.json:', err);
+    } catch (err) {
+        console.error("Error loading routes:", err);
         return null;
     }
 }
 
-// Fill dropdown menu
+// Populate driver dropdown
 function populateDrivers(data) {
-    const select = document.getElementById('driverSelect');
-    select.innerHTML = '';
+    const driverSelect = document.getElementById("driverSelect");
+    driverSelect.innerHTML = "";
 
     data.drivers.forEach(driver => {
-        const opt = document.createElement('option');
-        opt.value = driver.id;     // use driver ID
+        const opt = document.createElement("option");
+        opt.value = driver.id;      // must match driver.id in routes.json
         opt.textContent = driver.name;
-        select.appendChild(opt);
+        driverSelect.appendChild(opt);
     });
 
-    // Auto-select the first driver
     if (data.drivers.length > 0) {
-        select.value = data.drivers[0].id;
+        driverSelect.value = data.drivers[0].id;
         renderRouteForDriver(data.drivers[0].id);
     }
 
-    select.addEventListener('change', e => {
+    driverSelect.addEventListener("change", e => {
         renderRouteForDriver(e.target.value);
     });
 }
 
-// Render stops for selected driver
+// Render route for selected driver
 function renderRouteForDriver(driverId) {
-    const summary = document.getElementById('routeSummary');
-    const container = document.getElementById('routeContainer');
+    const container = document.getElementById("routeContainer");
+    const summary = document.getElementById("routeSummary");
+    container.innerHTML = "";
+    summary.innerHTML = "";
 
-    summary.innerHTML = '';
-    container.innerHTML = '';
-
-    if (!window.routesData) return;
+    if (!routesData) return;
 
     const driver = routesData.drivers.find(d => d.id === driverId);
     const route = routesData.routes.find(r => r.driverId === driverId);
 
-    if (!driver || !route || route.stops.length === 0) {
-        summary.innerHTML = `
-            <p>No stops assigned to <b>${driver ? driver.name : 'this driver'}</b> on this route.<br>
-            Check routes.json or choose a different driver.</p>`;
+    if (!driver || !route || !route.stops || route.stops.length === 0) {
+        summary.textContent = `No stops assigned to ${driver ? driver.name : 'this driver'} on this route.`;
         return;
     }
 
-    summary.innerHTML = `
-        <p><b>Assigned driver:</b> ${driver.name} · 
-        <b>Stops on this route:</b> ${route.stops.length}</p>`;
+    summary.innerHTML = `<strong>Assigned driver:</strong> ${driver.name} • <strong>Stops on this route:</strong> ${route.stops.length}`;
 
-    // Build each stop
     route.stops.forEach((stop, index) => {
-        const card = document.createElement('div');
-        card.className = 'route-card';
+        const card = document.createElement("div");
+        card.className = "route-card";
 
-        const title = document.createElement('h2');
+        const title = document.createElement("h2");
         title.textContent = `Stop ${index + 1} — Delivery #${index + 1}`;
         card.appendChild(title);
 
-        const loc = document.createElement('p');
-        loc.innerHTML = `<b>Location:</b> ${stop.location}`;
+        const loc = document.createElement("p");
+        loc.innerHTML = `<strong>Location:</strong> ${stop.location}`;
         card.appendChild(loc);
 
-        const items = document.createElement('p');
-        items.innerHTML = `<b>Items:</b> ${stop.items}`;
+        const items = document.createElement("p");
+        items.innerHTML = `<strong>Items:</strong> ${stop.items}`;
         card.appendChild(items);
 
-        const status = document.createElement('p');
-        status.innerHTML = `<b>Status:</b> ${stop.status}`;
+        const status = document.createElement("p");
+        status.id = `status-${stop.stopId}`;
+        status.innerHTML = `<strong>Status:</strong> ${stop.status}`;
         card.appendChild(status);
 
-        const uploadLink = document.createElement('a');
-        uploadLink.className = 'upload-button';
+        const uploadLink = document.createElement("a");
+        uploadLink.className = "upload-button";
         uploadLink.href = `/proof-upload.html?stopId=${encodeURIComponent(stop.stopId)}`;
-        uploadLink.textContent = 'Upload Proof';
+        uploadLink.textContent = "Upload Proof";
         card.appendChild(uploadLink);
+
+        const completeBtn = document.createElement("button");
+        completeBtn.className = "complete-button";
+        completeBtn.id = `complete-${stop.stopId}`;
+        completeBtn.textContent = "Mark Complete";
+        completeBtn.onclick = () => markComplete(stop.stopId);
+        card.appendChild(completeBtn);
 
         container.appendChild(card);
     });
 }
 
-// INITIALIZE PAGE
-loadRoutes().then(data => {
-    if (!data) return;
-    window.routesData = data;
-    populateDrivers(data);
-});
+// Mark stop complete (update UI + send to server)
+function markComplete(stopId) {
+    if (!routesData) return;
+
+    // Update in-memory data
+    routesData.routes.forEach(route => {
+        route.stops.forEach(stop => {
+            if (stop.stopId === stopId) {
+                stop.status = "Completed";
+            }
+        });
+    });
+
+    // Update status text
+    const statusEl = document.getElementById(`status-${stopId}`);
+    if (statusEl) {
+        statusEl.innerHTML = "<strong>Status:</strong> Completed";
+        statusEl.style.color = "green";
+    }
+
+    // Update button
+    const btn = document.getElementById(`complete-${stopId}`);
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Completed";
+    }
+
+    // Tell server to persist change to routes.json
+    fetch("/update-stop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stopId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            console.error("Server failed to update stop:", data);
+        }
+    })
+    .catch(err => {
+        console.error("Error calling /update-stop:", err);
+    });
+}
+
+// Startup
+async function start() {
+    routesData = await loadRoutesJSON();
+    if (!routesData) return;
+    populateDrivers(routesData);
+}
+
+start();
 </script>
 
 </body>
