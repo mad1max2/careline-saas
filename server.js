@@ -20,6 +20,7 @@ const BASE_DIR = __dirname;
 const UPLOAD_DIR = path.join(BASE_DIR, 'uploads');
 const DB_FILE = path.join(BASE_DIR, 'deliveries.json');
 const ROUTE_FILE = path.join(BASE_DIR, 'routes.json');
+const LOCATION_FILE = path.join(BASE_DIR, 'locations.json');
 
 // Ensure uploads folder exists
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -31,6 +32,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 // ----------------------------------------------------
 let deliveries = { deliveries: [] };
 let routes = { drivers: [], routes: [] };
+let locations = { drivers: {} }; // { drivers: { driverId: { lat, lng, timestamp } } }
 
 function loadDeliveriesFromDisk() {
     try {
@@ -62,8 +64,24 @@ function loadRoutesFromDisk() {
     }
 }
 
+function loadLocationsFromDisk() {
+    try {
+        if (fs.existsSync(LOCATION_FILE)) {
+            const raw = fs.readFileSync(LOCATION_FILE);
+            const parsed = JSON.parse(raw);
+            locations = parsed || { drivers: {} };
+        } else {
+            locations = { drivers: {} };
+        }
+    } catch (err) {
+        console.error('Error loading locations.json, resetting file:', err);
+        locations = { drivers: {} };
+    }
+}
+
 loadDeliveriesFromDisk();
 loadRoutesFromDisk();
+loadLocationsFromDisk();
 
 // ----------------------------------------------------
 // STATIC FILE HOSTING (HTML, JSON, JS, CSS, IMAGES)
@@ -75,9 +93,14 @@ app.use('/', express.static(BASE_DIR));
 // Serve uploads as static files
 app.use('/uploads', express.static(UPLOAD_DIR));
 
-// Explicit routes.json (so fetch('/routes.json') is clean JSON)
+// Explicit routes.json
 app.get('/routes.json', (req, res) => {
     res.sendFile(ROUTE_FILE);
+});
+
+// Optional: locations.json (for debugging from browser)
+app.get('/locations.json', (req, res) => {
+    res.sendFile(LOCATION_FILE);
 });
 
 // ----------------------------------------------------
@@ -97,7 +120,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Helper to handle forms that might use different field names
+// Helper for field name
 function handleUploadField(req, res, callback) {
     const tryProof = upload.single('proof');
     const tryPhoto = upload.single('photo');
@@ -106,7 +129,6 @@ function handleUploadField(req, res, callback) {
         if (!err && req.file) {
             return callback(null);
         }
-        // Try "photo" field name if "proof" didn't work
         tryPhoto(req, res, function (err2) {
             if (!err2 && req.file) return callback(null);
             callback(err2 || err || new Error('No file uploaded'));
@@ -115,7 +137,7 @@ function handleUploadField(req, res, callback) {
 }
 
 // ----------------------------------------------------
-// API: GET DELIVERIES (for tracking pages)
+// API: GET DELIVERIES
 // ----------------------------------------------------
 app.get('/api/deliveries', (req, res) => {
     res.json(deliveries);
@@ -175,7 +197,6 @@ app.post('/update-stop', (req, res) => {
 
     let updated = false;
 
-    // Look through all routes and all stops
     routes.routes.forEach((route) => {
         route.stops.forEach((stop) => {
             if (stop.stopId === stopId) {
@@ -199,6 +220,54 @@ app.post('/update-stop', (req, res) => {
         console.error('Error saving routes.json:', err);
         res.status(500).json({ success: false, message: 'Save failed' });
     }
+});
+
+// ----------------------------------------------------
+// API: DRIVER LOCATION (LIVE GPS PINGS)
+// ----------------------------------------------------
+
+// Driver sends location
+app.post('/api/location', (req, res) => {
+    const { driverId, lat, lng } = req.body;
+
+    if (!driverId || lat == null || lng == null) {
+        return res
+            .status(400)
+            .json({ success: false, message: 'driverId, lat, lng required' });
+    }
+
+    const entry = {
+        lat,
+        lng,
+        timestamp: new Date().toISOString(),
+    };
+
+    if (!locations.drivers) locations.drivers = {};
+    locations.drivers[driverId] = entry;
+
+    try {
+        fs.writeFileSync(LOCATION_FILE, JSON.stringify(locations, null, 2));
+        console.log('Updated location for driver:', driverId, entry);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error saving locations.json:', err);
+        res.status(500).json({ success: false, message: 'Save failed' });
+    }
+});
+
+// Get last location for one driver
+app.get('/api/location/:driverId', (req, res) => {
+    const { driverId } = req.params;
+    const entry =
+        locations.drivers && locations.drivers[driverId]
+            ? locations.drivers[driverId]
+            : null;
+    res.json({ driverId, location: entry });
+});
+
+// Get all drivers’ locations (for dispatch board)
+app.get('/api/locations', (req, res) => {
+    res.json(locations);
 });
 
 // ----------------------------------------------------
