@@ -1,225 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CareLine Driver Route | CareLine Medical Logistics</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f7f9;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background-color: #0097a7;
-      color: white;
-      text-align: center;
-      padding: 18px 10px;
-      font-size: 22px;
-      font-weight: bold;
-    }
-    .page-wrapper {
-      max-width: 900px;
-      margin: 25px auto 40px;
-      padding: 0 15px;
-    }
-    .driver-select {
-      max-width: 400px;
-      margin: 0 auto 20px;
-      background: #ffffff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      color: #004d66;
-    }
-    .driver-select label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-    .driver-select select {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #c2dfe6;
-      font-size: 14px;
-    }
-    .route-summary {
-      text-align: center;
-      margin-bottom: 18px;
-      font-size: 14px;
-      color: #006064;
-    }
-    .route-card {
-      background: #ffffff;
-      padding: 16px 18px;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-      margin-bottom: 20px;
-      border-left: 5px solid #26a69a;
-    }
-    .route-card h2 {
-      margin: 0 0 8px;
-      color: #00796b;
-      font-size: 18px;
-    }
-    .route-card p {
-      margin: 3px 0;
-      font-size: 14px;
-      color: #444;
-    }
-    .status-pill {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      margin-top: 6px;
-      background-color: #e0f2f1;
-      color: #00695c;
-      font-weight: bold;
-    }
-    .upload-button {
-      display: inline-block;
-      margin-top: 12px;
-      padding: 8px 14px;
-      background-color: #0077b6;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .upload-button:active {
-      transform: scale(0.98);
-    }
-    .empty-route {
-      text-align: center;
-      padding: 20px 14px;
-      border-radius: 10px;
-      background: #ffffff;
-      color: #607d8b;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <header>🚚 CareLine Driver Route</header>
+function renderRouteForDriver(driverId) {
+  const container = document.getElementById('routeContainer');
+  const summary = document.getElementById('routeSummary');
+  container.innerHTML = '';
 
-  <div class="page-wrapper">
-    <div class="driver-select">
-      <label for="driverSelect">Who is driving?</label>
-      <select id="driverSelect">
-        <option value="">Loading drivers…</option>
-      </select>
-    </div>
+  if (!routesData) return;
 
-    <div id="routeSummary" class="route-summary"></div>
-    <div id="routeContainer"></div>
-  </div>
+  // 👉 Simple version: always use the first driver + first route
+  const driver = routesData.drivers[0];
+  const route  = routesData.routes[0];
 
-  <script>
-    let routesData = null;
+  if (!driver || !route || !route.stops || route.stops.length === 0) {
+    summary.textContent =
+      `No stops assigned to ${driver ? driver.name : 'this driver'} on this route.`;
+    const msg = document.createElement('div');
+    msg.className = 'empty-route';
+    msg.textContent = 'Check routes.json or choose a different driver.';
+    container.appendChild(msg);
+    return;
+  }
 
-    async function loadRoutes() {
-      try {
-        const res = await fetch('/routes.json');
-        if (!res.ok) throw new Error('Failed to fetch routes.json');
-        const data = await res.json();
-        routesData = data;
-        populateDrivers(data);
-      } catch (err) {
-        console.error('Error loading routes.json', err);
-        document.getElementById('routeSummary').textContent =
-          'Unable to load route info. Please contact dispatch.';
-      }
-    }
+  summary.textContent =
+    `Assigned driver: ${driver.name} • Stops on this route: ${route.stops.length}`;
 
-    function populateDrivers(data) {
-      const driverSelect = document.getElementById('driverSelect');
-      driverSelect.innerHTML = '';
+  route.stops.forEach((stop, index) => {
+    const card = document.createElement('div');
+    card.className = 'route-card';
 
-      if (!data.drivers || data.drivers.length === 0) {
-        const opt = document.createElement('option');
-        opt.textContent = 'No drivers configured';
-        opt.value = '';
-        driverSelect.appendChild(opt);
-        return;
-      }
+    const title = document.createElement('h2');
+    title.textContent = `Stop ${index + 1} — Delivery #${index + 1}`;
+    card.appendChild(title);
 
-      data.drivers.forEach((driver) => {
-        const opt = document.createElement('option');
-        opt.value = driver.id;
-        opt.textContent = driver.name;
-        driverSelect.appendChild(opt);
-      });
+    const loc = document.createElement('p');
+    loc.innerHTML = `<strong>Location:</strong> ${stop.location}`;
+    card.appendChild(loc);
 
-      // Default to first driver
-      driverSelect.value = data.drivers[0].id;
-      renderRouteForDriver(data.drivers[0].id);
+    const items = document.createElement('p');
+    items.innerHTML = `<strong>Items:</strong> ${stop.items}`;
+    card.appendChild(items);
 
-      driverSelect.addEventListener('change', (e) => {
-        renderRouteForDriver(e.target.value);
-      });
-    }
+    const status = document.createElement('span');
+    status.className = 'status-pill';
+    status.textContent = stop.status || 'Scheduled';
+    card.appendChild(status);
 
-    function renderRouteForDriver(driverId) {
-      const container = document.getElementById('routeContainer');
-      const summary = document.getElementById('routeSummary');
-      container.innerHTML = '';
+    const uploadLink = document.createElement('a');
+    uploadLink.className = 'upload-button';
+    uploadLink.href = `/proof-upload.html?stopId=${encodeURIComponent(stop.stopId)}`;
+    uploadLink.textContent = 'Upload Proof';
+    card.appendChild(uploadLink);
 
-      if (!routesData) return;
-
-      const driver = routesData.drivers.find((d) => d.id === driverId);
-      const route = routesData.routes.find((r) => r.driverId === driverId);
-
-      if (!driver || !route || !route.stops || route.stops.length === 0) {
-        summary.textContent =
-          `No stops assigned to ${driver ? driver.name : 'this driver'} on this route.`;
-        const msg = document.createElement('div');
-        msg.className = 'empty-route';
-        msg.textContent = 'Check routes.json or choose a different driver.';
-        container.appendChild(msg);
-        return;
-      }
-
-      summary.textContent =
-        `Assigned driver: ${driver.name} • Stops on this route: ${route.stops.length}`;
-
-      route.stops.forEach((stop, index) => {
-        const card = document.createElement('div');
-        card.className = 'route-card';
-
-        const title = document.createElement('h2');
-        title.textContent = `Stop ${index + 1} — Delivery #${index + 1}`;
-        card.appendChild(title);
-
-        const loc = document.createElement('p');
-        loc.innerHTML = `<strong>Location:</strong> ${stop.location}`;
-        card.appendChild(loc);
-
-        const items = document.createElement('p');
-        items.innerHTML = `<strong>Items:</strong> ${stop.items}`;
-        card.appendChild(items);
-
-        const status = document.createElement('span');
-        status.className = 'status-pill';
-        status.textContent = stop.status || 'Scheduled';
-        card.appendChild(status);
-
-        const uploadLink = document.createElement('a');
-        uploadLink.className = 'upload-button';
-        uploadLink.href = `/proof-upload.html?stopId=${encodeURIComponent(stop.stopId)}`;
-        uploadLink.textContent = 'Upload Proof';
-        card.appendChild(uploadLink);
-
-        container.appendChild(card);
-      });
-    }
-
-    window.addEventListener('DOMContentLoaded', loadRoutes);
-  </script>
-</body>
-</html>
+    container.appendChild(card);
+  });
+}
