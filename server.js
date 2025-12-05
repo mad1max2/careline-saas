@@ -1,135 +1,141 @@
+// ------------------------------------------------------------
+// CareLine Medical Logistics — Node/Express Server (Render Ready)
+// ------------------------------------------------------------
+
 const express = require('express');
-const multer  = require('multer');
+const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 
 const app = express();
 
-//---------------------------------------------------------------
-// STATIC FILE HOSTING (Render + routes.json + HTML + uploads)
-//---------------------------------------------------------------
+// ------------------------------------------------------------
+// STATIC FILE HOSTING (Required for Render)
+// ------------------------------------------------------------
+app.use('/', express.static(__dirname));
 
-// Allow CORS (needed for HTML pages calling the API)
+// Allow CORS for HTML pages calling APIs
 app.use(cors());
 
-// Allow JSON body data
+// Parse JSON + form data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploads (photos)
-app.use('/uploads', express.static('uploads'));
+// ------------------------------------------------------------
+// UPLOADS FOLDER
+// ------------------------------------------------------------
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
 
-// Serve ALL project files (HTML, JSON, CSS, JS, images)
-app.use('/', express.static(__dirname));
-
-//---------------------------------------------------------------
-// LOAD deliveries.json
-//---------------------------------------------------------------
-const DB_FILE = './deliveries.json';
-
-let db = { deliveries: [] };
-
-if (fs.existsSync(DB_FILE)) {
-  try {
-    const raw = fs.readFileSync(DB_FILE);
-    db = JSON.parse(raw);
-    if (!db.deliveries) {
-      db = { deliveries: [] };
-    }
-  } catch (err) {
-    console.error('❌ Error loading JSON, resetting file.', err);
-    db = { deliveries: [] };
-  }
+if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR);
 }
 
-// Make sure uploads/ exists
-if (!fs.existsSync('./uploads')) {
-  fs.mkdirSync('./uploads');
-}
+app.use('/uploads', express.static(UPLOAD_DIR));
 
-//---------------------------------------------------------------
-// MULTER STORAGE (for photo uploads)
-//---------------------------------------------------------------
+// Configure Multer storage for photo uploads
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
+    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+    filename: (req, file, cb) => {
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, unique + path.extname(file.originalname));
+    }
 });
-
 const upload = multer({ storage });
 
-// Helper: make a tracking code like CL-7F2K9Q
-function generateTrackingCode() {
-  return 'CL-' + Date.now().toString(36).toUpperCase().slice(-6);
+// ------------------------------------------------------------
+// LOAD deliveries.json
+// ------------------------------------------------------------
+const DB_FILE = './deliveries.json';
+let deliveries = [];
+
+function loadDeliveries() {
+    try {
+        if (fs.existsSync(DB_FILE)) {
+            const raw = fs.readFileSync(DB_FILE);
+            deliveries = JSON.parse(raw);
+        } else {
+            deliveries = [];
+        }
+    } catch (err) {
+        console.error("Error loading deliveries.json:", err);
+        deliveries = [];
+    }
+}
+loadDeliveries();
+
+// Save deliveries.json
+function saveDeliveries() {
+    fs.writeFileSync(DB_FILE, JSON.stringify(deliveries, null, 2));
 }
 
-// Helper: build correct base URL (works local + Render)
-function getBaseUrl(req) {
-  return `${req.protocol}://${req.get('host')}`;
+// ------------------------------------------------------------
+// LOAD routes.json
+// ------------------------------------------------------------
+const ROUTE_FILE = './routes.json';
+let routeData = {};
+
+function loadRoutes() {
+    try {
+        if (fs.existsSync(ROUTE_FILE)) {
+            const raw = fs.readFileSync(ROUTE_FILE);
+            routeData = JSON.parse(raw);
+        } else {
+            routeData = { drivers: [], routes: [] };
+        }
+    } catch (err) {
+        console.error("Error loading routes.json:", err);
+        routeData = { drivers: [], routes: [] };
+    }
 }
+loadRoutes();
 
-//---------------------------------------------------------------
-// API ROUTES
-//---------------------------------------------------------------
+// ------------------------------------------------------------
+// API ENDPOINTS
+// ------------------------------------------------------------
 
-// Upload Proof API
-app.post('/uploadProof', upload.single('photo'), (req, res) => {
-  const trackingCode = generateTrackingCode();
-  const baseUrl = getBaseUrl(req);
-
-  const entry = {
-    stopId: req.body.stopId,
-    trackingCode,
-    timestamp: req.body.timestamp,
-    lat: req.body.lat,
-    lng: req.body.lng,
-    driverName: req.body.driverName || 'CareLine Driver',
-    facilityName: req.body.facilityName || '',
-    status: req.body.status || 'Delivered',
-    unableReason: req.body.unableReason || '',
-    fileUrl: `${baseUrl}/uploads/${req.file.filename}`
-  };
-
-  db.deliveries.push(entry);
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
-
-  console.log('📸 Saved Proof:', entry);
-  res.json(entry);
+// Get all routes + drivers
+app.get('/api/routes', (req, res) => {
+    res.json(routeData);
 });
 
-// Get proof by stop ID
-app.get('/getProof/:stopId', (req, res) => {
-  const stopId = req.params.stopId;
-  const results = db.deliveries.filter(p => p.stopId === stopId);
-  res.json(results);
+// Get deliveries list
+app.get('/api/deliveries', (req, res) => {
+    res.json(deliveries);
 });
 
-// Get proof by tracking code (customer/clinic view)
-app.get('/getProofByCode/:code', (req, res) => {
-  const code = req.params.code;
-  const results = db.deliveries.filter(p => p.trackingCode === code);
-  res.json(results);
+// Upload proof-of-delivery
+app.post('/api/upload', upload.single('photo'), (req, res) => {
+    try {
+        const { stopId } = req.body;
+
+        if (!req.file) {
+            return res.status(400).json({ error: "No photo uploaded" });
+        }
+
+        // Store reference
+        deliveries.push({
+            stopId,
+            file: req.file.filename,
+            uploadedAt: new Date().toISOString()
+        });
+
+        saveDeliveries();
+
+        return res.json({
+            success: true,
+            file: req.file.filename
+        });
+    } catch (err) {
+        console.error("Upload error:", err);
+        res.status(500).json({ error: "Server error during upload" });
+    }
 });
 
-// Get all deliveries (for route report / dashboard)
-app.get('/getAllDeliveries', (req, res) => {
-  const sorted = [...db.deliveries].sort((a, b) => {
-    const ta = new Date(a.timestamp).getTime() || 0;
-    const tb = new Date(b.timestamp).getTime() || 0;
-    return tb - ta;
-  });
-  res.json(sorted);
-});
-
-//---------------------------------------------------------------
-// START SERVER
-//---------------------------------------------------------------
+// ------------------------------------------------------------
+// START SERVER ON RENDER
+// ------------------------------------------------------------
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-  console.log(`🚀 CareLine server running on port ${PORT}`);
+    console.log(`CareLine server running on port ${PORT}`);
 });
