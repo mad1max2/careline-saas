@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Driver Map | CareLine Medical Logistics</title>
+
+  <!-- Leaflet Map CSS (OpenStreetMap) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <style>
+    :root {
+      --careline-teal: #0097a7;
+      --careline-dark: #005b66;
+      --careline-bg: #e9f7fb;
+      --careline-card: #ffffff;
+      --careline-orange: #ff9800;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--careline-bg);
+      color: #003640;
+    }
+
+    header {
+      background-color: var(--careline-teal);
+      color: white;
+      padding: 16px 20px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .content {
+      max-width: 1100px;
+      margin: 16px auto 24px;
+      padding: 0 12px;
+    }
+
+    .card {
+      background-color: var(--careline-card);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      padding: 16px 18px;
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: var(--careline-dark);
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #b2c8d0;
+      font-size: 14px;
+    }
+
+    .summary {
+      font-size: 14px;
+      margin-top: 8px;
+      color: #004651;
+    }
+
+    #map {
+      width: 100%;
+      height: 480px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #b2dde5;
+    }
+
+    .legend {
+      font-size: 12px;
+      margin-top: 8px;
+      color: #4b676f;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      margin-right: 4px;
+      margin-top: 4px;
+    }
+
+    .pill-start {
+      background-color: #e0f7fa;
+      color: var(--careline-dark);
+      border: 1px solid #80deea;
+    }
+
+    .pill-stop {
+      background-color: #fff3e0;
+      color: #e65100;
+      border: 1px solid #ffb74d;
+    }
+
+    .pill-driver {
+      background-color: #e8f5e9;
+      color: #1b5e20;
+      border: 1px solid #81c784;
+    }
+
+    .notice {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #6b7e84;
+    }
+
+    /* Small in-page notification banner */
+    #toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background-color: var(--careline-dark);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <header>🚚 CareLine Driver Live Map</header>
+
+  <div class="content">
+    <!-- Driver selection + summary -->
+    <div class="card">
+      <h2>Who are we tracking?</h2>
+      <label for="driverSelect">Driver</label>
+      <select id="driverSelect">
+        <option value="">Loading drivers…</option>
+      </select>
+      <div id="summary" class="summary"></div>
+    </div>
+
+    <!-- Map card -->
+    <div class="card">
+      <h2>Live Route View</h2>
+      <div id="map"></div>
+      <div class="legend">
+        <span class="pill pill-start">Start / First Stop</span>
+        <span class="pill pill-stop">Next Stops</span>
+        <span class="pill pill-driver">Current Driver Position (planned)</span>
+        <p class="notice">
+          This map auto-refreshes every <strong>5 seconds</strong> from
+          <code>routes.json</code>. When we upgrade to full GPS, the driver icon will
+          move in real time along the route.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script>
+    // ---------------------------------------------------------
+    // BASIC MAP + ROUTE LOGIC
+    // ---------------------------------------------------------
+    let map;
+    let driverSelect;
+    let summaryEl;
+    let markers = {};
+    let polyline = null;
+    let lastSnapshot = null; // for change detection
+
+    document.addEventListener("DOMContentLoaded", () => {
+      driverSelect = document.getElementById("driverSelect");
+      summaryEl = document.getElementById("summary");
+
+      initMap();
+      loadRoutesAndPopulateDrivers();
+
+      driverSelect.addEventListener("change", () => {
+        const driverId = driverSelect.value;
+        if (driverId) {
+          renderDriverRoute(driverId);
+        } else {
+          clearMap();
+        }
+      });
+
+      // Auto-refresh every 5 seconds
+      setInterval(() => {
+        const driverId = driverSelect.value;
+        if (driverId) {
+          loadRoutesAndPopulateDrivers(false, driverId);
+        }
+      }, 5000);
+    });
+
+    function initMap() {
+      map = L.map("map").setView([39.2904, -76.6122], 11); // default: Baltimore
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
+    }
+
+    function clearMap() {
+      Object.values(markers).forEach(m => map.removeLayer(m));
+      markers = {};
+      if (polyline) {
+        map.removeLayer(polyline);
+        polyline = null;
+      }
+      summaryEl.textContent = "";
+    }
+
+    async function loadRoutesAndPopulateDrivers(initial = true, keepDriverId = null) {
+      try {
+        const res = await fetch("/routes");
+        const data = await res.json();
+
+        // On first load, populate driver dropdown
+        if (initial) {
+          populateDrivers(data);
+        }
+
+        // Save snapshot for notification comparison
+        if (!lastSnapshot) {
+          lastSnapshot = JSON.stringify(data);
+        } else {
+          // Compare for changes (e.g., stop status updates)
+          const newSnap = JSON.stringify(data);
+          if (newSnap !== lastSnapshot) {
+            handleRouteChanges(JSON.parse(lastSnapshot), data);
+            lastSnapshot = newSnap;
+          }
+        }
+
+        // If we have a driver selected, re-render route from fresh data
+        const activeDriverId = keepDriverId || driverSelect.value;
+        if (activeDriverId) {
+          renderDriverRoute(activeDriverId, data);
+        }
+      } catch (err) {
+        console.error("Error loading routes:", err);
+      }
+    }
+
+    function populateDrivers(data) {
+      driverSelect.innerHTML = "";
+      if (!data || !data.drivers || data.drivers.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "No drivers defined in routes.json";
+        driverSelect.appendChild(opt);
+        return;
+      }
+
+      data.drivers.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = d.name;
+        driverSelect.appendChild(opt);
+      });
+
+      // Default to first driver
+      driverSelect.value = data.drivers[0].id;
+      renderDriverRoute(data.drivers[0].id, data);
+    }
+
+    async function renderDriverRoute(driverId, cachedData = null) {
+      try {
+        const data = cachedData || (await (await fetch("/routes")).json());
+
+        const driver = data.drivers.find(d => d.id === driverId);
+        const route = data.routes.find(r => r.driverId === driverId);
+
+        clearMap();
+
+        if (!driver || !route || !route.stops || route.stops.length === 0) {
+          summaryEl.textContent =
+            "No stops assigned to this driver on the active route. Check routes.json.";
+          return;
+        }
+
+        summaryEl.textContent = `Tracking driver: ${driver.name} · Stops on this route: ${route.stops.length}`;
+
+        const latLngs = [];
+        route.stops.forEach((stop, index) => {
+          if (typeof stop.lat !== "number" || typeof stop.lng !== "number") {
+            // If no coordinates, skip drawing marker but keep summary
+            console.warn(
+              "Stop missing coordinates. Add lat/lng to routes.json:",
+              stop.stopId
+            );
+            return;
+          }
+
+          const latLng = [stop.lat, stop.lng];
+          latLngs.push(latLng);
+
+          const isFirst = index === 0;
+          const marker = L.marker(latLng, {
+            title: stop.location
+          });
+
+          const popupHtml = `
+            <strong>${isFirst ? "Start · " : ""}Stop ${index + 1} — ${stop.stopId}</strong><br/>
+            <strong>Location:</strong> ${stop.location}<br/>
+            <strong>Items:</strong> ${stop.items || "N/A"}<br/>
+            <strong>Status:</strong> ${stop.status || "Out for delivery"}
+          `;
+
+          marker.bindPopup(popupHtml);
+          marker.addTo(map);
+
+          markers[stop.stopId] = marker;
+        });
+
+        if (latLngs.length > 0) {
+          polyline = L.polyline(latLngs, {
+            color: "#0097a7",
+            weight: 4,
+            opacity: 0.8
+          }).addTo(map);
+
+          map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+        }
+      } catch (err) {
+        console.error("Error rendering driver route:", err);
+      }
+    }
+
+    // ---------------------------------------------------------
+    // SIMPLE IN-PAGE "NOTIFICATIONS" + HOOK FOR REAL EMAIL/SMS
+    // ---------------------------------------------------------
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 4000);
+    }
+
+    function handleRouteChanges(oldData, newData) {
+      try {
+        const oldRoutes = indexStopsById(oldData);
+        const newRoutes = indexStopsById(newData);
+
+        Object.keys(newRoutes).forEach(stopId => {
+          const oldStop = oldRoutes[stopId];
+          const newStop = newRoutes[stopId];
+
+          if (!oldStop || !newStop) return;
+
+          // If status changed, fire notification hook
+          if (oldStop.status !== newStop.status) {
+            const msg = `Stop ${stopId} status changed: ${oldStop.status || "N/A"} → ${
+              newStop.status || "N/A"
+            }`;
+
+            // 1) In-page toast
+            showToast(msg);
+
+            // 2) Backend notification hook (admin / patient / company)
+            fireBackendNotification(newStop)
+              .catch(err => console.warn("Notify backend failed:", err));
+          }
+        });
+      } catch (err) {
+        console.error("Error handling route changes:", err);
+      }
+    }
+
+    function indexStopsById(data) {
+      const map = {};
+      if (!data || !data.routes) return map;
+      data.routes.forEach(r => {
+        r.stops.forEach(s => {
+          map[s.stopId] = s;
+        });
+      });
+      return map;
+    }
+
+    async function fireBackendNotification(stop) {
+      // This assumes you'll later make a POST /notify endpoint in server.js
+      // that sends SMS/email/push to admin + patient + company.
+      try {
+        await fetch("/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            stopId: stop.stopId,
+            status: stop.status,
+            location: stop.location,
+            items: stop.items || "",
+            // you can add patientId, facilityId, etc. later
+          })
+        });
+      } catch (err) {
+        // Just log; we don't want the map to break
+        console.warn("Notification error:", err);
+      }
+    }
+  </script>
+</body>
+</html>
