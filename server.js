@@ -1,98 +1,211 @@
-// ---------------------------------------------------------------
-// CareLine Medical Logistics - CLEAN SERVER.JS
-// Static hosting + routes.json API + proof upload
-// ---------------------------------------------------------------
+// ================================
+// CareLine Medical Logistics Server
+// ================================
 
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-const multer = require("multer");
-const cors = require("cors");
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ---------------------------------------------------------------
+// -------------------------------
 // MIDDLEWARE
-// ---------------------------------------------------------------
-app.use(cors());
-app.use(express.json());
+// -------------------------------
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve ALL static files (HTML, CSS, JS, images)
-app.use(express.static(__dirname));
+// -------------------------------
+// STATIC HOSTING
+// Serves ALL .html, .css, .js files
+// -------------------------------
+app.use(express.static(path.join(__dirname)));
 
-// Serve uploaded proof images
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ---------------------------------------------------------------
-// LOAD ROUTES.JSON API ENDPOINT
-// ---------------------------------------------------------------
-app.get("/routes", (req, res) => {
+// ===========================
+// ROUTES.JSON SAFE LOADING
+// ===========================
+const ROUTES_FILE = path.join(__dirname, 'routes.json');
+
+function loadRoutes() {
   try {
-    const filePath = path.join(__dirname, "routes.json");
-    const raw = fs.readFileSync(filePath, "utf8");
-    const data = JSON.parse(raw);
-    res.json(data);
+    if (fs.existsSync(ROUTES_FILE)) {
+      const raw = fs.readFileSync(ROUTES_FILE, 'utf8');
+      if (raw.trim().length > 0) {
+        return JSON.parse(raw);
+      }
+    }
   } catch (err) {
-    console.error("Error reading routes.json:", err);
-    res.status(500).json({ error: "Cannot load routes.json" });
+    console.error("Error loading routes.json:", err);
   }
-});
+  return { drivers: [], routes: [] };
+}
 
-// ---------------------------------------------------------------
-// UPDATE STOP STATUS
-// ---------------------------------------------------------------
-app.post("/update-stop", (req, res) => {
-  const { stopId, status } = req.body;
+function saveRoutes(data) {
+  try {
+    fs.writeFileSync(ROUTES_FILE, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error("Error saving routes.json:", err);
+  }
+}
+
+
+// ===============================
+// UPDATE STOP STATUS (MARK COMPLETE)
+// ===============================
+app.post('/update-stop', (req, res) => {
+  const { driverId, stopId, status } = req.body;
+
+  if (!driverId || !stopId) {
+    return res.status(400).json({ success: false, message: "Missing driverId or stopId" });
+  }
 
   try {
-    const filePath = path.join(__dirname, "routes.json");
-    const raw = fs.readFileSync(filePath, "utf8");
-    const data = JSON.parse(raw);
+    const data = loadRoutes();
 
     data.routes.forEach(route => {
-      route.stops.forEach(stop => {
-        if (stop.stopId === stopId) {
-          stop.status = status;
-        }
-      });
+      if (route.driverId === driverId) {
+        route.stops.forEach(stop => {
+          if (stop.stopId === stopId) {
+            stop.status = status || "Completed";
+          }
+        });
+      }
     });
 
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-    res.json({ success: true, stopId, status });
+    saveRoutes(data);
+    res.json({ success: true });
 
   } catch (err) {
-    console.error("Error updating stop:", err);
+    console.error("Stop update error:", err);
     res.status(500).json({ success: false });
   }
 });
 
-// ---------------------------------------------------------------
-// FILE UPLOAD (Proof of delivery)
-// ---------------------------------------------------------------
-const upload = multer({ dest: "uploads/" });
 
-app.post("/upload-proof", upload.single("file"), (req, res) => {
+// ===============================
+// PROOF UPLOAD HANDLING
+// ===============================
+const upload = multer({ dest: path.join(__dirname, 'uploads') });
+
+app.post('/upload-proof', upload.single('proof'), (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-    res.json({ success: true, filename: req.file.filename });
+    const stopId = req.body.stopId || "unknown_stop";
+    const filePath = path.join(__dirname, 'uploads', `${stopId}.jpg`);
+
+    fs.renameSync(req.file.path, filePath);
+
+    res.send(`
+      <h2>Upload successful</h2>
+      <p>Proof saved for stop ${stopId}</p>
+      <a href="/driver-route.html">Back to Route</a>
+    `);
+
   } catch (err) {
     console.error("Upload error:", err);
-    res.status(500).json({ success: false });
+    res.status(500).send("Upload failed");
   }
 });
 
-// ---------------------------------------------------------------
-// FALLBACK for unknown routes
-// ---------------------------------------------------------------
-app.use((req, res) => {
+
+// ===============================
+// LIVE GPS TRACKING STORAGE
+// ===============================
+const LOCATIONS_FILE = path.join(__dirname, 'locations.json');
+
+function loadLocations() {
+  try {
+    if (fs.existsSync(LOCATIONS_FILE)) {
+      const raw = fs.readFileSync(LOCATIONS_FILE, 'utf8');
+      if (raw.trim().length > 0) return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error("Error loading locations.json:", err);
+  }
+  return { locations: [] };
+}
+
+function saveLocations(data) {
+  try {
+    fs.writeFileSync(LOCATIONS_FILE, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error("Error saving locations.json:", err);
+  }
+}
+
+
+// ===============================
+// DRIVER POSTS GPS → SERVER
+// ===============================
+app.post('/api/location', (req, res) => {
+  const { driverId, lat, lng, speed, heading } = req.body || {};
+
+  if (!driverId || typeof lat !== 'number' || typeof lng !== 'number') {
+    return res.status(400).json({
+      success: false,
+      message: "driverId, lat, and lng required"
+    });
+  }
+
+  const data = loadLocations();
+  const now = new Date().toISOString();
+
+  const record = {
+    driverId,
+    lat,
+    lng,
+    speed: speed || null,
+    heading: heading || null,
+    updatedAt: now
+  };
+
+  const index = data.locations.findIndex(l => l.driverId === driverId);
+  if (index === -1) data.locations.push(record);
+  else data.locations[index] = record;
+
+  saveLocations(data);
+  res.json({ success: true });
+});
+
+
+// ===============================
+// CONTROL CENTER GETS LIVE GPS
+// ===============================
+app.get('/api/location/:driverId', (req, res) => {
+  const driverId = req.params.driverId;
+
+  const data = loadLocations();
+  const found = data.locations.find(l => l.driverId === driverId);
+
+  if (!found) {
+    return res.status(404).json({
+      success: false,
+      message: "No live location for this driver yet"
+    });
+  }
+
+  res.json({ success: true, location: found });
+});
+
+
+// ===============================
+// FALLBACK: SERVE ANY .html FILE
+// ===============================
+app.get('*', (req, res) => {
+  const target = path.join(__dirname, req.path);
+
+  if (fs.existsSync(target) && target.endsWith('.html')) {
+    return res.sendFile(target);
+  }
+
   res.status(404).send(`Cannot GET ${req.path}`);
 });
 
-// ---------------------------------------------------------------
+
+// ===============================
 // START SERVER
-// ---------------------------------------------------------------
+// ===============================
 app.listen(PORT, () => {
-  console.log(`🔥 CareLine server running on port ${PORT}`);
+  console.log(`🚚 CareLine server running on port ${PORT}`);
 });
