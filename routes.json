@@ -1,25 +1,29 @@
 {
   "drivers": [
     {
-      "id": "max",
+      "id": "driver1",
       "name": "Max (CareLine Driver)"
     }
   ],
   "routes": [
     {
-      "driverId": "max",
+      "driverId": "driver1",
       "stops": [
         {
           "stopId": "stop1",
           "location": "Johns Hopkins Wound Care Center",
           "items": "Wound-care supply kit",
-          "status": "Out for delivery"
+          "status": "Out for delivery",
+          "lat": 39.2976,
+          "lng": -76.5920
         },
         {
           "stopId": "stop2",
           "location": "Mercy Medical Center",
           "items": "Incontinence supplies",
-          "status": "Out for delivery"
+          "status": "Out for delivery",
+          "lat": 39.2904,
+          "lng": -76.6169
         }
       ]
     }
