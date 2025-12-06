@@ -1,159 +1,482 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CareLine Control Center</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #eef6f8;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #006a80;
-            color: #fff;
-            padding: 18px;
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-        }
-        .wrapper {
-            max-width: 900px;
-            margin: 30px auto;
-            background: #fff;
-            padding: 20px 25px;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th, td {
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 14px;
-        }
-        th {
-            background: #f0f7f8;
-            text-align: left;
-        }
-        .badge {
-            padding: 3px 7px;
-            border-radius: 10px;
-            font-size: 12px;
-            color: #fff;
-        }
-        .badge-ok {
-            background: #2e7d32;
-        }
-        .badge-warn {
-            background: #f57c00;
-        }
-        .small {
-            font-size: 12px;
-            color: #666;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareLine Control Center | Live Dispatch Dashboard</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #e3f2fd;
+      color: #263238;
+    }
+
+    header {
+      background: #006064;
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .pill {
+      background: #004d40;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 2fr 1.4fr;
+      grid-template-rows: auto 1fr;
+      grid-template-areas:
+        "summary map"
+        "table map";
+      gap: 12px;
+      padding: 12px;
+      height: calc(100vh - 56px);
+      box-sizing: border-box;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      padding: 10px 12px;
+      box-sizing: border-box;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .summary-card {
+      padding: 10px;
+      border-radius: 8px;
+      color: #ffffff;
+    }
+
+    .s-total {
+      background: #006064;
+    }
+    .s-out {
+      background: #0288d1;
+    }
+    .s-complete {
+      background: #2e7d32;
+    }
+    .s-alerts {
+      background: #e64a19;
+    }
+
+    .summary-label {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .summary-value {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    #tableCard {
+      grid-area: table;
+      overflow: auto;
+    }
+
+    #summaryCard {
+      grid-area: summary;
+    }
+
+    #mapCard {
+      grid-area: map;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #map {
+      flex: 1;
+      min-height: 260px;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      background: #eceff1;
+    }
+
+    th,
+    td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #eceff1;
+      text-align: left;
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 12px;
+      color: #455a64;
+    }
+
+    tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .tag {
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 11px;
+      display: inline-block;
+    }
+
+    .tag-out {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .tag-complete {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .tag-alert {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .tag-pending {
+      background: #fff8e1;
+      color: #ef6c00;
+    }
+
+    .small {
+      font-size: 11px;
+      color: #607d8b;
+      margin-top: 4px;
+    }
+
+    .map-footer {
+      font-size: 11px;
+      margin-top: 6px;
+      color: #546e7a;
+    }
+
+    .btn-link {
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      border: 1px solid #0097a7;
+      color: #006064;
+      text-decoration: none;
+      margin-left: 6px;
+    }
+
+    .btn-link:hover {
+      background: #e0f7fa;
+    }
+
+    @media (max-width: 1000px) {
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        grid-template-areas:
+          "summary"
+          "map"
+          "table";
+        height: auto;
+      }
+      #map {
+        min-height: 220px;
+      }
+    }
+  </style>
 </head>
 <body>
-<header>📡 CareLine Control Center</header>
+  <header>
+    <div>
+      <div class="title">CareLine Control Center</div>
+      <div class="subtitle">Live dispatch view • Drivers • Stops • GPS</div>
+    </div>
+    <div class="pill">Internal Operations Dashboard</div>
+  </header>
 
-<div class="wrapper">
-    <h3>Driver Overview</h3>
-    <p class="small">
-        Live view of drivers, last known location, and route completion.
-    </p>
+  <main class="layout">
+    <!-- SUMMARY CARD -->
+    <section id="summaryCard" class="card">
+      <div class="summary-grid">
+        <div class="summary-card s-total">
+          <div class="summary-label">Total Stops Today</div>
+          <div id="totalStops" class="summary-value">0</div>
+        </div>
+        <div class="summary-card s-out">
+          <div class="summary-label">Out for Delivery</div>
+          <div id="outForDelivery" class="summary-value">0</div>
+        </div>
+        <div class="summary-card s-complete">
+          <div class="summary-label">Completed</div>
+          <div id="completed" class="summary-value">0</div>
+        </div>
+        <div class="summary-card s-alerts">
+          <div class="summary-label">Needs Attention</div>
+          <div id="alerts" class="summary-value">0</div>
+        </div>
+      </div>
+      <div class="small">
+        Data auto-refreshes every 5 seconds from <code>routes.json</code> and <code>gps.json</code>.
+        <a href="driver-map.html" class="btn-link" target="_blank">Open Live Driver Map</a>
+      </div>
+    </section>
 
-    <table>
+    <!-- TABLE CARD -->
+    <section id="tableCard" class="card">
+      <h3 style="margin:0 0 6px 0; font-size:14px;">Active Deliveries</h3>
+      <table>
         <thead>
-            <tr>
-                <th>Driver</th>
-                <th>Completed</th>
-                <th>Remaining</th>
-                <th>Last Location</th>
-                <th>Last Update</th>
-            </tr>
+          <tr>
+            <th>Driver</th>
+            <th>Stop</th>
+            <th>Location</th>
+            <th>Items</th>
+            <th>Status</th>
+            <th>Last GPS</th>
+          </tr>
         </thead>
-        <tbody id="driverTableBody"></tbody>
-    </table>
-</div>
+        <tbody id="deliveriesBody">
+          <!-- Rows injected by JS -->
+        </tbody>
+      </table>
+      <div class="small" id="tableInfo">
+        Waiting for first data load…
+      </div>
+    </section>
 
-<script>
-async function fetchJSON(url) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Failed to load " + url);
-    return await res.json();
-}
+    <!-- MAP CARD -->
+    <section id="mapCard" class="card">
+      <h3 style="margin:0 0 6px 0; font-size:14px;">Live Map (All Drivers)</h3>
+      <div id="map"></div>
+      <div class="map-footer">
+        • Green markers = stops • Orange markers = live driver positions  
+        • Use this for dispatch monitoring and escalation calls.
+      </div>
+    </section>
+  </main>
 
-async function loadDashboard() {
-    try {
-        const routes = await fetchJSON("/routes.json");
-        const locs = await fetchJSON("/api/locations");
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
-        const body = document.getElementById("driverTableBody");
-        body.innerHTML = "";
+  <script>
+    const REFRESH_MS = 5000;
+    const DEFAULT_CENTER = [39.2904, -76.6122];
 
-        routes.drivers.forEach(driver => {
-            const row = document.createElement("tr");
+    let map, mapLayer, driverMarkers = {};
 
-            const driverRoutes = routes.routes.filter(r => r.driverId === driver.id);
-            let completed = 0;
-            let remaining = 0;
-
-            driverRoutes.forEach(r => {
-                r.stops.forEach(s => {
-                    if (s.status === "Completed") completed++;
-                    else remaining++;
-                });
-            });
-
-            const locEntry =
-                locs.drivers && locs.drivers[driver.id]
-                    ? locs.drivers[driver.id]
-                    : null;
-
-            const tdName = document.createElement("td");
-            tdName.textContent = driver.name;
-            row.appendChild(tdName);
-
-            const tdComp = document.createElement("td");
-            tdComp.innerHTML = `<span class="badge badge-ok">${completed}</span>`;
-            row.appendChild(tdComp);
-
-            const tdRem = document.createElement("td");
-            tdRem.innerHTML = `<span class="badge badge-warn">${remaining}</span>`;
-            row.appendChild(tdRem);
-
-            const tdLoc = document.createElement("td");
-            if (locEntry) {
-                tdLoc.textContent = `${locEntry.lat.toFixed(5)}, ${locEntry.lng.toFixed(5)}`;
-            } else {
-                tdLoc.textContent = "No location yet";
-            }
-            row.appendChild(tdLoc);
-
-            const tdTime = document.createElement("td");
-            if (locEntry) {
-                tdTime.textContent = new Date(locEntry.timestamp).toLocaleTimeString();
-            } else {
-                tdTime.textContent = "-";
-            }
-            row.appendChild(tdTime);
-
-            body.appendChild(row);
-        });
-    } catch (err) {
-        console.error("Dashboard error:", err);
+    function initMap() {
+      map = L.map('map').setView(DEFAULT_CENTER, 9);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      mapLayer = L.layerGroup().addTo(map);
     }
-}
 
-// Refresh every 15 seconds
-loadDashboard();
-setInterval(loadDashboard, 15000);
-</script>
+    async function loadDashboard() {
+      try {
+        const [routesRes, gpsRes] = await Promise.all([
+          fetch('/routes.json', { cache: 'no-store' }),
+          fetch('/gps.json', { cache: 'no-store' }).catch(() => null)
+        ]);
+
+        const routesData = await routesRes.json();
+        let gpsData = null;
+        if (gpsRes && gpsRes.ok) {
+          gpsData = await gpsRes.json();
+        }
+
+        updateSummary(routesData);
+        updateTable(routesData, gpsData);
+        updateMap(routesData, gpsData);
+
+      } catch (err) {
+        console.error('Dashboard load error', err);
+      }
+    }
+
+    function updateSummary(routesData) {
+      let total = 0;
+      let out = 0;
+      let complete = 0;
+      let alerts = 0;
+
+      routesData.routes.forEach(route => {
+        route.stops.forEach(stop => {
+          total++;
+          const status = (stop.status || '').toLowerCase();
+          if (status.includes('complete')) complete++;
+          else if (status.includes('out')) out++;
+          else if (status.includes('issue') || status.includes('delayed')) alerts++;
+          else alerts++; // treat unknown as needs attention
+        });
+      });
+
+      document.getElementById('totalStops').textContent = total;
+      document.getElementById('outForDelivery').textContent = out;
+      document.getElementById('completed').textContent = complete;
+      document.getElementById('alerts').textContent = alerts;
+    }
+
+    function statusTag(status) {
+      const s = (status || '').toLowerCase();
+      if (s.includes('complete')) return '<span class="tag tag-complete">Completed</span>';
+      if (s.includes('out')) return '<span class="tag tag-out">Out for delivery</span>';
+      if (s.includes('issue') || s.includes('delay')) return '<span class="tag tag-alert">Issue</span>';
+      return '<span class="tag tag-pending">Pending</span>';
+    }
+
+    function formatGpsTime(driverId, gpsData) {
+      if (!gpsData || !gpsData.drivers || !gpsData.drivers[driverId]) {
+        return '<span class="small">No live data</span>';
+      }
+      const d = gpsData.drivers[driverId];
+      const t = new Date(d.updated);
+      return `<span class="small">${t.toLocaleTimeString()}</span>`;
+    }
+
+    function updateTable(routesData, gpsData) {
+      const body = document.getElementById('deliveriesBody');
+      const info = document.getElementById('tableInfo');
+      body.innerHTML = '';
+
+      let rowCount = 0;
+
+      routesData.routes.forEach(route => {
+        const driver = routesData.drivers.find(d => d.id === route.driverId);
+        const driverName = driver ? driver.name : route.driverId;
+
+        route.stops.forEach((stop, index) => {
+          const tr = document.createElement('tr');
+
+          tr.innerHTML = `
+            <td>${driverName}</td>
+            <td>${index + 1} (${stop.stopId})</td>
+            <td>${stop.location || ''}</td>
+            <td>${stop.items || ''}</td>
+            <td>${statusTag(stop.status)}</td>
+            <td>${formatGpsTime(route.driverId, gpsData)}</td>
+          `;
+
+          body.appendChild(tr);
+          rowCount++;
+        });
+      });
+
+      info.textContent = rowCount === 0
+        ? 'No active stops found in routes.json.'
+        : `Showing ${rowCount} stops across ${routesData.routes.length} route(s).`;
+    }
+
+    function updateMap(routesData, gpsData) {
+      mapLayer.clearLayers();
+      driverMarkers = {};
+
+      const bounds = [];
+
+      // Draw stops (green markers)
+      routesData.routes.forEach(route => {
+        const driver = routesData.drivers.find(d => d.id === route.driverId);
+        const driverName = driver ? driver.name : route.driverId;
+
+        route.stops.forEach((stop, index) => {
+          if (typeof stop.lat === 'number' && typeof stop.lng === 'number') {
+            const m = L.marker([stop.lat, stop.lng], {
+              title: `Stop ${index + 1} (${driverName})`
+            }).addTo(mapLayer);
+            m.bindPopup(
+              `<strong>${driverName}</strong><br/>
+               Stop ${index + 1} — ${stop.stopId}<br/>
+               ${stop.location || ''}<br/>
+               Items: ${stop.items || ''}<br/>
+               Status: ${stop.status || 'Unknown'}`
+            );
+            bounds.push([stop.lat, stop.lng]);
+          }
+        });
+      });
+
+      // Draw live driver positions (orange markers)
+      if (gpsData && gpsData.drivers) {
+        Object.keys(gpsData.drivers).forEach(driverId => {
+          const d = gpsData.drivers[driverId];
+          const lat = parseFloat(d.lat);
+          const lng = parseFloat(d.lng);
+          if (isNaN(lat) || isNaN(lng)) return;
+
+          const driver = routesData.drivers.find(dr => dr.id === driverId);
+          const driverName = driver ? driver.name : driverId;
+
+          const marker = L.circleMarker([lat, lng], {
+            radius: 8,
+            color: '#ff5722',
+            fillColor: '#ff5722',
+            fillOpacity: 0.9
+          }).addTo(mapLayer);
+
+          marker.bindPopup(
+            `<strong>${driverName}</strong><br/>
+             Live position<br/>
+             ${lat.toFixed(5)}, ${lng.toFixed(5)}<br/>
+             Updated: ${new Date(d.updated).toLocaleTimeString()}`
+          );
+
+          bounds.push([lat, lng]);
+          driverMarkers[driverId] = marker;
+        });
+      }
+
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [40, 40] });
+      } else {
+        map.setView(DEFAULT_CENTER, 9);
+      }
+    }
+
+    // Boot
+    initMap();
+    loadDashboard();
+    setInterval(loadDashboard, REFRESH_MS);
+  </script>
 </body>
 </html>

@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Driver Map | CareLine Medical Logistics</title>
+  <title>CareLine Driver Map | CareLine Medical Logistics</title>
 
-  <!-- Leaflet Map CSS (OpenStreetMap) -->
+  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -14,171 +14,252 @@
   />
 
   <style>
-    :root {
-      --careline-teal: #0097a7;
-      --careline-dark: #005b66;
-      --careline-bg: #e9f7fb;
-      --careline-card: #ffffff;
-      --careline-orange: #ff9800;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      background-color: var(--careline-bg);
-      color: #003640;
+      background: #e6f7fb;
     }
 
     header {
-      background-color: var(--careline-teal);
-      color: white;
-      padding: 16px 20px;
-      font-size: 20px;
+      background-color: #0097a7;
+      color: #ffffff;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-title {
+      font-size: 18px;
       font-weight: bold;
-      text-align: center;
     }
 
-    .content {
-      max-width: 1100px;
-      margin: 16px auto 24px;
-      padding: 0 12px;
+    .badge {
+      background: #004d40;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
     }
 
-    .card {
-      background-color: var(--careline-card);
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-      padding: 16px 18px;
-      margin-bottom: 16px;
+    .layout {
+      display: flex;
+      flex-direction: row;
+      height: calc(100vh - 60px);
     }
 
-    .card h2 {
-      font-size: 16px;
+    .left-panel {
+      width: 320px;
+      max-width: 100%;
+      background: #fdfefe;
+      border-right: 1px solid #d0e4ec;
+      padding: 14px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    .panel-title {
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #004d40;
+    }
+
+    .panel-sub {
+      font-size: 13px;
+      color: #555;
       margin-bottom: 10px;
-      color: var(--careline-dark);
     }
 
-    label {
-      font-size: 14px;
-      font-weight: bold;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    select {
+    select,
+    button {
       width: 100%;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid #b2c8d0;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      border: 1px solid #cfd8dc;
       font-size: 14px;
+      box-sizing: border-box;
     }
 
-    .summary {
-      font-size: 14px;
-      margin-top: 8px;
-      color: #004651;
+    button {
+      cursor: pointer;
+      border: none;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: #0097a7;
+      color: #fff;
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      color: #006064;
+      border: 1px solid #0097a7;
+    }
+
+    .btn-warning {
+      background: #ff9800;
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #eceff1;
+      color: #37474f;
+    }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: #e0f2f1;
+      color: #004d40;
+      margin-top: 4px;
+    }
+
+    .last-update {
+      font-size: 12px;
+      color: #546e7a;
+      margin-top: 6px;
+    }
+
+    .map-container {
+      flex: 1;
+      position: relative;
     }
 
     #map {
       width: 100%;
-      height: 480px;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 2px solid #b2dde5;
+      height: 100%;
     }
 
     .legend {
-      font-size: 12px;
-      margin-top: 8px;
-      color: #4b676f;
-    }
-
-    .pill {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      margin-right: 4px;
-      margin-top: 4px;
-    }
-
-    .pill-start {
-      background-color: #e0f7fa;
-      color: var(--careline-dark);
-      border: 1px solid #80deea;
-    }
-
-    .pill-stop {
-      background-color: #fff3e0;
-      color: #e65100;
-      border: 1px solid #ffb74d;
-    }
-
-    .pill-driver {
-      background-color: #e8f5e9;
-      color: #1b5e20;
-      border: 1px solid #81c784;
-    }
-
-    .notice {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #6b7e84;
-    }
-
-    /* Small in-page notification banner */
-    #toast {
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      background-color: var(--careline-dark);
-      color: white;
-      padding: 10px 14px;
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(255, 255, 255, 0.95);
       border-radius: 8px;
-      font-size: 13px;
-      display: none;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-      z-index: 1000;
+      padding: 8px 10px;
+      font-size: 11px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .legend-driver {
+      background: #ff5722;
+    }
+
+    .legend-stop {
+      background: #0097a7;
+    }
+
+    .legend-planned {
+      background: #9c27b0;
+    }
+
+    .small {
+      font-size: 11px;
+      color: #607d8b;
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        flex-direction: column;
+      }
+      .left-panel {
+        width: 100%;
+        max-height: 260px;
+      }
+      .map-container {
+        height: calc(100vh - 60px - 260px);
+      }
     }
   </style>
 </head>
 <body>
-  <header>🚚 CareLine Driver Live Map</header>
+  <header>
+    <div class="logo-title">🚚 CareLine Driver Map</div>
+    <div class="badge">Real-Time Route View</div>
+  </header>
 
-  <div class="content">
-    <!-- Driver selection + summary -->
-    <div class="card">
-      <h2>Who are we tracking?</h2>
-      <label for="driverSelect">Driver</label>
-      <select id="driverSelect">
-        <option value="">Loading drivers…</option>
-      </select>
-      <div id="summary" class="summary"></div>
-    </div>
+  <div class="layout">
+    <aside class="left-panel">
+      <div class="panel-title">Driver & Route</div>
+      <div class="panel-sub">
+        Pick a driver and choose how you want to view the route.  
+        <span class="small">Route data comes from <code>routes.json</code>.</span>
+      </div>
 
-    <!-- Map card -->
-    <div class="card">
-      <h2>Live Route View</h2>
+      <label for="driverSelect" style="font-size: 13px; font-weight: 600; color:#37474f;">Who is driving?</label>
+      <select id="driverSelect"></select>
+
+      <button id="btnCenterRoute" class="btn-outline">
+        Center map on full route
+      </button>
+
+      <button id="btnDriverFollow" class="btn-secondary">
+        Center on current driver position
+      </button>
+
+      <button id="btnStartShare" class="btn-primary">
+        Start LIVE GPS sharing (driver phone)
+      </button>
+
+      <button id="btnStopShare" class="btn-warning">
+        Stop LIVE GPS sharing
+      </button>
+
+      <div class="status-badge" id="shareStatus">
+        GPS sharing: idle
+      </div>
+
+      <div class="last-update" id="lastGpsUpdate">
+        Driver location: waiting for first update…
+      </div>
+
+      <hr style="margin:14px 0;" />
+
+      <div class="panel-title">How this works</div>
+      <div class="small">
+        • Drivers open this page on their phone and tap **Start LIVE GPS sharing**.  
+        • Their location is sent to <code>/api/location</code> every few seconds.  
+        • Admin, patients, or facilities can open the same URL to watch the driver move in real time.
+      </div>
+    </aside>
+
+    <section class="map-container">
       <div id="map"></div>
       <div class="legend">
-        <span class="pill pill-start">Start / First Stop</span>
-        <span class="pill pill-stop">Next Stops</span>
-        <span class="pill pill-driver">Current Driver Position (planned)</span>
-        <p class="notice">
-          This map auto-refreshes every <strong>5 seconds</strong> from
-          <code>routes.json</code>. When we upgrade to full GPS, the driver icon will
-          move in real time along the route.
-        </p>
+        <div class="legend-row">
+          <div class="legend-color legend-driver"></div>
+          <span>Live driver position</span>
+        </div>
+        <div class="legend-row">
+          <div class="legend-color legend-stop"></div>
+          <span>Route stops</span>
+        </div>
+        <div class="legend-row">
+          <div class="legend-color legend-planned"></div>
+          <span>Planned route path</span>
+        </div>
+        <div class="small" style="margin-top:4px;">
+          This map auto-refreshes every 5 seconds using <code>routes.json</code> and <code>gps.json</code>.
+        </div>
       </div>
-    </div>
+    </section>
   </div>
-
-  <div id="toast"></div>
 
   <!-- Leaflet JS -->
   <script
@@ -188,250 +269,243 @@
   ></script>
 
   <script>
-    // ---------------------------------------------------------
-    // BASIC MAP + ROUTE LOGIC
-    // ---------------------------------------------------------
-    let map;
-    let driverSelect;
-    let summaryEl;
-    let markers = {};
-    let polyline = null;
-    let lastSnapshot = null; // for change detection
+    // ===============================
+    // CONFIG
+    // ===============================
+    const DEFAULT_CENTER = [39.2904, -76.6122]; // Baltimore
+    const REFRESH_MS = 5000;
 
-    document.addEventListener("DOMContentLoaded", () => {
-      driverSelect = document.getElementById("driverSelect");
-      summaryEl = document.getElementById("summary");
+    // Read driverId from ?driverId= in URL, fallback later
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentDriverId = urlParams.get('driverId') || null;
 
-      initMap();
-      loadRoutesAndPopulateDrivers();
+    let map, routeLayer, driverMarker;
+    let gpsTimer = null;
+    let pollTimer = null;
+    let isSharing = false;
 
-      driverSelect.addEventListener("change", () => {
-        const driverId = driverSelect.value;
-        if (driverId) {
-          renderDriverRoute(driverId);
-        } else {
-          clearMap();
-        }
-      });
+    const driverSelect = document.getElementById('driverSelect');
+    const shareStatus = document.getElementById('shareStatus');
+    const lastGpsUpdate = document.getElementById('lastGpsUpdate');
+    const btnStartShare = document.getElementById('btnStartShare');
+    const btnStopShare = document.getElementById('btnStopShare');
+    const btnCenterRoute = document.getElementById('btnCenterRoute');
+    const btnDriverFollow = document.getElementById('btnDriverFollow');
 
-      // Auto-refresh every 5 seconds
-      setInterval(() => {
-        const driverId = driverSelect.value;
-        if (driverId) {
-          loadRoutesAndPopulateDrivers(false, driverId);
-        }
-      }, 5000);
-    });
-
+    // ===============================
+    // MAP INIT
+    // ===============================
     function initMap() {
-      map = L.map("map").setView([39.2904, -76.6122], 11); // default: Baltimore
+      map = L.map('map').setView(DEFAULT_CENTER, 9);
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: "&copy; OpenStreetMap contributors"
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
+
+      routeLayer = L.layerGroup().addTo(map);
     }
 
-    function clearMap() {
-      Object.values(markers).forEach(m => map.removeLayer(m));
-      markers = {};
-      if (polyline) {
-        map.removeLayer(polyline);
-        polyline = null;
-      }
-      summaryEl.textContent = "";
-    }
-
-    async function loadRoutesAndPopulateDrivers(initial = true, keepDriverId = null) {
+    // ===============================
+    // LOAD ROUTES + POPULATE DRIVER LIST
+    // ===============================
+    async function loadRoutesAndDrivers() {
       try {
-        const res = await fetch("/routes");
+        const res = await fetch('/routes.json', { cache: 'no-store' });
         const data = await res.json();
 
-        // On first load, populate driver dropdown
-        if (initial) {
-          populateDrivers(data);
+        driverSelect.innerHTML = '';
+
+        data.drivers.forEach(driver => {
+          const opt = document.createElement('option');
+          opt.value = driver.id;
+          opt.textContent = driver.name;
+          driverSelect.appendChild(opt);
+        });
+
+        // Set default driverId if not in URL
+        if (!currentDriverId && data.drivers.length > 0) {
+          currentDriverId = data.drivers[0].id;
         }
 
-        // Save snapshot for notification comparison
-        if (!lastSnapshot) {
-          lastSnapshot = JSON.stringify(data);
-        } else {
-          // Compare for changes (e.g., stop status updates)
-          const newSnap = JSON.stringify(data);
-          if (newSnap !== lastSnapshot) {
-            handleRouteChanges(JSON.parse(lastSnapshot), data);
-            lastSnapshot = newSnap;
+        driverSelect.value = currentDriverId;
+
+        renderRouteForDriver(data, currentDriverId);
+
+        driverSelect.addEventListener('change', () => {
+          currentDriverId = driverSelect.value;
+          renderRouteForDriver(data, currentDriverId, true);
+        });
+
+        // Also refresh route display every REFRESH_MS in case routes.json changes
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(async () => {
+          try {
+            const r2 = await fetch('/routes.json', { cache: 'no-store' });
+            const d2 = await r2.json();
+            renderRouteForDriver(d2, currentDriverId);
+          } catch (err) {
+            console.error('Route poll error', err);
           }
-        }
+        }, REFRESH_MS);
 
-        // If we have a driver selected, re-render route from fresh data
-        const activeDriverId = keepDriverId || driverSelect.value;
-        if (activeDriverId) {
-          renderDriverRoute(activeDriverId, data);
-        }
       } catch (err) {
-        console.error("Error loading routes:", err);
+        console.error('Unable to load routes.json', err);
+        alert('Unable to load route information (routes.json).');
       }
     }
 
-    function populateDrivers(data) {
-      driverSelect.innerHTML = "";
-      if (!data || !data.drivers || data.drivers.length === 0) {
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.textContent = "No drivers defined in routes.json";
-        driverSelect.appendChild(opt);
+    function renderRouteForDriver(routesData, driverId, fitBounds = true) {
+      if (!routesData) return;
+
+      const route = routesData.routes.find(r => r.driverId === driverId);
+      routeLayer.clearLayers();
+
+      if (!route || !route.stops || route.stops.length === 0) {
         return;
       }
 
-      data.drivers.forEach(d => {
-        const opt = document.createElement("option");
-        opt.value = d.id;
-        opt.textContent = d.name;
-        driverSelect.appendChild(opt);
+      const latlngs = [];
+      route.stops.forEach((stop, index) => {
+        if (typeof stop.lat === 'number' && typeof stop.lng === 'number') {
+          const marker = L.marker([stop.lat, stop.lng]).addTo(routeLayer);
+          marker.bindPopup(
+            `<strong>Stop ${index + 1} &mdash; ${stop.stopId}</strong><br/>
+             <em>${stop.location || ''}</em><br/>
+             Items: ${stop.items || 'n/a'}<br/>
+             Status: ${stop.status || 'Unknown'}`
+          );
+          latlngs.push([stop.lat, stop.lng]);
+        }
       });
 
-      // Default to first driver
-      driverSelect.value = data.drivers[0].id;
-      renderDriverRoute(data.drivers[0].id, data);
+      // Draw polyline for planned route
+      if (latlngs.length > 1) {
+        L.polyline(latlngs, { color: '#9c27b0', weight: 3 }).addTo(routeLayer);
+      }
+
+      if (fitBounds && latlngs.length > 0) {
+        map.fitBounds(latlngs, { padding: [40, 40] });
+      }
     }
 
-    async function renderDriverRoute(driverId, cachedData = null) {
+    // ===============================
+    // POLL GPS.JSON FOR LIVE DRIVER
+    // ===============================
+    async function pollGps() {
+      if (!currentDriverId) return;
+
       try {
-        const data = cachedData || (await (await fetch("/routes")).json());
+        const res = await fetch('/gps.json', { cache: 'no-store' });
+        if (!res.ok) return; // file might not exist yet
 
-        const driver = data.drivers.find(d => d.id === driverId);
-        const route = data.routes.find(r => r.driverId === driverId);
-
-        clearMap();
-
-        if (!driver || !route || !route.stops || route.stops.length === 0) {
-          summaryEl.textContent =
-            "No stops assigned to this driver on the active route. Check routes.json.";
+        const data = await res.json();
+        const driver = data.drivers && data.drivers[currentDriverId];
+        if (!driver) {
+          lastGpsUpdate.textContent = 'Driver location: no live data yet.';
           return;
         }
 
-        summaryEl.textContent = `Tracking driver: ${driver.name} · Stops on this route: ${route.stops.length}`;
+        const lat = parseFloat(driver.lat);
+        const lng = parseFloat(driver.lng);
+        if (isNaN(lat) || isNaN(lng)) return;
 
-        const latLngs = [];
-        route.stops.forEach((stop, index) => {
-          if (typeof stop.lat !== "number" || typeof stop.lng !== "number") {
-            // If no coordinates, skip drawing marker but keep summary
-            console.warn(
-              "Stop missing coordinates. Add lat/lng to routes.json:",
-              stop.stopId
-            );
-            return;
-          }
+        const latlng = [lat, lng];
 
-          const latLng = [stop.lat, stop.lng];
-          latLngs.push(latLng);
-
-          const isFirst = index === 0;
-          const marker = L.marker(latLng, {
-            title: stop.location
-          });
-
-          const popupHtml = `
-            <strong>${isFirst ? "Start · " : ""}Stop ${index + 1} — ${stop.stopId}</strong><br/>
-            <strong>Location:</strong> ${stop.location}<br/>
-            <strong>Items:</strong> ${stop.items || "N/A"}<br/>
-            <strong>Status:</strong> ${stop.status || "Out for delivery"}
-          `;
-
-          marker.bindPopup(popupHtml);
-          marker.addTo(map);
-
-          markers[stop.stopId] = marker;
-        });
-
-        if (latLngs.length > 0) {
-          polyline = L.polyline(latLngs, {
-            color: "#0097a7",
-            weight: 4,
-            opacity: 0.8
+        if (!driverMarker) {
+          driverMarker = L.marker(latlng, {
+            title: 'Live driver position'
           }).addTo(map);
-
-          map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+        } else {
+          driverMarker.setLatLng(latlng);
         }
+
+        lastGpsUpdate.textContent = `Driver location: ${lat.toFixed(5)}, ${lng.toFixed(
+          5
+        )} (updated ${new Date(driver.updated).toLocaleTimeString()})`;
       } catch (err) {
-        console.error("Error rendering driver route:", err);
+        console.error('GPS poll error', err);
       }
     }
 
-    // ---------------------------------------------------------
-    // SIMPLE IN-PAGE "NOTIFICATIONS" + HOOK FOR REAL EMAIL/SMS
-    // ---------------------------------------------------------
-    function showToast(message) {
-      const toast = document.getElementById("toast");
-      toast.textContent = message;
-      toast.style.display = "block";
-      setTimeout(() => {
-        toast.style.display = "none";
-      }, 4000);
+    // ===============================
+    // DRIVER SHARING (PHONE MODE)
+// ===============================
+    function startLiveSharing() {
+      if (!navigator.geolocation) {
+        alert('This device does not support GPS location.');
+        return;
+      }
+
+      if (isSharing) return;
+      isSharing = true;
+      shareStatus.textContent = 'GPS sharing: active (sending every 5s)';
+
+      gpsTimer = setInterval(() => {
+        navigator.geolocation.getCurrentPosition(
+          async pos => {
+            try {
+              await fetch('/api/location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  driverId: currentDriverId,
+                  lat: pos.coords.latitude,
+                  lng: pos.coords.longitude
+                })
+              });
+            } catch (err) {
+              console.error('Error sending GPS location', err);
+            }
+          },
+          err => {
+            console.error('Geolocation error', err);
+          },
+          { enableHighAccuracy: true }
+        );
+      }, REFRESH_MS);
     }
 
-    function handleRouteChanges(oldData, newData) {
+    function stopLiveSharing() {
+      isSharing = false;
+      shareStatus.textContent = 'GPS sharing: idle';
+      if (gpsTimer) {
+        clearInterval(gpsTimer);
+        gpsTimer = null;
+      }
+    }
+
+    // ===============================
+    // BUTTON HOOKS
+    // ===============================
+    btnStartShare.addEventListener('click', startLiveSharing);
+    btnStopShare.addEventListener('click', stopLiveSharing);
+
+    btnCenterRoute.addEventListener('click', async () => {
       try {
-        const oldRoutes = indexStopsById(oldData);
-        const newRoutes = indexStopsById(newData);
-
-        Object.keys(newRoutes).forEach(stopId => {
-          const oldStop = oldRoutes[stopId];
-          const newStop = newRoutes[stopId];
-
-          if (!oldStop || !newStop) return;
-
-          // If status changed, fire notification hook
-          if (oldStop.status !== newStop.status) {
-            const msg = `Stop ${stopId} status changed: ${oldStop.status || "N/A"} → ${
-              newStop.status || "N/A"
-            }`;
-
-            // 1) In-page toast
-            showToast(msg);
-
-            // 2) Backend notification hook (admin / patient / company)
-            fireBackendNotification(newStop)
-              .catch(err => console.warn("Notify backend failed:", err));
-          }
-        });
+        const res = await fetch('/routes.json', { cache: 'no-store' });
+        const data = await res.json();
+        renderRouteForDriver(data, currentDriverId, true);
       } catch (err) {
-        console.error("Error handling route changes:", err);
+        console.error(err);
       }
-    }
+    });
 
-    function indexStopsById(data) {
-      const map = {};
-      if (!data || !data.routes) return map;
-      data.routes.forEach(r => {
-        r.stops.forEach(s => {
-          map[s.stopId] = s;
-        });
-      });
-      return map;
-    }
-
-    async function fireBackendNotification(stop) {
-      // This assumes you'll later make a POST /notify endpoint in server.js
-      // that sends SMS/email/push to admin + patient + company.
-      try {
-        await fetch("/notify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            stopId: stop.stopId,
-            status: stop.status,
-            location: stop.location,
-            items: stop.items || "",
-            // you can add patientId, facilityId, etc. later
-          })
-        });
-      } catch (err) {
-        // Just log; we don't want the map to break
-        console.warn("Notification error:", err);
+    btnDriverFollow.addEventListener('click', async () => {
+      await pollGps();
+      if (driverMarker) {
+        map.setView(driverMarker.getLatLng(), 13);
       }
-    }
+    });
+
+    // ===============================
+    // BOOT
+    // ===============================
+    initMap();
+    loadRoutesAndDrivers().then(() => {
+      pollGps();
+      setInterval(pollGps, REFRESH_MS);
+    });
   </script>
 </body>
 </html>
