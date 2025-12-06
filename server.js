@@ -79,24 +79,167 @@ function saveNotifications(data) {
   safeSaveJSON(NOTIFY_FILE, data);
 }
 
+// -------------------------------
+// HELPERS: FIND STOP, DISTANCE, ETA
+// -------------------------------
+function findStopById(stopId) {
+  const routes = loadRoutes();
+  for (const route of routes.routes) {
+    for (const stop of route.stops) {
+      if (stop.stopId === stopId) {
+        const driver = routes.drivers.find((d) => d.id === route.driverId);
+        return { stop, driver, route, routes };
+      }
+    }
+  }
+  return null;
+}
+
+// Haversine distance (km)
+function haversineKm(lat1, lon1, lat2, lon2) {
+  function toRad(v) { return (v * Math.PI) / 180; }
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Compute ETA in minutes
+function computeEtaMinutes(driverGps, stop, avgKmh = 40) {
+  if (!driverGps || typeof stop.lat !== 'number' || typeof stop.lng !== 'number') return null;
+  const distKm = haversineKm(driverGps.lat, driverGps.lng, stop.lat, stop.lng);
+  if (!distKm || !isFinite(distKm)) return null;
+  const hours = distKm / avgKmh;
+  return Math.max(1, Math.round(hours * 60));
+}
+
+// -------------------------------
+// NOTIFICATION TEMPLATES
+// -------------------------------
+function buildNotificationTemplates(eventType, driverId, stop, extra = {}) {
+  const patientName = stop.patientName || 'the patient';
+  const facilityName = stop.location || 'your facility';
+  const trackingUrl = `${BASE_URL}/track.html?stopId=${encodeURIComponent(stop.stopId)}`;
+
+  const base = {
+    eventType,
+    stopId: stop.stopId,
+    driverId,
+    patientName,
+    facilityName,
+    trackingUrl,
+  };
+
+  if (eventType === 'status_change') {
+    const status = stop.status || 'Updated';
+
+    return {
+      ...base,
+      subjectPatient: `CareLine update: your delivery is now "${status}"`,
+      bodyPatient:
+        `Hello ${patientName},\n\n` +
+        `Your CareLine delivery for ${facilityName} is now "${status}".\n` +
+        `You can track your driver in real time here:\n${trackingUrl}\n\n` +
+        `CareLine Medical Logistics\n` +
+        `"Care That Moves. Logistics That Deliver."`,
+
+      subjectFacility: `CareLine status update for patient delivery (${status})`,
+      bodyFacility:
+        `Hello,\n\n` +
+        `The CareLine delivery for ${patientName} at ${facilityName} is now "${status}".\n` +
+        `Track this delivery here:\n${trackingUrl}\n\n` +
+        `CareLine Medical Logistics`,
+
+      subjectAdmin: `STATUS ${status} — ${stop.stopId}`,
+      bodyAdmin:
+        `Stop: ${stop.stopId}\n` +
+        `Patient: ${patientName}\n` +
+        `Facility: ${facilityName}\n` +
+        `Status: ${status}\n` +
+        `Tracking: ${trackingUrl}\n\n` +
+        `(Logged in notifications.json)`,
+    };
+  }
+
+  if (eventType === 'proof_uploaded') {
+    const proofFile = extra.proofFile || '(file path unknown)';
+
+    return {
+      ...base,
+      subjectPatient: `CareLine: your delivery has been completed`,
+      bodyPatient:
+        `Hello ${patientName},\n\n` +
+        `Your CareLine delivery for ${facilityName} has been completed.\n` +
+        `Thank you for choosing CareLine Medical Logistics.\n\n` +
+        `Care That Moves. Logistics That Deliver.`,
+
+      subjectFacility: `Proof of delivery available for ${patientName}`,
+      bodyFacility:
+        `Hello,\n\n` +
+        `Proof of delivery has been uploaded for patient ${patientName} at ${facilityName}.\n` +
+        `Internal file: ${proofFile}\n\n` +
+        `CareLine Medical Logistics`,
+
+      subjectAdmin: `POD UPLOADED — ${stop.stopId}`,
+      bodyAdmin:
+        `Stop: ${stop.stopId}\n` +
+        `Patient: ${patientName}\n` +
+        `Facility: ${facilityName}\n` +
+        `Proof file: ${proofFile}\n\n` +
+        `(Logged in notifications.json)`,
+    };
+  }
+
+  // fallback
+  return {
+    ...base,
+    subjectAdmin: `CareLine event: ${eventType}`,
+    bodyAdmin: `Event ${eventType} for stop ${stop.stopId} at ${facilityName}.`,
+  };
+}
+
+function registerNotification(eventType, driverId, stop, extra = {}) {
+  const templates = buildNotificationTemplates(eventType, driverId, stop, extra);
+
+  const logData = loadNotifications();
+  logData.notifications.push({
+    id: Date.now().toString(),
+    eventType,
+    driverId,
+    stopId: stop.stopId,
+    status: stop.status || null,
+    templates,
+    createdAt: new Date().toISOString(),
+  });
+  saveNotifications(logData);
+
+  // Hook: here you would plug in Twilio/SendGrid if/when you want real SMS/email
+  // sendSms(patientPhone, templates.bodyPatient)
+  // sendEmail(facilityEmail, templates.subjectFacility, templates.bodyFacility)
+}
+
 // =======================================
 // 1) ROUTES & STOP STATUS
 // =======================================
 
-// Return routes.json (for driver-map, control-center, etc.)
+// Return routes.json
 app.get('/routes.json', (req, res) => {
   const data = loadRoutes();
   res.json(data);
 });
 
-// Update stop status (e.g. "Out for delivery", "Completed")
+// Update stop status
 app.post('/update-stop', (req, res) => {
   const { stopId, status } = req.body;
 
   if (!stopId || !status) {
-    return res
-      .status(400)
-      .json({ success: false, error: 'Missing stopId or status' });
+    return res.status(400).json({ success: false, error: 'Missing stopId or status' });
   }
 
   const data = loadRoutes();
@@ -115,14 +258,12 @@ app.post('/update-stop', (req, res) => {
     });
 
     if (!updatedStop) {
-      return res
-        .status(404)
-        .json({ success: false, error: 'Stop not found in routes.json' });
+      return res.status(404).json({ success: false, error: 'Stop not found' });
     }
 
     saveRoutes(data);
 
-    // Register notification hook when status changes
+    // Hook: log notification when status changes
     registerNotification('status_change', driverId, updatedStop);
 
     res.json({ success: true, stopId, status });
@@ -133,7 +274,7 @@ app.post('/update-stop', (req, res) => {
 });
 
 // =======================================
-// 2) PROOF OF DELIVERY UPLOAD (BASIC)
+// 2) PROOF OF DELIVERY UPLOAD
 // =======================================
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
@@ -144,9 +285,7 @@ app.post('/upload-proof', upload.single('file'), (req, res) => {
   const stopId = req.body.stopId;
 
   if (!req.file || !stopId) {
-    return res
-      .status(400)
-      .json({ success: false, error: 'Missing file or stopId' });
+    return res.status(400).json({ success: false, error: 'Missing file or stopId' });
   }
 
   const newFilePath = path.join(uploadDir, `${stopId}.jpg`);
@@ -154,7 +293,7 @@ app.post('/upload-proof', upload.single('file'), (req, res) => {
   try {
     fs.renameSync(req.file.path, newFilePath);
 
-    // Notification hook for proof-of-delivery
+    // Hook: log notification for proof uploaded
     const routes = loadRoutes();
     let stop = null;
     let driverId = null;
@@ -185,14 +324,15 @@ app.post('/upload-proof', upload.single('file'), (req, res) => {
 // 3) REAL-TIME GPS ENDPOINTS
 // =======================================
 
-// Driver posts GPS here: { driverId, lat, lng }
+// Driver sends GPS
 app.post('/api/location', (req, res) => {
   const { driverId, lat, lng } = req.body;
 
   if (!driverId || typeof lat !== 'number' || typeof lng !== 'number') {
-    return res
-      .status(400)
-      .json({ success: false, error: 'driverId, lat, lng required' });
+    return res.status(400).json({
+      success: false,
+      error: 'driverId, lat, lng required',
+    });
   }
 
   const gps = loadGps();
@@ -206,91 +346,33 @@ app.post('/api/location', (req, res) => {
   res.json({ success: true });
 });
 
-// For dashboards / map to read GPS
+// All GPS data
 app.get('/gps.json', (req, res) => {
   const gps = loadGps();
   res.json(gps);
 });
 
-// Single driver location
+// Single driver GPS
 app.get('/api/location/:driverId', (req, res) => {
   const driverId = req.params.driverId;
   const gps = loadGps();
 
   if (!gps.drivers[driverId]) {
-    return res
-      .status(404)
-      .json({ success: false, error: 'No location for this driver' });
+    return res.status(404).json({ success: false, error: 'No location for this driver' });
   }
 
   res.json({ success: true, location: gps.drivers[driverId] });
 });
 
 // =======================================
-// 4) ETA CALCULATIONS & SHARE LINK APIs
+// 4) STOP DETAILS + ETA + SHARE LINK
 // =======================================
-
-// Haversine distance (km)
-function haversineKm(lat1, lon1, lat2, lon2) {
-  function toRad(v) {
-    return (v * Math.PI) / 180;
-  }
-  const R = 6371; // km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-// Compute ETA in minutes given driver GPS & stop location
-function computeEtaMinutes(driverGps, stop, avgKmh = 40) {
-  if (
-    !driverGps ||
-    typeof stop.lat !== 'number' ||
-    typeof stop.lng !== 'number'
-  )
-    return null;
-
-  const distKm = haversineKm(
-    driverGps.lat,
-    driverGps.lng,
-    stop.lat,
-    stop.lng
-  );
-  if (!distKm || !isFinite(distKm)) return null;
-
-  const hours = distKm / avgKmh;
-  return Math.max(1, Math.round(hours * 60)); // at least 1 minute
-}
-
-// Find stop + driver for a given stopId
-function findStopById(stopId) {
-  const routes = loadRoutes();
-  for (const route of routes.routes) {
-    for (const stop of route.stops) {
-      if (stop.stopId === stopId) {
-        const driver = routes.drivers.find((d) => d.id === route.driverId);
-        return { stop, driver, route, routes };
-      }
-    }
-  }
-  return null;
-}
-
-// Public API: details for a stop + ETA + tracking link
 app.get('/api/stop/:stopId', (req, res) => {
   const stopId = req.params.stopId;
   const found = findStopById(stopId);
+
   if (!found) {
-    return res
-      .status(404)
-      .json({ success: false, error: 'Stop not found' });
+    return res.status(404).json({ success: false, error: 'Stop not found' });
   }
 
   const gps = loadGps();
@@ -298,13 +380,12 @@ app.get('/api/stop/:stopId', (req, res) => {
     found.driver && gps.drivers[found.driver.id]
       ? gps.drivers[found.driver.id]
       : null;
+
   const etaMinutes = liveLocation
     ? computeEtaMinutes(liveLocation, found.stop)
     : null;
 
-  const trackingUrl = `${BASE_URL}/track.html?stopId=${encodeURIComponent(
-    stopId
-  )}`;
+  const trackingUrl = `${BASE_URL}/track.html?stopId=${encodeURIComponent(stopId)}`;
 
   res.json({
     success: true,
@@ -316,133 +397,53 @@ app.get('/api/stop/:stopId', (req, res) => {
   });
 });
 
-// Shortcut: just return the share link for a stop
 app.get('/api/share-link/:stopId', (req, res) => {
   const stopId = req.params.stopId;
   const found = findStopById(stopId);
+
   if (!found) {
-    return res
-      .status(404)
-      .json({ success: false, error: 'Stop not found' });
+    return res.status(404).json({ success: false, error: 'Stop not found' });
   }
 
-  const trackingUrl = `${BASE_URL}/track.html?stopId=${encodeURIComponent(
-    stopId
-  )}`;
+  const trackingUrl = `${BASE_URL}/track.html?stopId=${encodeURIComponent(stopId)}`;
   res.json({ success: true, stopId, trackingUrl });
 });
 
 // =======================================
-// 5) NOTIFICATION HOOKS & TEMPLATES
+// 5) NOTIFICATIONS APIs
 // =======================================
 
-// Build the messages we *would* send via email/SMS
-function buildNotificationTemplates(eventType, driverId, stop, extra = {}) {
-  const patientName = stop.patientName || 'the patient';
-  const facilityName = stop.location || 'your facility';
-  const trackingUrl = `${BASE_URL}/track.html?stopId=${encodeURIComponent(
-    stop.stopId
-  )}`;
-
-  const base = {
-    eventType,
-    stopId: stop.stopId,
-    driverId,
-    patientName,
-    facilityName,
-    trackingUrl,
-  };
-
-  if (eventType === 'status_change') {
-    const status = stop.status || 'Updated';
-
-    return {
-      ...base,
-      subjectPatient: `CareLine update: your delivery is now "${status}"`,
-      bodyPatient: `Hello ${patientName},\n\nYour CareLine delivery for ${facilityName} is now "${status}".\nYou can track your driver in real time here:\n${trackingUrl}\n\nCareLine Medical Logistics\n"Care That Moves. Logistics That Deliver."`,
-
-      subjectFacility: `CareLine status update for patient delivery (${status})`,
-      bodyFacility: `Hello,\n\nThe CareLine delivery for ${patientName} at ${facilityName} is now "${status}".\nTrack this delivery here:\n${trackingUrl}\n\nCareLine Medical Logistics`,
-
-      subjectAdmin: `STATUS ${status} — ${stop.stopId}`,
-      bodyAdmin: `Stop: ${stop.stopId}\nPatient: ${patientName}\nFacility: ${facilityName}\nStatus: ${status}\nTracking: ${trackingUrl}\n\n(Logged in notifications.json)`,
-    };
-  }
-
-  if (eventType === 'proof_uploaded') {
-    const proofFile = extra.proofFile || '(file path unknown)';
-
-    return {
-      ...base,
-      subjectPatient: `CareLine: your delivery has been completed`,
-      bodyPatient: `Hello ${patientName},\n\nYour CareLine delivery for ${facilityName} has been completed.\nThank you for choosing CareLine Medical Logistics.\n\nCare That Moves. Logistics That Deliver.`,
-
-      subjectFacility: `Proof of delivery available for ${patientName}`,
-      bodyFacility: `Hello,\n\nProof of delivery has been uploaded for patient ${patientName} at ${facilityName}.\nInternal file: ${proofFile}\n\nCareLine Medical Logistics`,
-
-      subjectAdmin: `POD UPLOADED — ${stop.stopId}`,
-      bodyAdmin: `Stop: ${stop.stopId}\nPatient: ${patientName}\nFacility: ${facilityName}\nProof file: ${proofFile}\n\n(Logged in notifications.json)`,
-    };
-  }
-
-  // default fallback
-  return {
-    ...base,
-    subjectAdmin: `CareLine event: ${eventType}`,
-    bodyAdmin: `Event ${eventType} for stop ${stop.stopId} at ${facilityName}.`,
-  };
-}
-
-// Log notification entry ("hook" for SMS/email providers)
-function registerNotification(eventType, driverId, stop, extra = {}) {
-  const templates = buildNotificationTemplates(
-    eventType,
-    driverId,
-    stop,
-    extra
-  );
-
-  const logData = loadNotifications();
-  logData.notifications.push({
-    id: Date.now().toString(),
-    eventType,
-    driverId,
-    stopId: stop.stopId,
-    status: stop.status || null,
-    templates,
-    createdAt: new Date().toISOString(),
-  });
-  saveNotifications(logData);
-
-  // THIS is where you would plug in Twilio / SendGrid / etc.
-  // Example (pseudo):
-  // sendSms(patientPhone, templates.bodyPatient);
-  // sendEmail(facilityEmail, templates.subjectFacility, templates.bodyFacility);
-}
-
-// Admin endpoint: see notifications log
+// Full log (for admin)
 app.get('/api/notifications', (req, res) => {
   const data = loadNotifications();
   res.json(data);
 });
 
-// Simple test endpoint to generate a fake notification
+// Quick test hook
 app.post('/api/notify-test', (req, res) => {
   const { stopId } = req.body;
   const found = findStopById(stopId);
   if (!found) {
-    return res
-      .status(404)
-      .json({ success: false, error: 'Stop not found' });
+    return res.status(404).json({ success: false, error: 'Stop not found' });
   }
   registerNotification('status_change', found.route.driverId, found.stop);
   res.json({ success: true });
 });
 
+// NEW: front-end can fetch templates for SMS/email for a given stop
+app.get('/api/notify-templates/:stopId', (req, res) => {
+  const stopId = req.params.stopId;
+  const found = findStopById(stopId);
+  if (!found) {
+    return res.status(404).json({ success: false, error: 'Stop not found' });
+  }
+  const templates = buildNotificationTemplates('status_change', found.route.driverId, found.stop);
+  res.json({ success: true, stopId, templates });
+});
+
 // =======================================
 // 6) FALLBACK: SERVE HTML OR 404
 // =======================================
-
 app.use((req, res) => {
   const target = path.join(__dirname, req.path);
 

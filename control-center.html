@@ -80,18 +80,10 @@
       color: #ffffff;
     }
 
-    .s-total {
-      background: #006064;
-    }
-    .s-out {
-      background: #0288d1;
-    }
-    .s-complete {
-      background: #2e7d32;
-    }
-    .s-alerts {
-      background: #e64a19;
-    }
+    .s-total { background: #006064; }
+    .s-out { background: #0288d1; }
+    .s-complete { background: #2e7d32; }
+    .s-alerts { background: #e64a19; }
 
     .summary-label {
       font-size: 11px;
@@ -134,8 +126,7 @@
       background: #eceff1;
     }
 
-    th,
-    td {
+    th, td {
       padding: 6px 8px;
       border-bottom: 1px solid #eceff1;
       text-align: left;
@@ -158,25 +149,10 @@
       display: inline-block;
     }
 
-    .tag-out {
-      background: #e3f2fd;
-      color: #1565c0;
-    }
-
-    .tag-complete {
-      background: #e8f5e9;
-      color: #2e7d32;
-    }
-
-    .tag-alert {
-      background: #ffebee;
-      color: #c62828;
-    }
-
-    .tag-pending {
-      background: #fff8e1;
-      color: #ef6c00;
-    }
+    .tag-out { background: #e3f2fd; color: #1565c0; }
+    .tag-complete { background: #e8f5e9; color: #2e7d32; }
+    .tag-alert { background: #ffebee; color: #c62828; }
+    .tag-pending { background: #fff8e1; color: #ef6c00; }
 
     .small {
       font-size: 11px;
@@ -205,6 +181,25 @@
       background: #e0f7fa;
     }
 
+    .action-btn {
+      padding: 4px 6px;
+      font-size: 11px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      margin-right: 4px;
+    }
+
+    .action-link {
+      background: #e0f7fa;
+      color: #006064;
+    }
+
+    .action-sms {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
     @media (max-width: 1000px) {
       .layout {
         grid-template-columns: 1fr;
@@ -215,9 +210,7 @@
           "table";
         height: auto;
       }
-      #map {
-        min-height: 220px;
-      }
+      #map { min-height: 220px; }
     }
   </style>
 </head>
@@ -225,7 +218,7 @@
   <header>
     <div>
       <div class="title">CareLine Control Center</div>
-      <div class="subtitle">Live dispatch view • Drivers • Stops • GPS</div>
+      <div class="subtitle">Live dispatch view • Drivers • Stops • GPS • Notifications</div>
     </div>
     <div class="pill">Internal Operations Dashboard</div>
   </header>
@@ -252,7 +245,7 @@
         </div>
       </div>
       <div class="small">
-        Data auto-refreshes every 5 seconds from <code>routes.json</code> and <code>gps.json</code>.
+        Auto-refresh every 5 seconds from <code>routes.json</code> and <code>gps.json</code>.
         <a href="driver-map.html" class="btn-link" target="_blank">Open Live Driver Map</a>
       </div>
     </section>
@@ -269,6 +262,7 @@
             <th>Items</th>
             <th>Status</th>
             <th>Last GPS</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="deliveriesBody">
@@ -286,7 +280,7 @@
       <div id="map"></div>
       <div class="map-footer">
         • Green markers = stops • Orange markers = live driver positions  
-        • Use this for dispatch monitoring and escalation calls.
+        • Use this for dispatch, customer calls, and escalation.
       </div>
     </section>
   </main>
@@ -348,7 +342,7 @@
           if (status.includes('complete')) complete++;
           else if (status.includes('out')) out++;
           else if (status.includes('issue') || status.includes('delayed')) alerts++;
-          else alerts++; // treat unknown as needs attention
+          else alerts++; // unknown -> needs attention
         });
       });
 
@@ -396,6 +390,10 @@
             <td>${stop.items || ''}</td>
             <td>${statusTag(stop.status)}</td>
             <td>${formatGpsTime(route.driverId, gpsData)}</td>
+            <td>
+              <button class="action-btn action-link" onclick="showTrackingLink('${stop.stopId}')">Link</button>
+              <button class="action-btn action-sms" onclick="showPatientSms('${stop.stopId}')">Patient SMS</button>
+            </td>
           `;
 
           body.appendChild(tr);
@@ -414,7 +412,7 @@
 
       const bounds = [];
 
-      // Draw stops (green markers)
+      // Stops (green)
       routesData.routes.forEach(route => {
         const driver = routesData.drivers.find(d => d.id === route.driverId);
         const driverName = driver ? driver.name : route.driverId;
@@ -436,7 +434,7 @@
         });
       });
 
-      // Draw live driver positions (orange markers)
+      // Live drivers (orange)
       if (gpsData && gpsData.drivers) {
         Object.keys(gpsData.drivers).forEach(driverId => {
           const d = gpsData.drivers[driverId];
@@ -470,6 +468,43 @@
         map.fitBounds(bounds, { padding: [40, 40] });
       } else {
         map.setView(DEFAULT_CENTER, 9);
+      }
+    }
+
+    // ============ NEW: NOTIFICATION HELPERS ============
+
+    async function showTrackingLink(stopId) {
+      try {
+        const res = await fetch('/api/share-link/' + encodeURIComponent(stopId));
+        const data = await res.json();
+        if (!data.success) {
+          alert('Could not generate tracking link for this stop.');
+          return;
+        }
+        const msg = `Tracking link for ${stopId}:\n\n` + data.trackingUrl +
+          '\n\nCopy this into a text or email.';
+        alert(msg);
+      } catch (err) {
+        console.error('Error getting share link', err);
+        alert('Error getting tracking link.');
+      }
+    }
+
+    async function showPatientSms(stopId) {
+      try {
+        const res = await fetch('/api/notify-templates/' + encodeURIComponent(stopId));
+        const data = await res.json();
+        if (!data.success || !data.templates) {
+          alert('Could not generate SMS template for this stop.');
+          return;
+        }
+        // use patient body, but single-line it for SMS
+        const sms = data.templates.bodyPatient.replace(/\n+/g, ' ');
+        const msg = `Copy and paste this into a text message:\n\n${sms}`;
+        alert(msg);
+      } catch (err) {
+        console.error('Error getting SMS template', err);
+        alert('Error getting SMS text.');
       }
     }
 
