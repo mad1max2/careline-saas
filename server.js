@@ -1,6 +1,7 @@
 // =======================================
 // CARELINE MEDICAL LOGISTICS — SERVER.JS
-// Live GPS + ETA + Notifications + SMS Hooks
+// Live GPS + ETA + Notifications + SMS/Email Hooks
+// + Admin Security Hook (API key ready)
 // =======================================
 
 const express = require('express');
@@ -11,6 +12,10 @@ const multer = require('multer');
 const app = express();
 const PORT = process.env.PORT || 10000;
 const BASE_URL = process.env.BASE_URL || 'https://careline-api-1.onrender.com';
+
+// Optional admin key for future locking of admin APIs
+// Set ADMIN_KEY in Render env and then start adding ?key=YOURKEY on admin calls.
+const ADMIN_KEY = process.env.ADMIN_KEY || null;
 
 // -------------------------------
 // MIDDLEWARE
@@ -77,6 +82,25 @@ function loadNotifications() {
 }
 function saveNotifications(data) {
   safeSaveJSON(NOTIFY_FILE, data);
+}
+
+// -------------------------------
+// SIMPLE ADMIN SECURITY HOOK
+// -------------------------------
+// Right now, if ADMIN_KEY is NOT set, this does nothing (no blocking).
+// When you're ready, set ADMIN_KEY in Render, then start adding ?key=YOURKEY
+// from admin-only pages or tools.
+function requireAdmin(req, res, next) {
+  if (!ADMIN_KEY) {
+    // Security not enforced yet
+    return next();
+  }
+  const keyFromQuery = req.query.key;
+  const keyFromHeader = req.headers['x-admin-key'];
+  if (keyFromQuery === ADMIN_KEY || keyFromHeader === ADMIN_KEY) {
+    return next();
+  }
+  return res.status(403).json({ success: false, error: 'Admin key required' });
 }
 
 // -------------------------------
@@ -410,8 +434,8 @@ app.get('/api/share-link/:stopId', (req, res) => {
 // 5) NOTIFICATIONS APIs + SMS/EMAIL HOOKS
 // =======================================
 
-// Full log (for admin)
-app.get('/api/notifications', (req, res) => {
+// Full log (for admin) — protected by admin hook when ADMIN_KEY is set
+app.get('/api/notifications', requireAdmin, (req, res) => {
   const data = loadNotifications();
   res.json(data);
 });
@@ -428,7 +452,7 @@ app.get('/api/notify-templates/:stopId', (req, res) => {
 });
 
 // "Pretend" send SMS to patient — Twilio-ready hook
-app.post('/api/send-sms', (req, res) => {
+app.post('/api/send-sms', requireAdmin, (req, res) => {
   const { stopId, phone } = req.body;
 
   if (!stopId || !phone) {
@@ -456,12 +480,11 @@ app.post('/api/send-sms', (req, res) => {
   saveNotifications(logData);
 
   // THIS is where Twilio would actually send the SMS in the future.
-  // For now, we just log & return.
   res.json({ success: true, phone, smsText });
 });
 
 // "Pretend" send facility email — SendGrid-ready hook
-app.post('/api/send-facility-email', (req, res) => {
+app.post('/api/send-facility-email', requireAdmin, (req, res) => {
   const { stopId, email } = req.body;
 
   if (!stopId || !email) {

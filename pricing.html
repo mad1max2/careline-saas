@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CareLine Pricing | Wound-Care Delivery SaaS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --teal: #0097a7;
+      --dark: #004d40;
+      --bg: #e0f7fa;
+      --card: #ffffff;
+      --accent: #ff9800;
+      --muted: #607d8b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--teal);
+      color: #fff;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .nav a {
+      color: #e0f7fa;
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .nav a:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    main {
+      flex: 1;
+      padding: 16px;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .hero p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .billing-toggle {
+      text-align: center;
+      margin-bottom: 14px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .plans {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .plan {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 14px 14px 16px 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .plan.featured {
+      border: 2px solid var(--accent);
+      transform: translateY(-4px);
+    }
+
+    .badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .plan-name {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .plan-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .price {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 6px 0;
+    }
+
+    .price span {
+      font-size: 11px;
+      font-weight: normal;
+      color: var(--muted);
+    }
+
+    .perks {
+      margin: 8px 0 10px 0;
+      font-size: 12px;
+      list-style: none;
+    }
+
+    .perks li {
+      margin-bottom: 4px;
+    }
+
+    .perks li::before {
+      content: "✓ ";
+      color: var(--teal);
+      font-weight: bold;
+    }
+
+    .cta {
+      margin-top: auto;
+      text-align: center;
+    }
+
+    .cta button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--teal);
+      color: #fff;
+    }
+
+    .cta button.secondary {
+      background: #eceff1;
+      color: var(--dark);
+    }
+
+    .footnote {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    footer {
+      font-size: 11px;
+      text-align: center;
+      padding: 8px 10px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .plans {
+        grid-template-columns: 1fr;
+      }
+      .plan.featured {
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="brand">CareLine Medical Logistics</div>
+      <div class="subtitle">Delivery Intelligence for Wound-Care & Incontinence Supplies</div>
+    </div>
+    <nav class="nav">
+      <a href="control-center.html">Control Center</a>
+      <a href="facility-summary.html">Facilities</a>
+      <a href="notifications.html">Notifications</a>
+      <a href="pricing.html" style="background:rgba(255,255,255,0.2);">Pricing</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>CareLine SaaS Pricing</h1>
+      <p>
+        Built for wound-care clinics, home-health agencies, and facilities that need Amazon-level
+        visibility with bedside-level care.
+      </p>
+    </section>
+
+    <section class="billing-toggle">
+      Monthly pricing shown. Annual options available on request.
+    </section>
+
+    <section class="plans">
+      <!-- Starter / Freemium -->
+      <article class="plan">
+        <div class="plan-name">Starter Route</div>
+        <div class="plan-desc">For solo operators or test pilots.</div>
+        <div class="price">$0 <span>/ month</span></div>
+        <ul class="perks">
+          <li>1 driver seat</li>
+          <li>Up to 50 deliveries / month</li>
+          <li>Basic route tracking</li>
+          <li>Proof-of-delivery photo capture</li>
+          <li>Simple facility & patient notifications (manual send)</li>
+        </ul>
+        <div class="cta">
+          <button class="secondary">Start Free</button>
+        </div>
+      </article>
+
+      <!-- Core Plan -->
+      <article class="plan featured">
+        <div class="badge">Most Popular</div>
+        <div class="plan-name">CareLine Core</div>
+        <div class="plan-desc">For clinics and agencies ready to standardize delivery.</div>
+        <div class="price">$899 <span>/ month</span></div>
+        <ul class="perks">
+          <li>Up to 5 driver seats</li>
+          <li>Unlimited deliveries</li>
+          <li>Live GPS + ETA tracking for every route</li>
+          <li>Patient & facility tracking links</li>
+          <li>SMS & email notification logging</li>
+          <li>Facility & notification reports</li>
+          <li>CareLine branding & support</li>
+        </ul>
+        <div class="cta">
+          <button>Book Demo & Activate</button>
+        </div>
+      </article>
+
+      <!-- Pro Plan -->
+      <article class="plan">
+        <div class="plan-name">CareLine Pro</div>
+        <div class="plan-desc">For hospitals and multi-location groups.</div>
+        <div class="price">$1,199 <span>/ month</span></div>
+        <ul class="perks">
+          <li>Up to 15 driver seats</li>
+          <li>Advanced analytics & summaries</li>
+          <li>Priority routing & performance tuning</li>
+          <li>Custom facility branding</li>
+          <li>API-ready notifications (Twilio, SendGrid, etc.)</li>
+          <li>Dedicated onboarding & process mapping</li>
+        </ul>
+        <div class="cta">
+          <button>Talk to Sales</button>
+        </div>
+      </article>
+    </section>
+
+    <section class="footnote">
+      Pricing is designed for healthcare organizations that want to own their logistics,
+      protect PHI, and give patients the “I can see my driver” experience without turning
+      into a tech company.
+    </section>
+  </main>
+
+  <footer>
+    CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
+  </footer>
+</body>
+</html>
