@@ -1,6 +1,6 @@
 // =======================================
 // CARELINE MEDICAL LOGISTICS — SERVER.JS
-// Notifications + ETA + Share Links
+// Live GPS + ETA + Notifications + SMS Hooks
 // =======================================
 
 const express = require('express');
@@ -119,9 +119,9 @@ function computeEtaMinutes(driverGps, stop, avgKmh = 40) {
   return Math.max(1, Math.round(hours * 60));
 }
 
-// -------------------------------
+// =======================================
 // NOTIFICATION TEMPLATES
-// -------------------------------
+// =======================================
 function buildNotificationTemplates(eventType, driverId, stop, extra = {}) {
   const patientName = stop.patientName || 'the patient';
   const facilityName = stop.location || 'your facility';
@@ -214,14 +214,11 @@ function registerNotification(eventType, driverId, stop, extra = {}) {
     driverId,
     stopId: stop.stopId,
     status: stop.status || null,
+    extra,
     templates,
     createdAt: new Date().toISOString(),
   });
   saveNotifications(logData);
-
-  // Hook: here you would plug in Twilio/SendGrid if/when you want real SMS/email
-  // sendSms(patientPhone, templates.bodyPatient)
-  // sendEmail(facilityEmail, templates.subjectFacility, templates.bodyFacility)
 }
 
 // =======================================
@@ -410,7 +407,7 @@ app.get('/api/share-link/:stopId', (req, res) => {
 });
 
 // =======================================
-// 5) NOTIFICATIONS APIs
+// 5) NOTIFICATIONS APIs + SMS/EMAIL HOOKS
 // =======================================
 
 // Full log (for admin)
@@ -419,18 +416,7 @@ app.get('/api/notifications', (req, res) => {
   res.json(data);
 });
 
-// Quick test hook
-app.post('/api/notify-test', (req, res) => {
-  const { stopId } = req.body;
-  const found = findStopById(stopId);
-  if (!found) {
-    return res.status(404).json({ success: false, error: 'Stop not found' });
-  }
-  registerNotification('status_change', found.route.driverId, found.stop);
-  res.json({ success: true });
-});
-
-// NEW: front-end can fetch templates for SMS/email for a given stop
+// Templates (status_change) for front-end use
 app.get('/api/notify-templates/:stopId', (req, res) => {
   const stopId = req.params.stopId;
   const found = findStopById(stopId);
@@ -439,6 +425,76 @@ app.get('/api/notify-templates/:stopId', (req, res) => {
   }
   const templates = buildNotificationTemplates('status_change', found.route.driverId, found.stop);
   res.json({ success: true, stopId, templates });
+});
+
+// "Pretend" send SMS to patient — Twilio-ready hook
+app.post('/api/send-sms', (req, res) => {
+  const { stopId, phone } = req.body;
+
+  if (!stopId || !phone) {
+    return res.status(400).json({ success: false, error: 'stopId and phone are required' });
+  }
+
+  const found = findStopById(stopId);
+  if (!found) {
+    return res.status(404).json({ success: false, error: 'Stop not found' });
+  }
+
+  const templates = buildNotificationTemplates('status_change', found.route.driverId, found.stop);
+  const smsText = templates.bodyPatient.replace(/\n+/g, ' '); // flatten for SMS
+
+  const logData = loadNotifications();
+  logData.notifications.push({
+    id: Date.now().toString(),
+    eventType: 'sms_sent',
+    driverId: found.route.driverId,
+    stopId,
+    phone,
+    smsText,
+    createdAt: new Date().toISOString(),
+  });
+  saveNotifications(logData);
+
+  // THIS is where Twilio would actually send the SMS in the future.
+  // For now, we just log & return.
+  res.json({ success: true, phone, smsText });
+});
+
+// "Pretend" send facility email — SendGrid-ready hook
+app.post('/api/send-facility-email', (req, res) => {
+  const { stopId, email } = req.body;
+
+  if (!stopId || !email) {
+    return res.status(400).json({ success: false, error: 'stopId and email are required' });
+  }
+
+  const found = findStopById(stopId);
+  if (!found) {
+    return res.status(404).json({ success: false, error: 'Stop not found' });
+  }
+
+  const templates = buildNotificationTemplates('status_change', found.route.driverId, found.stop);
+
+  const emailPayload = {
+    to: email,
+    subject: templates.subjectFacility,
+    body: templates.bodyFacility,
+  };
+
+  const logData = loadNotifications();
+  logData.notifications.push({
+    id: Date.now().toString(),
+    eventType: 'facility_email_sent',
+    driverId: found.route.driverId,
+    stopId,
+    email,
+    emailPayload,
+    createdAt: new Date().toISOString(),
+  });
+  saveNotifications(logData);
+
+  // THIS is where SendGrid / SMTP would send the email in the future.
+  res.json({ success: true, email, emailPayload });
 });
 
 // =======================================

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CareLine Driver Stops</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --teal: #0097a7;
+      --dark: #004d40;
+      --bg: #e0f7fa;
+      --card: #ffffff;
+      --accent: #ff9800;
+      --success: #2e7d32;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--teal);
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .driver-pill {
+      background: rgba(0, 0, 0, 0.15);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+
+    main {
+      flex: 1;
+      padding: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .info {
+      font-size: 12px;
+      color: #455a64;
+      margin-bottom: 10px;
+    }
+
+    .stop-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .stop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .stop-title {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .stop-id {
+      font-size: 11px;
+      color: #607d8b;
+    }
+
+    .stop-location {
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .stop-items {
+      font-size: 12px;
+      color: #455a64;
+      margin-bottom: 6px;
+    }
+
+    .status-pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #fff8e1;
+      color: #ef6c00;
+      margin-bottom: 6px;
+    }
+
+    .status-complete {
+      background: #e8f5e9;
+      color: var(--success);
+    }
+
+    .status-out {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .status-arrived {
+      background: #ede7f6;
+      color: #4527a0;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    button {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-out {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .btn-arrived {
+      background: #f3e5f5;
+      color: #6a1b9a;
+    }
+
+    .btn-complete {
+      background: #e8f5e9;
+      color: var(--success);
+    }
+
+    .btn-map {
+      background: #fff3e0;
+      color: #ef6c00;
+    }
+
+    .footer-note {
+      font-size: 11px;
+      color: #607d8b;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    .error {
+      padding: 8px;
+      background: #ffebee;
+      color: #b71c1c;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="brand">CareLine Driver</div>
+      <div class="subtitle">Today’s Stops & Status</div>
+    </div>
+    <div class="driver-pill" id="driverLabel">
+      Driver: loading…
+    </div>
+  </header>
+
+  <main>
+    <div id="errorBox" class="error" style="display:none;"></div>
+
+    <div class="info">
+      Tap the buttons as you move through your route.  
+      This keeps dispatch, facilities, and patients updated in real time.
+    </div>
+
+    <div id="stopsContainer">
+      <!-- Stops injected here -->
+    </div>
+
+    <div class="footer-note">
+      Need help? Call your CareLine dispatcher before changing statuses.
+    </div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const driverId = params.get('driverId') || 'driver1';
+
+    const errorBox = document.getElementById('errorBox');
+    const driverLabel = document.getElementById('driverLabel');
+    const stopsContainer = document.getElementById('stopsContainer');
+
+    function showError(msg) {
+      errorBox.style.display = 'block';
+      errorBox.textContent = msg;
+    }
+
+    function clearError() {
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+    }
+
+    function statusClass(status) {
+      if (!status) return '';
+      const s = status.toLowerCase();
+      if (s.includes('complete')) return 'status-complete';
+      if (s.includes('arriv')) return 'status-arrived';
+      if (s.includes('out')) return 'status-out';
+      return '';
+    }
+
+    async function loadStops() {
+      try {
+        const res = await fetch('/routes.json', { cache: 'no-store' });
+        const data = await res.json();
+
+        const driver = data.drivers.find(d => d.id === driverId);
+        driverLabel.textContent = driver
+          ? `Driver: ${driver.name}`
+          : `Driver: ${driverId}`;
+
+        const route = data.routes.find(r => r.driverId === driverId);
+        stopsContainer.innerHTML = '';
+
+        if (!route || !route.stops || route.stops.length === 0) {
+          stopsContainer.innerHTML = '<div class="info">No stops assigned to you today.</div>';
+          return;
+        }
+
+        route.stops.forEach((stop, index) => {
+          const card = document.createElement('div');
+          card.className = 'stop-card';
+          card.dataset.stopId = stop.stopId;
+
+          card.innerHTML = `
+            <div class="stop-header">
+              <div class="stop-title">Stop ${index + 1}</div>
+              <div class="stop-id">${stop.stopId}</div>
+            </div>
+            <div class="stop-location">${stop.location || 'Location not set'}</div>
+            <div class="stop-items">Items: ${stop.items || '—'}</div>
+            <div class="status-pill ${statusClass(stop.status)}">
+              ${stop.status || 'Pending'}
+            </div>
+            <div class="buttons">
+              <button class="btn-out">Out for Delivery</button>
+              <button class="btn-arrived">Arrived</button>
+              <button class="btn-complete">Completed</button>
+              <button class="btn-map">Open Map</button>
+            </div>
+          `;
+
+          const [btnOut, btnArrived, btnComplete, btnMap] =
+            card.querySelectorAll('button');
+          const statusBadge = card.querySelector('.status-pill');
+
+          btnOut.addEventListener('click', async () => {
+            await updateStatus(stop.stopId, 'Out for delivery', statusBadge);
+          });
+
+          btnArrived.addEventListener('click', async () => {
+            await updateStatus(stop.stopId, 'Arrived at facility', statusBadge);
+          });
+
+          btnComplete.addEventListener('click', async () => {
+            await updateStatus(stop.stopId, 'Completed', statusBadge);
+          });
+
+          btnMap.addEventListener('click', () => {
+            // Send driver to live driver map for this route
+            window.location.href = `driver-map.html?driverId=${encodeURIComponent(driverId)}`;
+          });
+
+          stopsContainer.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Error loading stops', err);
+        showError('Problem loading your route. Please refresh or call dispatch.');
+      }
+    }
+
+    async function updateStatus(stopId, newStatus, badgeEl) {
+      clearError();
+      try {
+        const res = await fetch('/update-stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stopId, status: newStatus })
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          showError('Could not update status. Try again or call dispatch.');
+          return;
+        }
+
+        badgeEl.textContent = newStatus;
+        badgeEl.className = 'status-pill ' + statusClass(newStatus);
+      } catch (err) {
+        console.error('Error updating status', err);
+        showError('Network error updating status. Try again.');
+      }
+    }
+
+    // Boot
+    loadStops();
+    // Auto-refresh stop list every 30 seconds so drivers see changes from dispatch
+    setInterval(loadStops, 30000);
+  </script>
+</body>
+</html>

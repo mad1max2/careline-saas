@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CareLine Notifications Timeline</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --teal: #0097a7;
+      --dark: #004d40;
+      --bg: #e0f7fa;
+      --card: #ffffff;
+      --accent: #ff9800;
+      --danger: #c62828;
+      --muted: #607d8b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--teal);
+      color: #fff;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .pill {
+      background: rgba(0, 0, 0, 0.15);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    main {
+      flex: 1;
+      padding: 12px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .top-row-left h1 {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .top-row-left p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    select, button {
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid #b0bec5;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    button.refresh-btn {
+      background: var(--teal);
+      color: #ffffff;
+      border: none;
+      font-weight: 600;
+    }
+
+    button.csv-btn {
+      background: #fff3e0;
+      color: #e65100;
+      border: 1px solid #ffcc80;
+      font-weight: 600;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 10px;
+    }
+
+    .event-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .event-type {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .event-type.status_change { color: #1565c0; }
+    .event-type.proof_uploaded { color: #2e7d32; }
+    .event-type.sms_sent { color: #e65100; }
+    .event-type.facility_email_sent { color: #4527a0; }
+
+    .event-time {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .event-meta {
+      font-size: 12px;
+      margin-bottom: 6px;
+      color: #455a64;
+    }
+
+    .meta-pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #eceff1;
+      margin-right: 6px;
+      margin-bottom: 3px;
+    }
+
+    .event-body {
+      font-size: 12px;
+      border-left: 3px solid #e0e0e0;
+      padding-left: 8px;
+      margin-top: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .event-footer {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-sms { background: #fff3e0; color: #e65100; }
+    .badge-email { background: #ede7f6; color: #4527a0; }
+    .badge-status { background: #e3f2fd; color: #1565c0; }
+    .badge-proof { background: #e8f5e9; color: #2e7d32; }
+
+    .empty-state {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .chip {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 3px 7px;
+      font-size: 10px;
+      background: #eceff1;
+      margin-right: 4px;
+      margin-bottom: 2px;
+    }
+
+    footer {
+      font-size: 11px;
+      text-align: center;
+      padding: 8px 10px;
+      color: var(--muted);
+    }
+
+    .error {
+      padding: 8px;
+      background: #ffebee;
+      color: var(--danger);
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .count-pill {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 700px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      .top-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      main {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="brand">CareLine Medical Logistics</div>
+      <div class="subtitle">Notifications & Event Timeline</div>
+    </div>
+    <div class="pill">
+      Internal • Dispatch & Admin Only
+    </div>
+  </header>
+
+  <main>
+    <div id="errorBox" class="error"></div>
+
+    <div class="top-row">
+      <div class="top-row-left">
+        <h1>Notifications Timeline</h1>
+        <p>See SMS logs, facility emails, status changes, and proof-of-delivery events in one place.</p>
+      </div>
+      <div class="controls">
+        <select id="filterSelect">
+          <option value="all">All events</option>
+          <option value="status_change">Status changes</option>
+          <option value="proof_uploaded">Proof uploaded</option>
+          <option value="sms_sent">SMS sent</option>
+          <option value="facility_email_sent">Facility email sent</option>
+        </select>
+        <select id="limitSelect">
+          <option value="25">Last 25</option>
+          <option value="50">Last 50</option>
+          <option value="100">Last 100</option>
+          <option value="all">Show all</option>
+        </select>
+        <button class="refresh-btn" id="refreshBtn">Refresh</button>
+        <button class="csv-btn" id="csvBtn">Download CSV</button>
+      </div>
+    </div>
+
+    <div class="count-pill" id="countInfo">Loading events…</div>
+
+    <div id="eventsContainer">
+      <!-- Events injected here -->
+    </div>
+
+    <div class="empty-state" id="emptyState" style="display:none;">
+      No notifications found for this filter yet.  
+      As drivers complete stops and dispatch sends updates, events will appear here.
+    </div>
+  </main>
+
+  <footer>
+    Powered by CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
+  </footer>
+
+  <script>
+    const errorBox = document.getElementById('errorBox');
+    const eventsContainer = document.getElementById('eventsContainer');
+    const emptyState = document.getElementById('emptyState');
+    const filterSelect = document.getElementById('filterSelect');
+    const limitSelect = document.getElementById('limitSelect');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const csvBtn = document.getElementById('csvBtn');
+    const countInfo = document.getElementById('countInfo');
+
+    let allEvents = [];
+
+    function showError(message) {
+      errorBox.style.display = 'block';
+      errorBox.textContent = message;
+    }
+
+    function clearError() {
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+    }
+
+    function formatTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleString();
+    }
+
+    function eventBadgeClass(eventType) {
+      switch (eventType) {
+        case 'status_change': return 'badge badge-status';
+        case 'proof_uploaded': return 'badge badge-proof';
+        case 'sms_sent': return 'badge badge-sms';
+        case 'facility_email_sent': return 'badge badge-email';
+        default: return 'badge';
+      }
+    }
+
+    function eventTypeLabel(eventType) {
+      if (!eventType) return 'Event';
+      return eventType.replace(/_/g, ' ').toUpperCase();
+    }
+
+    function buildEventBody(event) {
+      const t = event.templates || {};
+      if (event.eventType === 'sms_sent') {
+        return `SMS to: ${event.phone}\n\n${event.smsText || ''}`;
+      }
+      if (event.eventType === 'facility_email_sent') {
+        const payload = event.emailPayload || {};
+        return `Email to: ${event.email}\n\nSubject: ${payload.subject || ''}\n\n${payload.body || ''}`;
+      }
+      if (event.eventType === 'status_change') {
+        return t.bodyAdmin || '(Status change recorded)';
+      }
+      if (event.eventType === 'proof_uploaded') {
+        return t.bodyAdmin || '(Proof of delivery uploaded)';
+      }
+      return t.bodyAdmin || '(Notification logged)';
+    }
+
+    function renderEvents() {
+      const filter = filterSelect.value;
+      const limitVal = limitSelect.value;
+
+      let events = [...allEvents];
+
+      // newest first
+      events.sort((a, b) => {
+        const ta = new Date(a.createdAt || 0).getTime();
+        const tb = new Date(b.createdAt || 0).getTime();
+        return tb - ta;
+      });
+
+      if (filter !== 'all') {
+        events = events.filter(ev => ev.eventType === filter);
+      }
+
+      const total = events.length;
+
+      if (limitVal !== 'all') {
+        const limit = parseInt(limitVal, 10);
+        events = events.slice(0, limit);
+      }
+
+      countInfo.textContent = total === 0
+        ? 'No events found for this filter.'
+        : `Showing ${events.length} of ${total} event(s).`;
+
+      eventsContainer.innerHTML = '';
+
+      if (events.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      events.forEach(ev => {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const badgeClass = eventBadgeClass(ev.eventType);
+        const typeLabel = eventTypeLabel(ev.eventType);
+
+        const stopId = ev.stopId || '(no stopId)';
+        const driverId = ev.driverId || '(no driverId)';
+        const status = ev.status || '';
+        const createdAt = formatTime(ev.createdAt);
+
+        const t = ev.templates || {};
+        const facilityName = t.facilityName || 'Unknown facility';
+        const patientName = t.patientName || '';
+
+        const bodyText = buildEventBody(ev);
+
+        card.innerHTML = `
+          <div class="event-header">
+            <div class="event-type ${ev.eventType || ''}">
+              ${typeLabel}
+            </div>
+            <div class="event-time">
+              ${createdAt}
+            </div>
+          </div>
+
+          <div class="event-meta">
+            <span class="meta-pill">Stop: ${stopId}</span>
+            <span class="meta-pill">Driver: ${driverId}</span>
+            <span class="meta-pill">Facility: ${facilityName}</span>
+            ${patientName ? `<span class="meta-pill">Patient: ${patientName}</span>` : ''}
+            ${status ? `<span class="meta-pill">Status: ${status}</span>` : ''}
+          </div>
+
+          <div class="event-body">${bodyText.replace(/</g, '&lt;')}</div>
+
+          <div class="event-footer">
+            <div>
+              <span class="${badgeClass}">${typeLabel}</span>
+            </div>
+            <div>
+              <span class="chip">ID: ${ev.id || 'n/a'}</span>
+              <span class="chip">Logged: notifications.json</span>
+            </div>
+          </div>
+        `;
+
+        eventsContainer.appendChild(card);
+      });
+    }
+
+    async function loadNotifications() {
+      clearError();
+      try {
+        const res = await fetch('/api/notifications', { cache: 'no-store' });
+        if (!res.ok) {
+          showError('Unable to load notifications from the server.');
+          return;
+        }
+        const data = await res.json();
+        allEvents = data.notifications || [];
+        renderEvents();
+      } catch (err) {
+        console.error('Error loading notifications', err);
+        showError('There was a problem loading notifications. Please try again.');
+      }
+    }
+
+    function escapeCsvValue(value) {
+      if (value == null) return '';
+      const str = String(value);
+      if (str.includes('"') || str.includes(',') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    }
+
+    function downloadCsv() {
+      if (!allEvents || allEvents.length === 0) {
+        alert('No events available to export yet.');
+        return;
+      }
+
+      const header = [
+        'id',
+        'eventType',
+        'stopId',
+        'driverId',
+        'facilityName',
+        'patientName',
+        'status',
+        'phone',
+        'email',
+        'createdAt'
+      ];
+
+      const rows = [header.join(',')];
+
+      allEvents.forEach(ev => {
+        const t = ev.templates || {};
+        const row = [
+          escapeCsvValue(ev.id),
+          escapeCsvValue(ev.eventType),
+          escapeCsvValue(ev.stopId),
+          escapeCsvValue(ev.driverId),
+          escapeCsvValue(t.facilityName || ''),
+          escapeCsvValue(t.patientName || ''),
+          escapeCsvValue(ev.status || ''),
+          escapeCsvValue(ev.phone || ''),
+          escapeCsvValue(ev.email || ''),
+          escapeCsvValue(ev.createdAt || '')
+        ];
+        rows.push(row.join(','));
+      });
+
+      const csvContent = rows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'careline-notifications.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    // Event listeners
+    filterSelect.addEventListener('change', renderEvents);
+    limitSelect.addEventListener('change', renderEvents);
+    refreshBtn.addEventListener('click', loadNotifications);
+    csvBtn.addEventListener('click', downloadCsv);
+
+    // Boot: first load + auto-refresh every 15 seconds
+    loadNotifications();
+    setInterval(loadNotifications, 15000);
+  </script>
+</body>
+</html>

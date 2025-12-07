@@ -182,12 +182,14 @@
     }
 
     .action-btn {
-      padding: 4px 6px;
+      padding: 3px 5px;
       font-size: 11px;
       border-radius: 6px;
       border: none;
       cursor: pointer;
       margin-right: 4px;
+      margin-bottom: 2px;
+      display: inline-block;
     }
 
     .action-link {
@@ -198,6 +200,11 @@
     .action-sms {
       background: #fff3e0;
       color: #e65100;
+    }
+
+    .action-email {
+      background: #ede7f6;
+      color: #4527a0;
     }
 
     @media (max-width: 1000px) {
@@ -218,7 +225,7 @@
   <header>
     <div>
       <div class="title">CareLine Control Center</div>
-      <div class="subtitle">Live dispatch view • Drivers • Stops • GPS • Notifications</div>
+      <div class="subtitle">Live dispatch • Tracking • SMS & Email Hooks</div>
     </div>
     <div class="pill">Internal Operations Dashboard</div>
   </header>
@@ -392,7 +399,8 @@
             <td>${formatGpsTime(route.driverId, gpsData)}</td>
             <td>
               <button class="action-btn action-link" onclick="showTrackingLink('${stop.stopId}')">Link</button>
-              <button class="action-btn action-sms" onclick="showPatientSms('${stop.stopId}')">Patient SMS</button>
+              <button class="action-btn action-sms" onclick="sendPatientSms('${stop.stopId}')">Send SMS</button>
+              <button class="action-btn action-email" onclick="sendFacilityEmail('${stop.stopId}')">Facility Email</button>
             </td>
           `;
 
@@ -471,7 +479,7 @@
       }
     }
 
-    // ============ NEW: NOTIFICATION HELPERS ============
+    // ============ NOTIFICATION ACTIONS ============
 
     async function showTrackingLink(stopId) {
       try {
@@ -481,8 +489,7 @@
           alert('Could not generate tracking link for this stop.');
           return;
         }
-        const msg = `Tracking link for ${stopId}:\n\n` + data.trackingUrl +
-          '\n\nCopy this into a text or email.';
+        const msg = `Tracking link for ${stopId}:\n\n${data.trackingUrl}\n\nCopy this into a text or email.`;
         alert(msg);
       } catch (err) {
         console.error('Error getting share link', err);
@@ -490,21 +497,57 @@
       }
     }
 
-    async function showPatientSms(stopId) {
+    async function sendPatientSms(stopId) {
+      const phone = prompt('Enter patient phone number (digits only):');
+      if (!phone) return;
       try {
-        const res = await fetch('/api/notify-templates/' + encodeURIComponent(stopId));
+        const res = await fetch('/api/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stopId, phone })
+        });
         const data = await res.json();
-        if (!data.success || !data.templates) {
-          alert('Could not generate SMS template for this stop.');
+        if (!data.success) {
+          alert('Could not send SMS. Check number or try again.');
           return;
         }
-        // use patient body, but single-line it for SMS
-        const sms = data.templates.bodyPatient.replace(/\n+/g, ' ');
-        const msg = `Copy and paste this into a text message:\n\n${sms}`;
-        alert(msg);
+        alert(
+          'SMS logged as sent to ' +
+          phone +
+          '.\n\nMessage:\n\n' +
+          data.smsText
+        );
       } catch (err) {
-        console.error('Error getting SMS template', err);
-        alert('Error getting SMS text.');
+        console.error('Error sending SMS', err);
+        alert('Error sending SMS.');
+      }
+    }
+
+    async function sendFacilityEmail(stopId) {
+      const email = prompt('Enter facility email address:');
+      if (!email) return;
+      try {
+        const res = await fetch('/api/send-facility-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stopId, email })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          alert('Could not send email. Check address or try again.');
+          return;
+        }
+        alert(
+          'Email logged as sent to ' +
+          email +
+          '.\n\nSubject:\n' +
+          data.emailPayload.subject +
+          '\n\nBody:\n\n' +
+          data.emailPayload.body
+        );
+      } catch (err) {
+        console.error('Error sending email', err);
+        alert('Error sending email.');
       }
     }
 

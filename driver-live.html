@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CareLine Driver Map – Live Tracking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;
+    }
+    #map {
+      height: calc(100% - 60px);
+      width: 100%;
+    }
+    header {
+      height: 60px;
+      background-color: #0097a7;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .controls {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 1000;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .controls button {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .btn-start {
+      background-color: #ffffff;
+    }
+    .btn-next {
+      background-color: #ff9800;
+      color: #fff;
+    }
+    .btn-live {
+      background-color: #4caf50;
+      color: #fff;
+    }
+    .legend {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <header>🚚 CareLine Driver Map (Live)</header>
+  <div id="map"></div>
+
+  <div class="controls">
+    <button id="btnStart" class="btn-start">Start / First Stop</button>
+    <button id="btnNext" class="btn-next">Next Stops</button>
+    <button id="btnLive" class="btn-live">Current Driver (LIVE)</button>
+  </div>
+
+  <div class="legend">
+    Map auto-refreshes driver GPS every 5 seconds.<br />
+    Driver is selected via <code>?name=driver1</code> (etc).
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script>
+    // Get driverId from URL (?name=driver1) or default to driver1
+    const params = new URLSearchParams(window.location.search);
+    const driverId = params.get('name') || 'driver1';
+
+    const map = L.map('map').setView([39.2904, -76.6122], 8); // default Baltimore area
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let routeData = null;
+    let routeLayer = null;
+    let liveMarker = null;
+
+    const btnStart = document.getElementById('btnStart');
+    const btnNext = document.getElementById('btnNext');
+    const btnLive = document.getElementById('btnLive');
+
+    async function loadRoute() {
+      try {
+        const res = await fetch('/routes.json');
+        const data = await res.json();
+
+        const route = (data.routes || []).find(r => r.driverId === driverId);
+        if (!route) {
+          console.warn('No route for driver', driverId);
+          return;
+        }
+
+        routeData = route;
+        drawRoute();
+      } catch (err) {
+        console.error('Error loading routes.json:', err);
+      }
+    }
+
+    function drawRoute() {
+      if (!routeData || !routeData.stops || routeData.stops.length === 0) return;
+
+      if (routeLayer) {
+        map.removeLayer(routeLayer);
+      }
+
+      const latlngs = [];
+
+      routeData.stops.forEach((stop, index) => {
+        if (typeof stop.lat === 'number' && typeof stop.lng === 'number') {
+          const ll = [stop.lat, stop.lng];
+          latlngs.push(ll);
+
+          const marker = L.marker(ll).addTo(map);
+          marker.bindPopup(
+            `<b>Stop ${index + 1} — ${stop.items}</b><br>` +
+            `${stop.location}<br>` +
+            `Status: ${stop.status || 'Scheduled'}`
+          );
+        }
+      });
+
+      if (latlngs.length > 1) {
+        routeLayer = L.polyline(latlngs, { color: '#0097a7', weight: 4 }).addTo(map);
+        map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+      } else if (latlngs.length === 1) {
+        map.setView(latlngs[0], 13);
+      }
+    }
+
+    function jumpToFirstStop() {
+      if (!routeData || !routeData.stops || routeData.stops.length === 0) return;
+      const first = routeData.stops[0];
+      if (typeof first.lat === 'number' && typeof first.lng === 'number') {
+        map.setView([first.lat, first.lng], 14);
+      }
+    }
+
+    function showAllStops() {
+      if (!routeLayer) return;
+      map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+    }
+
+    async function fetchLiveLocation() {
+      try {
+        const res = await fetch('/api/location/' + encodeURIComponent(driverId));
+        if (!res.ok) {
+          // no location yet; just skip
+          return;
+        }
+        const data = await res.json();
+        if (!data.success || !data.location) return;
+
+        const { lat, lng } = data.location;
+        if (typeof lat !== 'number' || typeof lng !== 'number') return;
+
+        const latlng = [lat, lng];
+
+        if (!liveMarker) {
+          liveMarker = L.marker(latlng, {
+            title: 'Live driver position'
+          }).addTo(map);
+          liveMarker.bindPopup('Current driver position (live)');
+        } else {
+          liveMarker.setLatLng(latlng);
+        }
+      } catch (err) {
+        console.error('Error fetching live location:', err);
+      }
+    }
+
+    function jumpToLive() {
+      if (!liveMarker) return;
+      map.setView(liveMarker.getLatLng(), 15);
+      liveMarker.openPopup();
+    }
+
+    // Buttons
+    btnStart.addEventListener('click', jumpToFirstStop);
+    btnNext.addEventListener('click', showAllStops);
+    btnLive.addEventListener('click', jumpToLive);
+
+    // Initial load
+    loadRoute();
+    fetchLiveLocation();
+
+    // Poll live GPS every 5 seconds
+    setInterval(fetchLiveLocation, 5000);
+  </script>
+</body>
+</html>

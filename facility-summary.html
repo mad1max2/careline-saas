@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CareLine Facility Summary Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --teal: #0097a7;
+      --dark: #004d40;
+      --bg: #e0f7fa;
+      --card: #ffffff;
+      --muted: #607d8b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--teal);
+      color: #fff;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .pill {
+      background: rgba(0, 0, 0, 0.15);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    main {
+      flex: 1;
+      padding: 12px;
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .top-row-left h1 {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .top-row-left p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    input, button {
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid #b0bec5;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    input {
+      min-width: 160px;
+    }
+
+    button.refresh-btn {
+      background: var(--teal);
+      color: #ffffff;
+      border: none;
+      font-weight: 600;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      background: #eceff1;
+    }
+
+    th, td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #eceff1;
+      text-align: left;
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 12px;
+      color: #455a64;
+      white-space: nowrap;
+    }
+
+    tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .error {
+      padding: 8px;
+      background: #ffebee;
+      color: #c62828;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .count-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 10px;
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    footer {
+      font-size: 11px;
+      text-align: center;
+      padding: 8px 10px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 800px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      main {
+        padding: 10px;
+      }
+      table {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="brand">CareLine Medical Logistics</div>
+      <div class="subtitle">Facility Summary Report</div>
+    </div>
+    <div class="pill">
+      Internal • For Account Management & Sales
+    </div>
+  </header>
+
+  <main>
+    <div id="errorBox" class="error"></div>
+
+    <div class="top-row">
+      <div class="top-row-left">
+        <h1>Facility Summary</h1>
+        <p>High-level view of notifications and events grouped by facility name.</p>
+      </div>
+      <div class="controls">
+        <input
+          id="facilityFilter"
+          type="text"
+          placeholder="Filter by facility name..."
+        />
+        <button class="refresh-btn" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+
+    <div class="count-pill" id="countInfo">Loading facility summary…</div>
+
+    <section class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Facility</th>
+            <th>Approx. Stops</th>
+            <th>Status Changes</th>
+            <th>SMS Sent</th>
+            <th>Facility Emails</th>
+            <th>Proof Uploaded</th>
+            <th>Last Event</th>
+          </tr>
+        </thead>
+        <tbody id="facilityBody">
+          <!-- Rows injected here -->
+        </tbody>
+      </table>
+      <div class="small">
+        Facilities are grouped based on the <strong>facilityName</strong> stored in notification templates.  
+        Values are approximate, but good enough for account reviews and “who gets the most love” conversations.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Powered by CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
+  </footer>
+
+  <script>
+    const errorBox = document.getElementById('errorBox');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const facilityFilterInput = document.getElementById('facilityFilter');
+    const facilityBody = document.getElementById('facilityBody');
+    const countInfo = document.getElementById('countInfo');
+
+    let grouped = [];
+
+    function showError(msg) {
+      errorBox.style.display = 'block';
+      errorBox.textContent = msg;
+    }
+
+    function clearError() {
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+    }
+
+    function formatTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleString();
+    }
+
+    function computeFacilitySummary(notifications) {
+      const map = {};
+
+      notifications.forEach(ev => {
+        const t = ev.templates || {};
+        const facilityName = (t.facilityName || 'Unknown facility').trim() || 'Unknown facility';
+        const key = facilityName.toLowerCase();
+
+        if (!map[key]) {
+          map[key] = {
+            facilityName,
+            stops: new Set(),
+            statusChanges: 0,
+            smsCount: 0,
+            emailCount: 0,
+            proofCount: 0,
+            lastEventTime: null,
+          };
+        }
+
+        const bucket = map[key];
+
+        if (ev.stopId) bucket.stops.add(ev.stopId);
+
+        if (ev.eventType === 'status_change') bucket.statusChanges++;
+        if (ev.eventType === 'sms_sent') bucket.smsCount++;
+        if (ev.eventType === 'facility_email_sent') bucket.emailCount++;
+        if (ev.eventType === 'proof_uploaded') bucket.proofCount++;
+
+        if (ev.createdAt) {
+          const current = bucket.lastEventTime
+            ? new Date(bucket.lastEventTime).getTime()
+            : 0;
+          const next = new Date(ev.createdAt).getTime();
+          if (next > current) {
+            bucket.lastEventTime = ev.createdAt;
+          }
+        }
+      });
+
+      return Object.values(map)
+        .map(b => ({
+          facilityName: b.facilityName,
+          stopCount: b.stops.size,
+          statusChanges: b.statusChanges,
+          smsCount: b.smsCount,
+          emailCount: b.emailCount,
+          proofCount: b.proofCount,
+          lastEventTime: b.lastEventTime,
+        }))
+        .sort((a, b) => {
+          // sort by stopCount desc, then name
+          if (b.stopCount !== a.stopCount) return b.stopCount - a.stopCount;
+          return a.facilityName.localeCompare(b.facilityName);
+        });
+    }
+
+    async function loadSummary() {
+      clearError();
+      try {
+        const res = await fetch('/api/notifications', { cache: 'no-store' });
+        if (!res.ok) {
+          showError('Unable to load notifications from the server.');
+          return;
+        }
+        const data = await res.json();
+        const notifications = data.notifications || [];
+        grouped = computeFacilitySummary(notifications);
+        renderTable();
+      } catch (err) {
+        console.error('Error loading facility summary', err);
+        showError('There was a problem loading the facility summary. Please try again.');
+      }
+    }
+
+    function renderTable() {
+      const filterText = (facilityFilterInput.value || '').toLowerCase();
+      let rows = grouped;
+
+      if (filterText) {
+        rows = rows.filter(r =>
+          r.facilityName.toLowerCase().includes(filterText)
+        );
+      }
+
+      countInfo.textContent =
+        rows.length === 0
+          ? 'No facilities match this filter yet.'
+          : `Showing ${rows.length} facility record(s).`;
+
+      facilityBody.innerHTML = '';
+
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <strong>${r.facilityName}</strong><br/>
+            <span class="badge">Active account</span>
+          </td>
+          <td>${r.stopCount}</td>
+          <td>${r.statusChanges}</td>
+          <td>${r.smsCount}</td>
+          <td>${r.emailCount}</td>
+          <td>${r.proofCount}</td>
+          <td>${r.lastEventTime ? formatTime(r.lastEventTime) : '—'}</td>
+        `;
+        facilityBody.appendChild(tr);
+      });
+    }
+
+    refreshBtn.addEventListener('click', loadSummary);
+    facilityFilterInput.addEventListener('input', renderTable);
+
+    // Boot
+    loadSummary();
+    // Optional: auto-refresh every 60s
+    setInterval(loadSummary, 60000);
+  </script>
+</body>
+</html>
