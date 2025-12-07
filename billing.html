@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CareLine Billing & Licensing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --teal: #0097a7;
+      --dark: #004d40;
+      --bg: #e0f7fa;
+      --card: #ffffff;
+      --muted: #607d8b;
+      --danger: #c62828;
+      --highlight: #ffca28;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--teal);
+      color: #fff;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand { font-weight: bold; font-size: 17px; }
+
+    .subtitle { font-size: 11px; opacity: 0.9; }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .nav a {
+      color: #e0f7fa;
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .nav a.active { background: rgba(255,255,255,0.2); }
+
+    main {
+      flex: 1;
+      padding: 14px;
+      max-width: 1000px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    h1 { font-size: 20px; margin-bottom: 4px; }
+
+    .small { font-size: 11px; color: var(--muted); }
+
+    .session-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 12px;
+    }
+
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 6px;
+      margin-bottom: 4px;
+    }
+
+    .plan-card {
+      border-radius: 12px;
+      padding: 10px 10px;
+      background: #f5f5f5;
+      position: relative;
+    }
+
+    .plan-card.current {
+      border: 2px solid var(--teal);
+      box-shadow: 0 0 0 2px rgba(0,151,167,0.2);
+    }
+
+    .badge-current {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 10px;
+      background: var(--teal);
+      color: #fff;
+      border-radius: 999px;
+      padding: 2px 6px;
+    }
+
+    .plan-name {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .plan-price {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 2px;
+    }
+
+    .plan-price span {
+      font-size: 11px;
+      font-weight: normal;
+      color: var(--muted);
+    }
+
+    .plan-desc {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .plan-cta {
+      margin-top: 8px;
+    }
+
+    button {
+      font-size: 12px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--teal);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    button.secondary {
+      background: #eceff1;
+      color: var(--dark);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .error {
+      padding: 8px;
+      background: #ffebee;
+      color: var(--danger);
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    th, td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #eceff1;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 11px;
+      color: #455a64;
+      white-space: nowrap;
+    }
+
+    tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .count-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .highlight {
+      background: #fff8e1;
+    }
+
+    footer {
+      font-size: 11px;
+      text-align: center;
+      padding: 8px 10px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 850px) {
+      .plan-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="brand">CareLine Medical Logistics</div>
+      <div class="subtitle">Billing & Licensing</div>
+    </div>
+    <nav class="nav" id="mainNav"></nav>
+  </header>
+
+  <main>
+    <div class="top-row">
+      <div>
+        <h1>Subscription & Billing</h1>
+        <p class="small">
+          Manage your CareLine subscription, review invoices, and confirm licensing details.
+        </p>
+        <p class="session-pill" id="sessionUser">Checking current session…</p>
+      </div>
+
+      <section class="card" style="max-width:360px;">
+        <h2 style="font-size:14px;margin-bottom:4px;">Current Subscription</h2>
+        <div id="billError" class="error"></div>
+        <p class="small" id="currentPlanText">Loading…</p>
+        <p class="small" id="nextInvoiceText"></p>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2 style="font-size:14px;margin-bottom:4px;">CareLine SaaS Plans</h2>
+      <p class="small">
+        Pricing for licensing this platform to clinics, wound-care groups, or home-health agencies.
+      </p>
+
+      <div class="plan-grid" id="planGrid">
+        <div class="plan-card" data-plan-id="starter">
+          <div class="plan-name">Starter Route</div>
+          <div class="plan-price">$899 <span>/ month</span></div>
+          <div class="plan-desc">
+            Up to 3 drivers · 5 facilities · Real-time tracking · Notifications · Basic analytics.
+          </div>
+          <div class="plan-cta">
+            <button class="secondary" data-action="select-plan" data-plan="starter">
+              Choose Starter
+            </button>
+          </div>
+        </div>
+
+        <div class="plan-card highlight" data-plan-id="growth">
+          <div class="plan-name">Growth Route</div>
+          <div class="plan-price">$1,199 <span>/ month</span></div>
+          <div class="plan-desc">
+            Up to 8 drivers · 15 facilities · Full analytics · Facility portals · Priority support.
+          </div>
+          <div class="plan-cta">
+            <button class="primary" data-action="select-plan" data-plan="growth">
+              Choose Growth
+            </button>
+          </div>
+        </div>
+
+        <div class="plan-card" data-plan-id="enterprise">
+          <div class="plan-name">Enterprise Route</div>
+          <div class="plan-price">Custom <span>/ month</span></div>
+          <div class="plan-desc">
+            Unlimited drivers & facilities · SSO · Custom SLAs · White-label CareLine tracking.
+          </div>
+          <div class="plan-cta">
+            <button class="secondary" data-action="contact-sales">
+              Contact Sales
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 style="font-size:14px;margin-bottom:4px;">Invoice History</h2>
+      <p class="small">
+        For your records and accounting, this lists previous subscription charges.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Invoice #</th>
+            <th>Plan</th>
+            <th>Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="invoiceBody"></tbody>
+      </table>
+      <p class="count-pill" id="invoiceCount">No invoices yet.</p>
+    </section>
+  </main>
+
+  <footer>
+    CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
+  </footer>
+
+  <script src="/js/careline-universal.js"></script>
+  <script src="nav.js"></script>
+  <script>
+    function markCurrentPlan(planId) {
+      const cards = document.querySelectorAll('.plan-card');
+      cards.forEach(c => {
+        c.classList.remove('current');
+        const badge = c.querySelector('.badge-current');
+        if (badge) badge.remove();
+      });
+
+      if (!planId) return;
+
+      const card = document.querySelector('.plan-card[data-plan-id="' + planId + '"]');
+      if (card) {
+        card.classList.add('current');
+        const badge = document.createElement('div');
+        badge.className = 'badge-current';
+        badge.textContent = 'Current plan';
+        card.appendChild(badge);
+      }
+    }
+
+    async function loadBilling() {
+      const err = document.getElementById('billError');
+      err.style.display = 'none';
+      err.textContent = '';
+
+      const currentPlanText = document.getElementById('currentPlanText');
+      const nextInvoiceText = document.getElementById('nextInvoiceText');
+      const invoiceBody = document.getElementById('invoiceBody');
+      const invoiceCount = document.getElementById('invoiceCount');
+
+      invoiceBody.innerHTML = '';
+      invoiceCount.textContent = 'Loading…';
+
+      try {
+        const [summary, history] = await Promise.all([
+          carelineApiGet('/api/billing/summary'),
+          carelineApiGet('/api/billing/history')
+        ]);
+
+        const planId = summary.planId || 'starter';
+        markCurrentPlan(planId);
+
+        const planName = summary.planName || 'Starter Route';
+        const amount = summary.amount || '$899/month';
+        const nextDate = summary.nextInvoiceDate
+          ? carelineFormatDateTimeShort(summary.nextInvoiceDate)
+          : '—';
+
+        currentPlanText.textContent =
+          'Current plan: ' + planName + ' (' + amount + ')';
+        nextInvoiceText.textContent =
+          'Next invoice: ' + nextDate + (summary.status ? ' · ' + summary.status : '');
+
+        const invoices = history.invoices || [];
+
+        if (!invoices.length) {
+          invoiceCount.textContent = 'No invoices yet.';
+        } else {
+          invoices
+            .slice()
+            .sort((a, b) => {
+              const ta = a.date ? new Date(a.date).getTime() : 0;
+              const tb = b.date ? new Date(b.date).getTime() : 0;
+              return tb - ta;
+            })
+            .forEach(inv => {
+              const tr = document.createElement('tr');
+              const dateStr = inv.date ? carelineFormatDateTimeShort(inv.date) : '—';
+              tr.innerHTML = `
+                <td>${dateStr}</td>
+                <td>${inv.invoiceNumber || '—'}</td>
+                <td>${inv.planName || '—'}</td>
+                <td>${inv.amount || '—'}</td>
+                <td>${inv.status || '—'}</td>
+              `;
+              invoiceBody.appendChild(tr);
+            });
+
+          invoiceCount.textContent = 'Showing ' + invoices.length + ' invoice(s).';
+        }
+      } catch (e) {
+        console.error('Billing error', e);
+        err.style.display = 'block';
+        err.textContent = 'Error loading billing: ' + e.message;
+        currentPlanText.textContent = 'Unable to load subscription details.';
+        invoiceCount.textContent = 'Error loading invoices.';
+      }
+    }
+
+    document.getElementById('planGrid').addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      if (action === 'select-plan') {
+        const plan = btn.dataset.plan;
+        carelineShowToast('Plan change request: ' + plan + ' (wire to /api/billing/upgrade when ready).');
+        // In production: POST /api/billing/upgrade with { planId: plan }
+      } else if (action === 'contact-sales') {
+        carelineShowToast('Open sales contact flow (email or form).');
+        // In production: open /contact-sales or mailto:
+      }
+    });
+
+    // Boot – admin-only
+    requireLoggedIn();
+    CareLine.requireRole(['admin']);
+    buildRoleAwareNav('billing');
+    updateSessionLabel();
+    loadBilling();
+  </script>
+</body>
+</html>

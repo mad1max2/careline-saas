@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>CareLine Facility Monthly Report</title>
+  <title>CareLine Facility Report</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -58,10 +58,6 @@
       border-radius: 999px;
     }
 
-    .nav a:hover {
-      background: rgba(255,255,255,0.15);
-    }
-
     .nav a.active {
       background: rgba(255,255,255,0.2);
     }
@@ -84,6 +80,12 @@
       color: var(--muted);
     }
 
+    .session-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
     .top-row {
       display: flex;
       justify-content: space-between;
@@ -101,22 +103,28 @@
       margin-bottom: 12px;
     }
 
-    label {
-      display: block;
+    .error {
+      padding: 8px;
+      background: #ffebee;
+      color: var(--danger);
+      border-radius: 8px;
       font-size: 12px;
-      margin-bottom: 3px;
-      color: #455a64;
+      margin-bottom: 8px;
+      display: none;
     }
 
-    input, select {
+    label {
+      font-size: 12px;
+      color: #455a64;
+      margin-right: 4px;
+    }
+
+    input[type="date"],
+    input[type="text"] {
       padding: 7px 9px;
       border-radius: 8px;
       border: 1px solid #b0bec5;
       font-size: 13px;
-      width: 100%;
-      max-width: 260px;
-      margin-right: 6px;
-      margin-bottom: 6px;
     }
 
     button {
@@ -142,32 +150,58 @@
       transform: scale(0.98);
     }
 
-    .error {
-      padding: 8px;
-      background: #ffebee;
-      color: var(--danger);
-      border-radius: 8px;
-      font-size: 12px;
-      margin-bottom: 8px;
-      display: none;
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 4px;
+      margin-bottom: 4px;
     }
 
-    .count-pill {
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
+    .metric-card {
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
+    .metric-label {
       font-size: 11px;
       color: var(--muted);
-      margin-top: 4px;
+      margin-bottom: 2px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .metric-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
+      margin-top: 6px;
     }
 
     th, td {
       padding: 6px 8px;
       border-bottom: 1px solid #eceff1;
       text-align: left;
+      vertical-align: top;
     }
 
     th {
@@ -181,23 +215,28 @@
       background: #fafafa;
     }
 
-    .status-pill {
-      display: inline-block;
+    .bar-cell {
+      width: 40%;
+    }
+
+    .bar {
+      height: 8px;
       border-radius: 999px;
-      padding: 2px 7px;
+      background: #b2ebf2;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--teal);
+      width: 0%;
+    }
+
+    .count-pill {
       font-size: 11px;
-      background: #eceff1;
-      color: #455a64;
-    }
-
-    .status-complete {
-      background: #e8f5e9;
-      color: #2e7d32;
-    }
-
-    .status-pending {
-      background: #fff3e0;
-      color: #e65100;
+      color: var(--muted);
+      margin-top: 4px;
     }
 
     footer {
@@ -208,8 +247,14 @@
     }
 
     @media (max-width: 900px) {
-      .top-row {
-        flex-direction: column;
+      .metrics-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -218,7 +263,7 @@
   <header>
     <div>
       <div class="brand">CareLine Medical Logistics</div>
-      <div class="subtitle">Facility Monthly Report</div>
+      <div class="subtitle">Facility Report</div>
     </div>
     <nav class="nav" id="mainNav"></nav>
   </header>
@@ -226,72 +271,84 @@
   <main>
     <div class="top-row">
       <div>
-        <h1>Facility Monthly Report</h1>
+        <h1>Facility Performance Report</h1>
         <p class="small">
-          Filter notification activity for a single facility and month, then export as CSV.
+          On-time rate, volume, and delivery durations for a single facility.
         </p>
+        <p class="session-pill" id="sessionUser">Checking current session…</p>
       </div>
 
-      <section class="card" style="max-width:360px;">
+      <section class="card" style="max-width:410px;">
         <h2 style="font-size:14px;margin-bottom:4px;">Filters</h2>
-        <p class="small" style="margin-bottom:6px;">
-          Facility name is matched by text (case-insensitive). Month/year are based on event time.
-        </p>
+        <div id="frError" class="error"></div>
 
-        <div id="reportError" class="error"></div>
+        <div class="filters-row">
+          <div>
+            <label for="facilityNameInput">Facility name contains</label><br />
+            <input id="facilityNameInput" type="text" placeholder="Facility name..." />
+          </div>
+        </div>
 
-        <label for="facilityInput">Facility name</label>
-        <input id="facilityInput" type="text" placeholder="e.g. Sunrise Wound Care Center" />
+        <div class="filters-row">
+          <div>
+            <label for="startDate">From</label>
+            <input type="date" id="startDate" />
+          </div>
+          <div>
+            <label for="endDate">To</label>
+            <input type="date" id="endDate" />
+          </div>
+        </div>
 
-        <label for="monthSelect">Month</label>
-        <select id="monthSelect">
-          <option value="0">January</option>
-          <option value="1">February</option>
-          <option value="2">March</option>
-          <option value="3">April</option>
-          <option value="4">May</option>
-          <option value="5">June</option>
-          <option value="6">July</option>
-          <option value="7">August</option>
-          <option value="8">September</option>
-          <option value="9">October</option>
-          <option value="10">November</option>
-          <option value="11">December</option>
-        </select>
-
-        <label for="yearInput">Year</label>
-        <input id="yearInput" type="number" min="2020" max="2100" />
-
-        <button id="applyFiltersBtn" class="primary" style="margin-top:4px;">Apply</button>
-        <button id="downloadCsvBtn" class="secondary" style="margin-top:4px;margin-left:4px;">Download CSV</button>
+        <div class="filters-row">
+          <button id="applyBtn" class="primary">Apply</button>
+          <button id="resetBtn" class="secondary">Reset</button>
+        </div>
       </section>
     </div>
 
     <section class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <h2 style="font-size:14px;">Events</h2>
-        <button id="refreshBtn" class="secondary">Refresh</button>
+      <h2 style="font-size:14px;margin-bottom:4px;">Summary</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">On-time rate</div>
+          <div class="metric-value" id="metricOnTime">0%</div>
+          <div class="metric-sub" id="metricOnTimeSub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Distinct stops</div>
+          <div class="metric-value" id="metricStops">0</div>
+          <div class="metric-sub" id="metricStopsSub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Avg delivery duration</div>
+          <div class="metric-value" id="metricDuration">0 min</div>
+          <div class="metric-sub" id="metricDurationSub"></div>
+        </div>
       </div>
+    </section>
+
+    <section class="card">
+      <h2 style="font-size:14px;margin-bottom:4px;">Delivery Details</h2>
+      <p class="small">
+        One row per stop with schedule, delivery time, and duration (where data is available).
+      </p>
 
       <table>
         <thead>
           <tr>
-            <th>Time</th>
-            <th>Event Type</th>
-            <th>Status</th>
-            <th>Patient</th>
-            <th>Facility</th>
-            <th>Driver</th>
             <th>Stop ID</th>
+            <th>Patient</th>
+            <th>Scheduled</th>
+            <th>Delivered</th>
+            <th>On-time?</th>
+            <th>Duration (min)</th>
+            <th class="bar-cell">Bar</th>
           </tr>
         </thead>
-        <tbody id="eventsBody">
-          <!-- rows injected -->
-        </tbody>
+        <tbody id="stopsBody"></tbody>
       </table>
-      <p class="count-pill" id="eventsCount">
-        No data loaded yet.
-      </p>
+      <p class="count-pill" id="stopsCount">No stops yet.</p>
     </section>
   </main>
 
@@ -299,208 +356,258 @@
     CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
   </footer>
 
+  <script src="/js/careline-universal.js"></script>
   <script src="nav.js"></script>
   <script>
-    function requireLoggedIn() {
-      const token = localStorage.getItem('carelineToken');
-      if (!token) {
-        alert('You must be logged in to view this page.');
-        window.location.href = 'login.html';
-      }
+    function buildBarFill(widthPct) {
+      const w = Math.max(0, Math.min(100, widthPct));
+      return '<div class="bar"><div class="bar-fill" style="width:' + w + '%;"></div></div>';
     }
 
-    function getAuthHeaders() {
-      const token = localStorage.getItem('carelineToken');
-      return token ? { 'Authorization': 'Bearer ' + token } : {};
+    function isCompleteStatus(status, eventType) {
+      const s = (status || '').toLowerCase();
+      const e = (eventType || '').toLowerCase();
+      const words = ['delivered', 'completed', 'complete', 'done', 'closed'];
+      return words.some(w => s.includes(w) || e.includes(w));
     }
 
-    function facilityMatches(target, facilityName) {
-      if (!target || !facilityName) return false;
-      return facilityName.toLowerCase().includes(target.toLowerCase());
+    function findScheduledFromTemplates(t) {
+      if (!t) return null;
+      if (t.scheduledTime) return new Date(t.scheduledTime);
+      if (t.scheduledWindowEnd) return new Date(t.scheduledWindowEnd);
+      if (t.windowEnd) return new Date(t.windowEnd);
+      return null;
     }
 
-    function isCompleteStatus(statusRaw) {
-      if (!statusRaw) return false;
-      const s = statusRaw.toLowerCase();
-      const completeWords = ['done', 'delivered', 'completed', 'complete', 'closed'];
-      return completeWords.some(word => s.includes(word));
-    }
+    async function loadFacilityReport() {
+      const errBox = document.getElementById('frError');
+      errBox.style.display = 'none';
+      errBox.textContent = '';
 
-    let currentFilteredEvents = [];
+      const facilityFilter = document.getElementById('facilityNameInput').value.trim().toLowerCase();
+      const startVal = document.getElementById('startDate').value;
+      const endVal = document.getElementById('endDate').value;
+      const startDate = carelineParseInputDate(startVal, false);
+      const endDate = carelineParseInputDate(endVal, true);
 
-    async function loadReport() {
-      const facility = (document.getElementById('facilityInput').value || '').trim();
-      const month = parseInt(document.getElementById('monthSelect').value, 10);
-      const year = parseInt(document.getElementById('yearInput').value, 10);
-      const errorBox = document.getElementById('reportError');
-      const body = document.getElementById('eventsBody');
-      const countEl = document.getElementById('eventsCount');
-
-      errorBox.style.display = 'none';
-      errorBox.textContent = '';
-      body.innerHTML = '';
-      currentFilteredEvents = [];
-
-      if (!facility || !year || isNaN(month)) {
-        errorBox.style.display = 'block';
-        errorBox.textContent = 'Please enter facility name, month, and year.';
-        countEl.textContent = 'Missing filters.';
-        return;
-      }
+      const stopsBody = document.getElementById('stopsBody');
+      const stopsCount = document.getElementById('stopsCount');
+      stopsBody.innerHTML = '';
+      stopsCount.textContent = 'Loading…';
 
       try {
-        const res = await fetch('/api/notifications', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeaders()
-          },
-          cache: 'no-store'
-        });
+        const [notifyRes, routesRes] = await Promise.all([
+          carelineApiGet('/api/notifications'),
+          carelineApiGet('/routes.json')
+        ]);
 
-        if (!res.ok) {
-          errorBox.style.display = 'block';
-          errorBox.textContent = 'Could not load notifications. Check access rights.';
-          countEl.textContent = 'Error loading data.';
-          return;
-        }
+        const notifications = notifyRes.notifications || [];
+        const routes = routesRes.routes || [];
 
-        const data = await res.json();
-        const notifications = data.notifications || [];
+        // Filter events to matching facility/date
+        const events = notifications.filter(ev => {
+          if (!ev.createdAt) return false;
+          const d = new Date(ev.createdAt);
+          if (isNaN(d.getTime())) return false;
+          if (startDate && d < startDate) return false;
+          if (endDate && d > endDate) return false;
 
-        const filtered = notifications.filter(ev => {
           const t = ev.templates || {};
-          const fName = (t.facilityName || '').trim();
-          if (!facilityMatches(facility, fName)) return false;
+          const facilityName = (t.facilityName || '').toLowerCase();
+          if (facilityFilter && !facilityName.includes(facilityFilter)) return false;
 
-          const createdAt = ev.createdAt ? new Date(ev.createdAt) : null;
-          if (!createdAt || isNaN(createdAt.getTime())) return false;
-          return createdAt.getMonth() === month && createdAt.getFullYear() === year;
+          return true;
         });
 
-        currentFilteredEvents = filtered;
-
-        if (filtered.length === 0) {
-          countEl.textContent = 'No events found for "' + facility + '" in ' + (month + 1) + '/' + year + '.';
-          return;
+        if (!events.length) {
+          stopsCount.textContent = 'No events for this facility / date range.';
         }
 
-        filtered
-          .sort((a, b) => {
+        // Map stop -> events
+        const eventsByStop = {};
+        events.forEach(ev => {
+          const stopId = ev.stopId || '';
+          if (!stopId) return;
+          if (!eventsByStop[stopId]) eventsByStop[stopId] = [];
+          eventsByStop[stopId].push(ev);
+        });
+
+        const perStop = [];
+        Object.keys(eventsByStop).forEach(stopId => {
+          const stopEvents = eventsByStop[stopId].slice().sort((a, b) => {
             const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
             const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-            return tb - ta;
-          })
-          .forEach(ev => {
-            const t = ev.templates || {};
-            const timeStr = ev.createdAt ? new Date(ev.createdAt).toLocaleString() : '—';
-            const patient = t.patientName || '';
-            const facilityName = t.facilityName || '';
-            const status = ev.status || '';
-            const driverId = ev.driverId || '';
-            const stopId = ev.stopId || '';
-            const complete = isCompleteStatus(status);
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${timeStr}</td>
-              <td>${ev.eventType || ''}</td>
-              <td>
-                <span class="status-pill ${complete ? 'status-complete' : ''}">
-                  ${status || (complete ? 'Delivered' : '')}
-                </span>
-              </td>
-              <td>${patient}</td>
-              <td>${facilityName}</td>
-              <td>${driverId}</td>
-              <td>${stopId}</td>
-            `;
-            body.appendChild(tr);
+            return ta - tb;
           });
 
-        countEl.textContent =
-          'Showing ' + filtered.length + ' event(s) for "' + facility + '" in ' + (month + 1) + '/' + year + '.';
-      } catch (err) {
-        console.error('Facility report load error', err);
-        errorBox.style.display = 'block';
-        errorBox.textContent = 'Network error while loading data.';
-        countEl.textContent = 'Network error.';
-      }
-    }
+          if (!stopEvents.length) return;
 
-    function exportCsv() {
-      const facility = (document.getElementById('facilityInput').value || '').trim();
-      const month = parseInt(document.getElementById('monthSelect').value, 10);
-      const year = parseInt(document.getElementById('yearInput').value, 10);
+          let scheduled = null;
+          let deliveredAt = null;
+          let patientName = '';
+          let facilityName = '';
 
-      if (!currentFilteredEvents.length) {
-        alert('No events to export. Run the report first.');
-        return;
-      }
-
-      const header = [
-        'Time',
-        'EventType',
-        'Status',
-        'Patient',
-        'Facility',
-        'Driver',
-        'StopId'
-      ];
-
-      const rows = currentFilteredEvents.map(ev => {
-        const t = ev.templates || {};
-        const timeStr = ev.createdAt ? new Date(ev.createdAt).toISOString() : '';
-        return [
-          timeStr,
-          ev.eventType || '',
-          ev.status || '',
-          t.patientName || '',
-          t.facilityName || '',
-          ev.driverId || '',
-          ev.stopId || ''
-        ];
-      });
-
-      const allRows = [header, ...rows];
-      const csv = allRows
-        .map(row =>
-          row
-            .map(value => {
-              const v = value == null ? '' : String(value);
-              if (v.includes(',') || v.includes('"') || v.includes('\n')) {
-                return '"' + v.replace(/"/g, '""') + '"';
+          stopEvents.forEach(ev => {
+            const t = ev.templates || {};
+            const cand = findScheduledFromTemplates(t);
+            if (cand && !isNaN(cand.getTime())) {
+              if (!scheduled || cand.getTime() < scheduled.getTime()) {
+                scheduled = cand;
               }
-              return v;
-            })
-            .join(',')
-        )
-        .join('\n');
+            }
+            if (!patientName && t.patientName) patientName = t.patientName;
+            if (!facilityName && t.facilityName) facilityName = t.facilityName;
+          });
 
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
+          for (let i = stopEvents.length - 1; i >= 0; i--) {
+            const ev = stopEvents[i];
+            if (isCompleteStatus(ev.status, ev.eventType) && ev.createdAt) {
+              const d = new Date(ev.createdAt);
+              if (!isNaN(d.getTime())) {
+                deliveredAt = d;
+                break;
+              }
+            }
+          }
 
-      const link = document.createElement('a');
-      const safeFacility = facility ? facility.replace(/[^a-z0-9]+/gi, '_') : 'facility';
-      link.href = url;
-      link.download = `careline-report_${safeFacility}_${year}-${month + 1}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+          let durationMin = null;
+          if (deliveredAt) {
+            const firstEv = stopEvents[0];
+            if (firstEv && firstEv.createdAt) {
+              const start = new Date(firstEv.createdAt);
+              if (!isNaN(start.getTime())) {
+                durationMin = Math.round((deliveredAt.getTime() - start.getTime()) / 60000);
+                if (durationMin < 0) durationMin = null;
+              }
+            }
+          }
+
+          let onTime = null;
+          const graceMinutes = 15;
+          if (scheduled && deliveredAt) {
+            const diff = (deliveredAt.getTime() - scheduled.getTime()) / 60000;
+            onTime = diff <= graceMinutes;
+          }
+
+          perStop.push({
+            stopId,
+            patientName,
+            facilityName,
+            scheduled,
+            deliveredAt,
+            durationMin,
+            onTime
+          });
+        });
+
+        if (!perStop.length) {
+          stopsCount.textContent = 'No stops with schedule/delivery data in this range.';
+        }
+
+        perStop.sort((a, b) => {
+          const ta = a.deliveredAt ? a.deliveredAt.getTime() : 0;
+          const tb = b.deliveredAt ? b.deliveredAt.getTime() : 0;
+          return tb - ta;
+        });
+
+        const durations = perStop
+          .map(s => s.durationMin)
+          .filter(v => v != null);
+        const avgDuration =
+          durations.length
+            ? Math.round(durations.reduce((sum, v) => sum + v, 0) / durations.length)
+            : 0;
+
+        const stopsWithOnTime = perStop.filter(s => s.onTime !== null);
+        const totalOnTimeEligible = stopsWithOnTime.length;
+        const onTimeCount = stopsWithOnTime.filter(s => s.onTime).length;
+        const onTimePct = totalOnTimeEligible
+          ? Math.round((onTimeCount / totalOnTimeEligible) * 100)
+          : 0;
+
+        const metricOnTime = document.getElementById('metricOnTime');
+        const metricOnTimeSub = document.getElementById('metricOnTimeSub');
+        const metricStops = document.getElementById('metricStops');
+        const metricStopsSub = document.getElementById('metricStopsSub');
+        const metricDuration = document.getElementById('metricDuration');
+        const metricDurationSub = document.getElementById('metricDurationSub');
+
+        metricStops.textContent = perStop.length;
+        metricStopsSub.textContent = perStop.length
+          ? 'Distinct stops for this facility.'
+          : 'No stops found for this facility.';
+        metricOnTime.textContent = onTimePct + '%';
+        metricOnTimeSub.textContent =
+          totalOnTimeEligible > 0
+            ? onTimeCount + ' of ' + totalOnTimeEligible + ' deliveries on time (15 min grace).'
+            : 'No stops with both scheduled + delivered timestamps.';
+        metricDuration.textContent = avgDuration + ' min';
+        metricDurationSub.textContent = durations.length
+          ? 'Based on ' + durations.length + ' stop(s) with start+end events.'
+          : 'No complete duration data.';
+
+        const maxDuration = durations.length ? Math.max(...durations) : 1;
+
+        perStop.forEach(s => {
+          const tr = document.createElement('tr');
+          const schedStr = s.scheduled ? carelineFormatDateTimeShort(s.scheduled) : '—';
+          const delStr = s.deliveredAt ? carelineFormatDateTimeShort(s.deliveredAt) : '—';
+          const onTimeText =
+            s.onTime === null ? 'N/A' : s.onTime ? 'Yes' : 'No';
+          const durText = s.durationMin != null ? s.durationMin : '—';
+          const relWidth =
+            s.durationMin != null
+              ? (Math.max(1, maxDuration - s.durationMin + 1) / (maxDuration + 1)) * 100
+              : 0;
+
+          tr.innerHTML = `
+            <td>${s.stopId}</td>
+            <td>${s.patientName || '—'}</td>
+            <td>${schedStr}</td>
+            <td>${delStr}</td>
+            <td>${onTimeText}</td>
+            <td>${durText}</td>
+            <td class="bar-cell">${s.durationMin != null ? buildBarFill(relWidth) : ''}</td>
+          `;
+          stopsBody.appendChild(tr);
+        });
+
+        if (perStop.length) {
+          stopsCount.textContent =
+            'Showing ' + perStop.length + ' stop(s) for this facility.';
+        }
+      } catch (err) {
+        console.error('Facility report error', err);
+        errBox.style.display = 'block';
+        errBox.textContent = 'Error loading facility report: ' + err.message;
+        document.getElementById('stopsCount').textContent = 'Error loading data.';
+      }
     }
 
-    document.getElementById('applyFiltersBtn').addEventListener('click', loadReport);
-    document.getElementById('refreshBtn').addEventListener('click', loadReport);
-    document.getElementById('downloadCsvBtn').addEventListener('click', exportCsv);
+    document.getElementById('applyBtn').addEventListener('click', loadFacilityReport);
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      const today = new Date();
+      const thirtyAgo = new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000);
+      document.getElementById('endDate').value = today.toISOString().slice(0, 10);
+      document.getElementById('startDate').value = thirtyAgo.toISOString().slice(0, 10);
+      document.getElementById('facilityNameInput').value = '';
+      loadFacilityReport();
+    });
 
-    // Boot
+    // Boot – admin or facility
     requireLoggedIn();
+    CareLine.requireRole(['admin', 'facility']);
     buildRoleAwareNav('facility-report');
+    updateSessionLabel();
 
-    const now = new Date();
-    document.getElementById('monthSelect').value = String(now.getMonth());
-    document.getElementById('yearInput').value = now.getFullYear();
+    (function initDates() {
+      const today = new Date();
+      const thirtyAgo = new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000);
+      document.getElementById('endDate').value = today.toISOString().slice(0, 10);
+      document.getElementById('startDate').value = thirtyAgo.toISOString().slice(0, 10);
+    })();
+
+    loadFacilityReport();
   </script>
 </body>
 </html>

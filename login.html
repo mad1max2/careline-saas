@@ -1,120 +1,236 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Driver Dashboard — CareLine</title>
+  <meta charset="UTF-8" />
+  <title>CareLine Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
+    :root {
+      --teal: #0097a7;
+      --dark: #004d40;
+      --bg: #e0f7fa;
+      --card: #ffffff;
+      --muted: #607d8b;
+      --danger: #c62828;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f3f6f9;
-      color: #12303f;
-    }
-
-    .header {
-      background: #00a8b5;
-      color: white;
-      padding: 16px 24px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-      font-size: 22px;
-      font-weight: bold;
-    }
-
-    .page {
-      max-width: 700px;
-      margin: 40px auto;
-      padding: 0 16px;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
     }
 
     .card {
-      background: white;
-      border-radius: 10px;
-      padding: 24px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      margin-bottom: 24px;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 18px 20px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
     }
 
-    h2 {
-      margin-top: 0;
-      color: #004b6b;
+    .logo {
+      text-align: center;
+      margin-bottom: 10px;
     }
 
-    .welcome {
+    .logo-title {
+      font-weight: bold;
       font-size: 18px;
-      font-weight: bold;
-      color: #004b6b;
-      margin-bottom: 16px;
     }
 
-    .button-row {
-      margin-top: 16px;
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+    .logo-subtitle {
+      font-size: 11px;
+      color: var(--muted);
     }
 
-    a.button {
-      display: inline-block;
-      padding: 12px 18px;
-      background: #004b6b;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 14px;
+    h1 {
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 4px;
     }
 
-    a.button:hover {
-      background: #006593;
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    label {
+      font-size: 12px;
+      color: #455a64;
+      display: block;
+      margin-top: 6px;
+      margin-bottom: 3px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #b0bec5;
+      font-size: 13px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--teal);
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .error {
+      padding: 8px;
+      background: #ffebee;
+      color: var(--danger);
+      border-radius: 8px;
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 8px;
     }
   </style>
 </head>
-
 <body>
-
-  <div class="header">CareLine Driver Dashboard</div>
-
-  <div class="page">
-
-    <div class="card">
-      <div class="welcome" id="welcomeName">Welcome, Driver</div>
-
-      <p>You are now logged into the secure CareLine Driver Portal.</p>
-
-      <p>
-        From here you can:
-      </p>a
-
-      <ul>
-        <li>📦 Track any delivery</li>
-        <li>📝 Update status (Delivered, Out for Delivery, etc.)</li>
-        <li>🚚 View your assigned route</li>
-      </ul>
-
-      <div class="button-row">
-        <a class="button" id="trackLink" href="tracking.html">Track a Delivery</a>
-        <a class="button" id="routeLink" href="driver-route.html">View Today’s Route</a>
-      </div>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-title">CareLine Medical Logistics</div>
+      <div class="logo-subtitle">Care That Moves. Logistics That Deliver.</div>
     </div>
 
+    <h1>Sign In</h1>
+    <p class="small">
+      Secure access for drivers, dispatch, and facility partners.
+    </p>
+
+    <label for="emailInput">Email</label>
+    <input id="emailInput" type="email" placeholder="you@example.com" />
+
+    <label for="passwordInput">Password</label>
+    <input id="passwordInput" type="password" placeholder="••••••••" />
+
+    <label for="roleSelect">Role</label>
+    <select id="roleSelect">
+      <option value="">Select role…</option>
+      <option value="driver">Driver</option>
+      <option value="admin">Admin / Dispatch</option>
+      <option value="facility">Facility</option>
+    </select>
+
+    <button id="loginBtn">Log In</button>
+
+    <div id="loginError" class="error"></div>
+
+    <div class="footer">
+      If you need help signing in, contact your CareLine administrator.
+    </div>
   </div>
 
+  <!-- Shared helpers (for token + user management) -->
+  <script src="/js/careline-universal.js"></script>
   <script>
-    // Read driver name from URL
-    const params = new URLSearchParams(window.location.search);
-    const name = params.get("name") || "Driver";
+    async function handleLogin() {
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value;
+      const role = document.getElementById('roleSelect').value;
+      const errorBox = document.getElementById('loginError');
 
-    document.getElementById("welcomeName").innerText =
-      "Welcome, " + name;
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
 
-    // Pass driver name along to other pages (optional, for future use)
-    const trackLink = document.getElementById("trackLink");
-    const routeLink = document.getElementById("routeLink");
+      if (!email || !password || !role) {
+        errorBox.style.display = 'block';
+        errorBox.textContent = 'Please enter email, password, and role.';
+        return;
+      }
 
-    const nameParam = "?name=" + encodeURIComponent(name);
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, role })
+        });
 
-    trackLink.href = "tracking.html" + nameParam;
-    routeLink.href = "driver-route.html" + nameParam;
+        if (!res.ok) {
+          throw new Error('Invalid credentials or role.');
+        }
+
+        const data = await res.json();
+        const token = data.token;
+        const user = data.user || { id: email, email, role };
+
+        if (!token) {
+          throw new Error('No token returned from server.');
+        }
+
+        CareLine.setToken(token);
+        CareLine.setUser(user);
+
+        // Role-based redirect
+        let target = 'control-center.html';
+        if (user.role === 'driver') {
+          target = 'driver-stops.html';
+        } else if (user.role === 'facility') {
+          target = 'facility-portal.html';
+        } else if (user.role === 'admin') {
+          target = 'control-center.html';
+        }
+
+        carelineShowToast('Welcome back, ' + (user.email || user.id || 'CareLine user') + '!');
+        window.location.href = target;
+      } catch (err) {
+        console.error('Login error', err);
+        errorBox.style.display = 'block';
+        errorBox.textContent = err.message || 'Login failed.';
+      }
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+
+    document.getElementById('passwordInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    document.getElementById('emailInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    // If already logged in, bounce them to their home
+    window.addEventListener('load', () => {
+      const token = CareLine.getToken();
+      const user = CareLine.getUser();
+      if (token && user && user.role) {
+        let target = 'control-center.html';
+        if (user.role === 'driver') target = 'driver-stops.html';
+        if (user.role === 'facility') target = 'facility-portal.html';
+        window.location.href = target;
+      }
+    });
   </script>
-
 </body>
 </html>

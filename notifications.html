@@ -58,10 +58,6 @@
       border-radius: 999px;
     }
 
-    .nav a:hover {
-      background: rgba(255,255,255,0.15);
-    }
-
     .nav a.active {
       background: rgba(255,255,255,0.2);
     }
@@ -69,7 +65,7 @@
     main {
       flex: 1;
       padding: 14px;
-      max-width: 1200px;
+      max-width: 1100px;
       width: 100%;
       margin: 0 auto;
     }
@@ -82,6 +78,12 @@
     .small {
       font-size: 11px;
       color: var(--muted);
+    }
+
+    .session-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
     }
 
     .top-row {
@@ -101,12 +103,6 @@
       margin-bottom: 12px;
     }
 
-    .session-pill {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
     .error {
       padding: 8px;
       background: #ffebee;
@@ -117,31 +113,19 @@
       display: none;
     }
 
-    .filters-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
     label {
       font-size: 12px;
       color: #455a64;
+      margin-right: 4px;
     }
 
-    select,
+    input[type="date"],
     input[type="text"],
-    input[type="date"] {
+    select {
       padding: 7px 9px;
       border-radius: 8px;
       border: 1px solid #b0bec5;
       font-size: 13px;
-    }
-
-    input[type="checkbox"] {
-      transform: scale(0.9);
-      margin-right: 3px;
     }
 
     button {
@@ -167,29 +151,13 @@
       transform: scale(0.98);
     }
 
-    .live-pill {
-      display: inline-flex;
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      border-radius: 999px;
-      padding: 3px 8px;
-      background: #e3f2fd;
-      color: #1565c0;
-    }
-
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #d32f2f;
-      animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.3); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.8; }
+      margin-top: 4px;
+      margin-bottom: 4px;
     }
 
     table {
@@ -227,8 +195,8 @@
     }
 
     .pill-sms {
-      background: #fce4ec;
-      color: #ad1457;
+      background: #e8f5e9;
+      color: #2e7d32;
     }
 
     .pill-email {
@@ -237,23 +205,14 @@
     }
 
     .pill-status {
-      background: #e8f5e9;
-      color: #2e7d32;
+      background: #fff3e0;
+      color: #e65100;
     }
 
     .count-pill {
       font-size: 11px;
       color: var(--muted);
       margin-top: 4px;
-    }
-
-    .msg-preview {
-      font-size: 11px;
-      color: #455a64;
-      max-width: 280px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     footer {
@@ -264,9 +223,7 @@
     }
 
     @media (max-width: 900px) {
-      th:nth-child(5), td:nth-child(5) {
-        display: none; /* hide message preview on small screens */
-      }
+      main { padding: 10px; }
     }
   </style>
 </head>
@@ -274,7 +231,7 @@
   <header>
     <div>
       <div class="brand">CareLine Medical Logistics</div>
-      <div class="subtitle">Notifications Timeline — SMS · Email · Status</div>
+      <div class="subtitle">Notifications Timeline</div>
     </div>
     <nav class="nav" id="mainNav"></nav>
   </header>
@@ -282,105 +239,72 @@
   <main>
     <div class="top-row">
       <div>
-        <h1>Notifications Feed</h1>
+        <h1>Notifications Timeline</h1>
         <p class="small">
-          Live timeline of every SMS, email, and status event across CareLine — with filters for channel, date, and facility.
+          Every SMS, email, and status event — filterable by date, channel, and facility.
         </p>
-        <p class="session-pill" id="sessionUser">
-          Checking current session…
-        </p>
+        <p class="session-pill" id="sessionUser">Checking current session…</p>
       </div>
 
-      <section class="card" style="max-width:380px;">
-        <h2 style="font-size:14px;margin-bottom:4px;">Live Status</h2>
-        <p class="small">
-          When <strong>Live Mode</strong> is ON, this page auto-refreshes every few seconds using your secure API token.
-        </p>
+      <section class="card" style="max-width:420px;">
+        <h2 style="font-size:14px;margin-bottom:4px;">Filters & Export</h2>
         <div id="notifError" class="error"></div>
 
-        <div class="filters-row" style="margin-top:6px;">
-          <span id="liveIndicator" class="live-pill">
-            <span class="live-dot"></span>
-            Live: ON
-          </span>
+        <div class="filters-row">
+          <div>
+            <label for="startDate">From</label>
+            <input type="date" id="startDate" />
+          </div>
+          <div>
+            <label for="endDate">To</label>
+            <input type="date" id="endDate" />
+          </div>
         </div>
 
         <div class="filters-row">
-          <label>
-            <input type="checkbox" id="liveToggle" checked />
-            Auto-refresh every 10 seconds
-          </label>
+          <div>
+            <label for="channelSelect">Channel</label>
+            <select id="channelSelect">
+              <option value="">All</option>
+              <option value="sms">SMS</option>
+              <option value="email">Email</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
+          <div>
+            <label for="facilityFilter">Facility contains</label>
+            <input id="facilityFilter" type="text" placeholder="Facility name..." />
+          </div>
         </div>
 
         <div class="filters-row">
-          <button id="manualRefreshBtn" class="secondary">Refresh now</button>
+          <button id="applyFiltersBtn" class="primary">Apply</button>
+          <button id="resetFiltersBtn" class="secondary">Reset</button>
+          <button id="csvBtn" class="secondary">Download CSV</button>
         </div>
       </section>
     </div>
 
     <section class="card">
-      <!-- FILTERS -->
-      <div class="filters-row">
-        <div>
-          <label for="channelFilter">Channel:</label>
-          <select id="channelFilter">
-            <option value="all">All</option>
-            <option value="sms">SMS</option>
-            <option value="email">Email</option>
-            <option value="status">Status</option>
-          </select>
-        </div>
+      <h2 style="font-size:14px;margin-bottom:4px;">Events</h2>
+      <p class="small">
+        Most recent events at the top. This is your audit trail for patients, facilities, and drivers.
+      </p>
 
-        <div>
-          <label for="facilityFilter">Facility:</label>
-          <input
-            type="text"
-            id="facilityFilter"
-            placeholder="Type facility name..."
-          />
-        </div>
-
-        <div>
-          <label for="startDate">From:</label>
-          <input type="date" id="startDate" />
-        </div>
-
-        <div>
-          <label for="endDate">To:</label>
-          <input type="date" id="endDate" />
-        </div>
-      </div>
-
-      <div class="filters-row">
-        <div>
-          <label for="searchInput">Search:</label>
-          <input
-            type="text"
-            id="searchInput"
-            placeholder="Patient, status, driver, message..."
-          />
-        </div>
-      </div>
-
-      <!-- TABLE -->
       <table>
         <thead>
           <tr>
             <th>Time</th>
             <th>Channel</th>
             <th>Event</th>
-            <th>Context</th>
-            <th>Message Preview</th>
+            <th>Facility</th>
+            <th>Patient</th>
+            <th>Driver / Stop</th>
           </tr>
         </thead>
-        <tbody id="notificationsBody">
-          <!-- rows injected -->
-        </tbody>
+        <tbody id="notificationsBody"></tbody>
       </table>
-
-      <p class="count-pill" id="notifCount">
-        No notifications loaded yet.
-      </p>
+      <p class="count-pill" id="notificationsCount">No events loaded yet.</p>
     </section>
   </main>
 
@@ -388,302 +312,179 @@
     CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
   </footer>
 
+  <script src="/js/careline-universal.js"></script>
   <script src="nav.js"></script>
   <script>
-    // ==============================
-    // UNIVERSAL TOKEN HELPERS
-    // ==============================
+    let latestEvents = [];
 
-    function getAuthHeaders() {
-      const token = localStorage.getItem('carelineToken');
-      return token ? { Authorization: 'Bearer ' + token } : {};
-    }
-
-    function requireLoggedIn() {
-      const token = localStorage.getItem('carelineToken');
-      if (!token) {
-        alert('You must be logged in to view this page.');
-        window.location.href = 'login.html';
-      }
-    }
-
-    // ==============================
-    // PAGE HELPERS
-    // ==============================
-
-    function updateSessionLabel() {
-      const el = document.getElementById('sessionUser');
-      const raw = localStorage.getItem('carelineUser');
-      if (!raw) {
-        el.textContent = 'Not logged in.';
-        return;
-      }
-      try {
-        const user = JSON.parse(raw);
-        el.textContent =
-          (user.email || user.id || 'User') + ' — ' + (user.role || 'unknown');
-      } catch {
-        el.textContent = 'Session found, but user data could not be read.';
-      }
-    }
-
-    function channelPillClass(channel) {
-      if (!channel) return 'pill';
-      const c = String(channel).toLowerCase();
+    function channelClass(channel) {
+      const c = (channel || '').toLowerCase();
       if (c === 'sms') return 'pill pill-sms';
       if (c === 'email') return 'pill pill-email';
       if (c === 'status') return 'pill pill-status';
       return 'pill';
     }
 
-    function formatTime(ts) {
-      if (!ts) return '—';
-      const d = new Date(ts);
-      if (isNaN(d.getTime())) return '—';
-      return d.toLocaleString();
+    function channelLabel(c) {
+      if (!c) return '—';
+      return c.toUpperCase();
     }
 
-    function buildContextCell(ev) {
-      const t = ev.templates || {};
-      const bits = [];
+    function renderNotifications() {
+      const tbody = document.getElementById('notificationsBody');
+      const countEl = document.getElementById('notificationsCount');
+      const facilityFilter = document.getElementById('facilityFilter').value.trim().toLowerCase();
+      const channelFilter = document.getElementById('channelSelect').value;
 
-      if (t.patientName) bits.push('Patient: ' + t.patientName);
-      if (t.facilityName) bits.push('Facility: ' + t.facilityName);
-      if (ev.driverId) bits.push('Driver: ' + ev.driverId);
-      if (ev.stopId) bits.push('Stop: ' + ev.stopId);
+      tbody.innerHTML = '';
 
-      if (!bits.length) return '—';
-      return bits.join(' · ');
+      let rows = latestEvents.slice();
+
+      if (channelFilter) {
+        rows = rows.filter(ev => (ev.channel || '').toLowerCase() === channelFilter);
+      }
+
+      if (facilityFilter) {
+        rows = rows.filter(ev => {
+          const t = ev.templates || {};
+          const facilityName = (t.facilityName || '').toLowerCase();
+          return facilityName.includes(facilityFilter);
+        });
+      }
+
+      if (!rows.length) {
+        countEl.textContent = 'No events match the current filters.';
+        return;
+      }
+
+      rows.forEach(ev => {
+        const t = ev.templates || {};
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${carelineFormatDateTimeShort(ev.createdAt)}</td>
+          <td><span class="${channelClass(ev.channel)}">${channelLabel(ev.channel)}</span></td>
+          <td>${ev.eventType || ev.status || '—'}</td>
+          <td>${t.facilityName || '—'}</td>
+          <td>${t.patientName || '—'}</td>
+          <td>${ev.driverId || '—'}${ev.stopId ? ' · ' + ev.stopId : ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      countEl.textContent = 'Showing ' + rows.length + ' event(s).';
     }
 
-    function buildMessagePreview(ev) {
-      const t = ev.templates || {};
-      const msg =
-        t.smsBody ||
-        t.emailSubject ||
-        t.emailBody ||
-        ev.message ||
-        ev.status ||
-        ev.eventType ||
-        '';
-      if (!msg) return '';
-      return msg.replace(/\s+/g, ' ').trim();
+    function toCsv(rows) {
+      const header = [
+        'CreatedAt',
+        'Channel',
+        'EventType',
+        'Status',
+        'Facility',
+        'Patient',
+        'DriverId',
+        'StopId'
+      ];
+      const lines = [header.join(',')];
+      rows.forEach(ev => {
+        const t = ev.templates || {};
+        const vals = [
+          ev.createdAt || '',
+          ev.channel || '',
+          ev.eventType || '',
+          ev.status || '',
+          t.facilityName || '',
+          t.patientName || '',
+          ev.driverId || '',
+          ev.stopId || ''
+        ].map(v => '"' + String(v).replace(/"/g, '""') + '"');
+        lines.push(vals.join(','));
+      });
+      return lines.join('\r\n');
     }
 
-    function matchesChannel(ev, filterValue) {
-      if (filterValue === 'all') return true;
-      const ch = (ev.channel || '').toLowerCase();
-      return ch === filterValue;
+    function downloadCsv(rows) {
+      if (!rows.length) {
+        carelineShowToast('No events to export.');
+        return;
+      }
+      const csv = toCsv(rows);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const startVal = document.getElementById('startDate').value || 'start';
+      const endVal = document.getElementById('endDate').value || 'end';
+      a.href = url;
+      a.download = 'careline_notifications_' + startVal + '_to_' + endVal + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
 
-    function facilityMatches(ev, facilityTerm) {
-      if (!facilityTerm) return true;
-      const t = ev.templates || {};
-      const name = (t.facilityName || '').toLowerCase();
-      return name.includes(facilityTerm.toLowerCase());
-    }
+    async function loadNotifications() {
+      const errBox = document.getElementById('notifError');
+      errBox.style.display = 'none';
+      errBox.textContent = '';
 
-    function inDateRange(ev, startDate, endDate) {
-      if (!startDate && !endDate) return true;
-      if (!ev.createdAt) return false;
-      const d = new Date(ev.createdAt);
-      if (isNaN(d.getTime())) return false;
-
-      if (startDate && d < startDate) return false;
-      if (endDate && d > endDate) return false;
-      return true;
-    }
-
-    function matchesSearch(ev, term) {
-      if (!term) return true;
-      const lower = term.toLowerCase();
-      const t = ev.templates || {};
-
-      const haystack = [
-        ev.channel || '',
-        ev.eventType || '',
-        ev.status || '',
-        ev.driverId || '',
-        ev.stopId || '',
-        t.patientName || '',
-        t.facilityName || '',
-        t.smsBody || '',
-        t.emailSubject || '',
-        t.emailBody || '',
-        ev.message || ''
-      ]
-        .join(' ')
-        .toLowerCase();
-
-      return haystack.includes(lower);
-    }
-
-    // ==============================
-    // LIVE NOTIFICATIONS LOGIC
-    // ==============================
-
-    let latestNotifications = [];
-    let liveIntervalId = null;
-
-    async function fetchNotifications() {
-      const notifError = document.getElementById('notifError');
-      const body = document.getElementById('notificationsBody');
-      const countEl = document.getElementById('notifCount');
-
-      notifError.style.display = 'none';
-      notifError.textContent = '';
+      const startVal = document.getElementById('startDate').value;
+      const endVal = document.getElementById('endDate').value;
+      const startDate = carelineParseInputDate(startVal, false);
+      const endDate = carelineParseInputDate(endVal, true);
 
       try {
-        const res = await fetch('/api/notifications', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeaders()
-          },
-          cache: 'no-store'
-        });
+        const data = await carelineApiGet('/api/notifications');
+        const all = data.notifications || [];
 
-        if (!res.ok) {
-          notifError.style.display = 'block';
-          notifError.textContent =
-            'Could not load notifications. Check your access or token.';
-          return;
-        }
-
-        const data = await res.json();
-        const notifications = data.notifications || [];
-
-        // Sort newest first
-        latestNotifications = notifications.slice().sort((a, b) => {
+        const filtered = all.filter(ev => {
+          if (!ev.createdAt) return false;
+          const d = new Date(ev.createdAt);
+          if (isNaN(d.getTime())) return false;
+          if (startDate && d < startDate) return false;
+          if (endDate && d > endDate) return false;
+          return true;
+        }).sort((a, b) => {
           const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
           const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
           return tb - ta;
         });
 
+        latestEvents = filtered;
         renderNotifications();
       } catch (err) {
-        console.error('Notifications load error', err);
-        notifError.style.display = 'block';
-        notifError.textContent =
-          'Network error while loading notifications.';
-        body.innerHTML = '';
-        countEl.textContent = 'Network error.';
+        console.error('Notifications error', err);
+        errBox.style.display = 'block';
+        errBox.textContent = 'Error loading notifications: ' + err.message;
       }
     }
 
-    function renderNotifications() {
-      const body = document.getElementById('notificationsBody');
-      const countEl = document.getElementById('notifCount');
-      const channelFilter = document.getElementById('channelFilter').value;
-      const searchTerm = document.getElementById('searchInput').value.trim();
-      const facilityTerm = document.getElementById('facilityFilter').value.trim();
+    document.getElementById('applyFiltersBtn').addEventListener('click', loadNotifications);
+    document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+      const today = new Date();
+      const sevenAgo = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+      document.getElementById('endDate').value = today.toISOString().slice(0, 10);
+      document.getElementById('startDate').value = sevenAgo.toISOString().slice(0, 10);
+      document.getElementById('channelSelect').value = '';
+      document.getElementById('facilityFilter').value = '';
+      loadNotifications();
+    });
 
-      const startVal = document.getElementById('startDate').value;
-      const endVal = document.getElementById('endDate').value;
-      let startDate = null;
-      let endDate = null;
+    document.getElementById('facilityFilter').addEventListener('input', renderNotifications);
 
-      if (startVal) {
-        startDate = new Date(startVal + 'T00:00:00');
+    document.getElementById('csvBtn').addEventListener('click', () => {
+      const channelFilter = document.getElementById('channelSelect').value;
+      const facilityFilter = document.getElementById('facilityFilter').value.trim().toLowerCase();
+      let rows = latestEvents.slice();
+      if (channelFilter) {
+        rows = rows.filter(ev => (ev.channel || '').toLowerCase() === channelFilter);
       }
-      if (endVal) {
-        endDate = new Date(endVal + 'T23:59:59');
+      if (facilityFilter) {
+        rows = rows.filter(ev => {
+          const t = ev.templates || {};
+          return (t.facilityName || '').toLowerCase().includes(facilityFilter);
+        });
       }
-
-      body.innerHTML = '';
-
-      const filtered = latestNotifications.filter(ev => {
-        return (
-          matchesChannel(ev, channelFilter) &&
-          facilityMatches(ev, facilityTerm) &&
-          inDateRange(ev, startDate, endDate) &&
-          matchesSearch(ev, searchTerm)
-        );
-      });
-
-      if (!filtered.length) {
-        countEl.textContent = 'No notifications match the current filters.';
-        return;
-      }
-
-      filtered.forEach(ev => {
-        const tr = document.createElement('tr');
-
-        const channel = ev.channel || '';
-        const eventType = ev.eventType || '';
-        const status = ev.status || '';
-        const context = buildContextCell(ev);
-        const msgPreview = buildMessagePreview(ev);
-
-        tr.innerHTML = `
-          <td>${formatTime(ev.createdAt)}</td>
-          <td><span class="${channelPillClass(channel)}">${channel || '—'}</span></td>
-          <td>${eventType || status || '—'}</td>
-          <td>${context}</td>
-          <td><span class="msg-preview" title="${msgPreview.replace(/"/g, '&quot;')}">${msgPreview}</span></td>
-        `;
-        body.appendChild(tr);
-      });
-
-      countEl.textContent = 'Showing ' + filtered.length + ' event(s).';
-    }
-
-    function startLiveUpdates() {
-      const liveIndicator = document.getElementById('liveIndicator');
-      if (liveIntervalId) clearInterval(liveIntervalId);
-
-      liveIndicator.innerHTML = '<span class="live-dot"></span>Live: ON';
-
-      // First immediate fetch
-      fetchNotifications();
-
-      // Then auto-refresh
-      liveIntervalId = setInterval(fetchNotifications, 10000); // 10 seconds
-    }
-
-    function stopLiveUpdates() {
-      const liveIndicator = document.getElementById('liveIndicator');
-      if (liveIntervalId) {
-        clearInterval(liveIntervalId);
-        liveIntervalId = null;
-      }
-      liveIndicator.innerHTML = 'Live: OFF';
-    }
-
-    // ==============================
-    // EVENT LISTENERS & BOOT
-    // ==============================
-
-    document.getElementById('manualRefreshBtn').addEventListener('click', () => {
-      fetchNotifications();
-    });
-
-    document.getElementById('channelFilter').addEventListener('change', () => {
-      renderNotifications();
-    });
-
-    document.getElementById('searchInput').addEventListener('input', () => {
-      renderNotifications();
-    });
-
-    document.getElementById('facilityFilter').addEventListener('input', () => {
-      renderNotifications();
-    });
-
-    document.getElementById('startDate').addEventListener('change', () => {
-      renderNotifications();
-    });
-
-    document.getElementById('endDate').addEventListener('change', () => {
-      renderNotifications();
-    });
-
-    document.getElementById('liveToggle').addEventListener('change', (e) => {
-      if (e.target.checked) {
-        startLiveUpdates();
-      } else {
-        stopLiveUpdates();
-      }
+      downloadCsv(rows);
     });
 
     // Boot
@@ -691,15 +492,14 @@
     buildRoleAwareNav('notifications');
     updateSessionLabel();
 
-    // Default: show last 3 days
-    (function initDefaultDates() {
-      const end = new Date();
-      const start = new Date(end.getTime() - 2 * 24 * 60 * 60 * 1000);
-      document.getElementById('endDate').value = end.toISOString().slice(0, 10);
-      document.getElementById('startDate').value = start.toISOString().slice(0, 10);
+    (function initDates() {
+      const today = new Date();
+      const sevenAgo = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+      document.getElementById('endDate').value = today.toISOString().slice(0, 10);
+      document.getElementById('startDate').value = sevenAgo.toISOString().slice(0, 10);
     })();
 
-    startLiveUpdates();
+    loadNotifications();
   </script>
 </body>
 </html>

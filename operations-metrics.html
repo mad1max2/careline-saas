@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CareLine Operations Metrics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --teal: #0097a7;
+      --dark: #004d40;
+      --bg: #e0f7fa;
+      --card: #ffffff;
+      --muted: #607d8b;
+      --danger: #c62828;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--teal);
+      color: #fff;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .nav a {
+      color: #e0f7fa;
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .nav a:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .nav a.active {
+      background: rgba(255,255,255,0.2);
+    }
+
+    main {
+      flex: 1;
+      padding: 14px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 12px;
+    }
+
+    .session-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .error {
+      padding: 8px;
+      background: #ffebee;
+      color: var(--danger);
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-top: 6px;
+      margin-bottom: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      color: #455a64;
+      margin-right: 4px;
+    }
+
+    select, input {
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #b0bec5;
+      font-size: 13px;
+    }
+
+    button {
+      font-size: 12px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--teal);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    button.secondary {
+      background: #eceff1;
+      color: var(--dark);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
+    .metric-card {
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .metric-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    h2.section-title {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    th, td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #eceff1;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 11px;
+      color: #455a64;
+      white-space: nowrap;
+    }
+
+    tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .bar-cell {
+      width: 40%;
+    }
+
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #b2ebf2;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--teal);
+      width: 0%;
+    }
+
+    .count-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    footer {
+      font-size: 11px;
+      text-align: center;
+      padding: 8px 10px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1000px) {
+      .metrics-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="brand">CareLine Medical Logistics</div>
+      <div class="subtitle">Operations Metrics</div>
+    </div>
+    <nav class="nav" id="mainNav"></nav>
+  </header>
+
+  <main>
+    <div class="top-row">
+      <div>
+        <h1>Operations Metrics</h1>
+        <p class="small">
+          On-time performance, average delivery duration, and top facilities — all from your live data.
+        </p>
+        <p class="session-pill" id="sessionUser">Checking current session…</p>
+      </div>
+
+      <section class="card" style="max-width:380px;">
+        <h2 class="section-title">Filters</h2>
+        <p class="small">
+          Optional: limit metrics to a date range and grace window for “on time” deliveries.
+        </p>
+        <div id="filtersError" class="error"></div>
+
+        <div class="filters">
+          <div>
+            <label for="startDate">From</label>
+            <input type="date" id="startDate" />
+          </div>
+          <div>
+            <label for="endDate">To</label>
+            <input type="date" id="endDate" />
+          </div>
+        </div>
+
+        <div class="filters">
+          <div>
+            <label for="graceMinutes">On-time grace (min)</label>
+            <input type="number" id="graceMinutes" min="0" max="240" value="15" style="max-width:90px;" />
+          </div>
+        </div>
+
+        <button id="applyFiltersBtn" class="primary" style="margin-top:4px;">Apply Filters</button>
+        <button id="resetFiltersBtn" class="secondary" style="margin-top:4px;margin-left:4px;">Reset</button>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2 class="section-title">Overall Summary</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Average on-time rate (all drivers)</div>
+          <div class="metric-value" id="metricOverallOnTime">0%</div>
+          <div class="metric-sub" id="metricOverallOnTimeSub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Average delivery duration (all drivers)</div>
+          <div class="metric-value" id="metricOverallDuration">0 min</div>
+          <div class="metric-sub" id="metricOverallDurationSub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Top facility by volume</div>
+          <div class="metric-value" id="metricTopFacility">—</div>
+          <div class="metric-sub" id="metricTopFacilitySub"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">On-Time Performance by Driver</h2>
+      <p class="small">
+        A stop is considered <strong>on time</strong> if the first “delivered/completed” event
+        occurs on or before the scheduled time plus the grace window.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Driver</th>
+            <th>Total Stops (with schedule)</th>
+            <th>On-time</th>
+            <th>On-time %</th>
+            <th class="bar-cell">Bar</th>
+          </tr>
+        </thead>
+        <tbody id="driverOnTimeBody"></tbody>
+      </table>
+      <p class="count-pill" id="driverOnTimeCount">No data loaded yet.</p>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Average Delivery Duration by Driver</h2>
+      <p class="small">
+        Duration is calculated as time from the first event for a stop (e.g. “Out for delivery”)
+        to the final delivery event.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Driver</th>
+            <th>Stops (with start + end)</th>
+            <th>Avg Duration (min)</th>
+            <th class="bar-cell">Bar</th>
+          </tr>
+        </thead>
+        <tbody id="driverDurationBody"></tbody>
+      </table>
+      <p class="count-pill" id="driverDurationCount">No data loaded yet.</p>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Top Facilities by Volume</h2>
+      <p class="small">
+        Facilities ranked by number of distinct stops with any events in the selected date range.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Facility</th>
+            <th>Distinct Stops</th>
+            <th class="bar-cell">Bar</th>
+          </tr>
+        </thead>
+        <tbody id="facilityVolumeBody"></tbody>
+      </table>
+      <p class="count-pill" id="facilityVolumeCount">No data loaded yet.</p>
+    </section>
+  </main>
+
+  <footer>
+    CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
+  </footer>
+
+  <script src="/js/careline-universal.js"></script>
+  <script src="nav.js"></script>
+  <script>
+    function isCompleteStatus(statusRaw, eventType) {
+      const s = (statusRaw || '').toLowerCase();
+      const e = (eventType || '').toLowerCase();
+      const words = ['delivered', 'completed', 'complete', 'done', 'closed'];
+      return words.some(w => s.includes(w) || e.includes(w));
+    }
+
+    function findScheduledTimeFromTemplates(t) {
+      if (!t) return null;
+      if (t.scheduledTime) return new Date(t.scheduledTime);
+      if (t.scheduledWindowEnd) return new Date(t.scheduledWindowEnd);
+      if (t.windowEnd) return new Date(t.windowEnd);
+      return null;
+    }
+
+    function buildBarFill(widthPct) {
+      const w = Math.max(0, Math.min(100, widthPct));
+      return '<div class="bar"><div class="bar-fill" style="width:' + w + '%;"></div></div>';
+    }
+
+    async function loadMetrics() {
+      const filtersError = document.getElementById('filtersError');
+      filtersError.style.display = 'none';
+      filtersError.textContent = '';
+
+      const startInput = document.getElementById('startDate').value;
+      const endInput = document.getElementById('endDate').value;
+      const graceMinutesInput = document.getElementById('graceMinutes').value;
+
+      let startDate = carelineParseInputDate(startInput, false);
+      let endDate = carelineParseInputDate(endInput, true);
+
+      let graceMinutes = parseInt(graceMinutesInput, 10);
+      if (isNaN(graceMinutes) || graceMinutes < 0) graceMinutes = 15;
+
+      let notifications = [];
+      let routes = [];
+
+      try {
+        const [notifyRes, routesRes] = await Promise.all([
+          carelineApiGet('/api/notifications'),
+          carelineApiGet('/routes.json')
+        ]);
+
+        notifications = notifyRes.notifications || [];
+        routes = routesRes.routes || [];
+      } catch (err) {
+        console.error('Metrics load error', err);
+        filtersError.style.display = 'block';
+        filtersError.textContent = 'Network or auth error loading data: ' + err.message;
+        return;
+      }
+
+      const filteredEvents = notifications.filter(ev => {
+        if (!ev.createdAt) return false;
+        const d = new Date(ev.createdAt);
+        if (isNaN(d.getTime())) return false;
+        if (startDate && d < startDate) return false;
+        if (endDate && d > endDate) return false;
+        return true;
+      });
+
+      const stopsByKey = {};
+      routes.forEach(route => {
+        const driverId = route.driverId || '';
+        (route.stops || []).forEach(stop => {
+          const stopId = stop.stopId || '';
+          const key = driverId + '|' + stopId;
+          if (!stopsByKey[key]) {
+            stopsByKey[key] = { driverId, stopId, stop };
+          }
+        });
+      });
+
+      const eventsByKey = {};
+      filteredEvents.forEach(ev => {
+        const driverId = ev.driverId || '';
+        const stopId = ev.stopId || '';
+        const key = driverId + '|' + stopId;
+        if (!eventsByKey[key]) eventsByKey[key] = [];
+        eventsByKey[key].push(ev);
+      });
+
+      const perStopMetrics = [];
+      Object.keys(eventsByKey).forEach(key => {
+        const [driverId, stopId] = key.split('|');
+        const events = eventsByKey[key].slice().sort((a, b) => {
+          const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return ta - tb;
+        });
+        if (!events.length) return;
+
+        let scheduled = null;
+        for (const ev of events) {
+          const t = ev.templates || {};
+          const candidate = findScheduledTimeFromTemplates(t);
+          if (candidate && !isNaN(candidate.getTime())) {
+            if (!scheduled || candidate.getTime() < scheduled.getTime()) {
+              scheduled = candidate;
+            }
+          }
+        }
+
+        let deliveredAt = null;
+        for (let i = events.length - 1; i >= 0; i--) {
+          const ev = events[i];
+          if (isCompleteStatus(ev.status, ev.eventType) && ev.createdAt) {
+            const d = new Date(ev.createdAt);
+            if (!isNaN(d.getTime())) {
+              deliveredAt = d;
+              break;
+            }
+          }
+        }
+
+        let durationMin = null;
+        if (deliveredAt) {
+          const firstEv = events[0];
+          if (firstEv && firstEv.createdAt) {
+            const start = new Date(firstEv.createdAt);
+            if (!isNaN(start.getTime())) {
+              durationMin = Math.round((deliveredAt.getTime() - start.getTime()) / 60000);
+              if (durationMin < 0) durationMin = null;
+            }
+          }
+        }
+
+        let onTime = null;
+        if (scheduled && deliveredAt) {
+          const diffMin = (deliveredAt.getTime() - scheduled.getTime()) / 60000;
+          onTime = diffMin <= graceMinutes;
+        }
+
+        perStopMetrics.push({ driverId, stopId, scheduled, deliveredAt, durationMin, onTime });
+      });
+
+      // On-time metrics per driver
+      const driverOnTimeStats = {};
+      perStopMetrics.forEach(m => {
+        if (m.onTime === null || !m.driverId) return;
+        if (!driverOnTimeStats[m.driverId]) {
+          driverOnTimeStats[m.driverId] = { totalScheduled: 0, onTimeCount: 0 };
+        }
+        driverOnTimeStats[m.driverId].totalScheduled++;
+        if (m.onTime) driverOnTimeStats[m.driverId].onTimeCount++;
+      });
+
+      const driverOnTimeRows = Object.keys(driverOnTimeStats).map(driverId => {
+        const s = driverOnTimeStats[driverId];
+        const total = s.totalScheduled;
+        const onTime = s.onTimeCount;
+        const pct = total > 0 ? Math.round((onTime / total) * 100) : 0;
+        return { driverId, total, onTime, pct };
+      }).sort((a, b) => b.pct - a.pct);
+
+      const driverOnTimeBody = document.getElementById('driverOnTimeBody');
+      const driverOnTimeCount = document.getElementById('driverOnTimeCount');
+      driverOnTimeBody.innerHTML = '';
+
+      let totalStopsAll = 0;
+      let onTimeAll = 0;
+
+      if (!driverOnTimeRows.length) {
+        driverOnTimeCount.textContent =
+          'No on-time data available (missing schedule or delivery events).';
+      } else {
+        const maxPct = driverOnTimeRows.reduce((m, r) => Math.max(m, r.pct), 0) || 1;
+        driverOnTimeRows.forEach(row => {
+          totalStopsAll += row.total;
+          onTimeAll += row.onTime;
+          const relativeWidth = (row.pct / maxPct) * 100;
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${row.driverId || '—'}</td>
+            <td>${row.total}</td>
+            <td>${row.onTime}</td>
+            <td>${row.pct}%</td>
+            <td class="bar-cell">${buildBarFill(relativeWidth)}</td>
+          `;
+          driverOnTimeBody.appendChild(tr);
+        });
+
+        driverOnTimeCount.textContent =
+          'Drivers with schedule+delivery data: ' + driverOnTimeRows.length +
+          ' | Stops considered: ' + totalStopsAll +
+          ' | On-time deliveries: ' + onTimeAll + '.';
+      }
+
+      // Duration metrics per driver
+      const durationStats = {};
+      perStopMetrics.forEach(m => {
+        if (m.durationMin == null || !m.driverId) return;
+        if (!durationStats[m.driverId]) {
+          durationStats[m.driverId] = { totalStops: 0, sumMinutes: 0 };
+        }
+        durationStats[m.driverId].totalStops++;
+        durationStats[m.driverId].sumMinutes += m.durationMin;
+      });
+
+      const driverDurationRows = Object.keys(durationStats).map(driverId => {
+        const s = durationStats[driverId];
+        const avg = s.totalStops > 0 ? Math.round(s.sumMinutes / s.totalStops) : 0;
+        return { driverId, count: s.totalStops, avg };
+      }).sort((a, b) => a.avg - b.avg);
+
+      const driverDurationBody = document.getElementById('driverDurationBody');
+      const driverDurationCount = document.getElementById('driverDurationCount');
+      driverDurationBody.innerHTML = '';
+
+      if (!driverDurationRows.length) {
+        driverDurationCount.textContent =
+          'No duration data available (missing start/end events).';
+      } else {
+        const maxAvg = driverDurationRows.reduce((m, r) => Math.max(m, r.avg), 0) || 1;
+        driverDurationRows.forEach(row => {
+          const relativeWidth = (1 - row.avg / maxAvg) * 100;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${row.driverId || '—'}</td>
+            <td>${row.count}</td>
+            <td>${row.avg}</td>
+            <td class="bar-cell">${buildBarFill(relativeWidth)}</td>
+          `;
+          driverDurationBody.appendChild(tr);
+        });
+
+        driverDurationCount.textContent =
+          'Drivers with duration data: ' + driverDurationRows.length + '.';
+      }
+
+      // Facility volume metrics
+      const facilityStops = {};
+      filteredEvents.forEach(ev => {
+        const t = ev.templates || {};
+        const facilityName = (t.facilityName || '').trim();
+        const stopId = ev.stopId || '';
+        if (!facilityName || !stopId) return;
+        if (!facilityStops[facilityName]) {
+          facilityStops[facilityName] = new Set();
+        }
+        facilityStops[facilityName].add(stopId);
+      });
+
+      const facilityRows = Object.keys(facilityStops).map(name => {
+        return { facilityName: name, count: facilityStops[name].size };
+      }).sort((a, b) => b.count - a.count);
+
+      const facilityVolumeBody = document.getElementById('facilityVolumeBody');
+      const facilityVolumeCount = document.getElementById('facilityVolumeCount');
+      facilityVolumeBody.innerHTML = '';
+
+      if (!facilityRows.length) {
+        facilityVolumeCount.textContent =
+          'No facility volume data in the selected range.';
+      } else {
+        const maxCount = facilityRows[0].count || 1;
+        facilityRows.forEach(row => {
+          const relativeWidth = (row.count / maxCount) * 100;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${row.facilityName}</td>
+            <td>${row.count}</td>
+            <td class="bar-cell">${buildBarFill(relativeWidth)}</td>
+          `;
+          facilityVolumeBody.appendChild(tr);
+        });
+
+        facilityVolumeCount.textContent =
+          'Facilities with activity: ' + facilityRows.length + '.';
+      }
+
+      // Overall summary
+      const metricOverallOnTime = document.getElementById('metricOverallOnTime');
+      const metricOverallOnTimeSub = document.getElementById('metricOverallOnTimeSub');
+
+      if (totalStopsAll > 0) {
+        const overallPct = Math.round((onTimeAll / totalStopsAll) * 100);
+        metricOverallOnTime.textContent = overallPct + '%';
+        metricOverallOnTimeSub.textContent =
+          onTimeAll + ' of ' + totalStopsAll + ' deliveries on time (with grace window).';
+      } else {
+        metricOverallOnTime.textContent = '0%';
+        metricOverallOnTimeSub.textContent =
+          'No stops with schedule+delivery data in this range.';
+      }
+
+      let allDurations = [];
+      perStopMetrics.forEach(m => {
+        if (m.durationMin != null) allDurations.push(m.durationMin);
+      });
+
+      const metricOverallDuration = document.getElementById('metricOverallDuration');
+      const metricOverallDurationSub = document.getElementById('metricOverallDurationSub');
+
+      if (allDurations.length) {
+        const avgAll = Math.round(
+          allDurations.reduce((sum, v) => sum + v, 0) / allDurations.length
+        );
+        metricOverallDuration.textContent = avgAll + ' min';
+        metricOverallDurationSub.textContent =
+          'Based on ' + allDurations.length + ' stop(s) with start+end events.';
+      } else {
+        metricOverallDuration.textContent = '0 min';
+        metricOverallDurationSub.textContent =
+          'No complete start-to-finish stop durations found.';
+      }
+
+      const metricTopFacility = document.getElementById('metricTopFacility');
+      const metricTopFacilitySub = document.getElementById('metricTopFacilitySub');
+
+      if (facilityRows.length) {
+        const top = facilityRows[0];
+        metricTopFacility.textContent = top.facilityName;
+        metricTopFacilitySub.textContent =
+          top.count + ' distinct stop(s) in the selected date range.';
+      } else {
+        metricTopFacility.textContent = '—';
+        metricTopFacilitySub.textContent =
+          'No facility activity in this range.';
+      }
+    }
+
+    document.getElementById('applyFiltersBtn').addEventListener('click', loadMetrics);
+    document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+      document.getElementById('graceMinutes').value = '15';
+      const today = new Date();
+      const sevenDaysAgo = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+      document.getElementById('endDate').value = today.toISOString().slice(0, 10);
+      document.getElementById('startDate').value = sevenDaysAgo.toISOString().slice(0, 10);
+      loadMetrics();
+    });
+
+    // Boot
+    requireLoggedIn();
+    buildRoleAwareNav('operations-metrics');
+    updateSessionLabel();
+
+    const today = new Date();
+    const sevenDaysAgo = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+    document.getElementById('endDate').value = today.toISOString().slice(0, 10);
+    document.getElementById('startDate').value = sevenDaysAgo.toISOString().slice(0, 10);
+
+    loadMetrics();
+  </script>
+</body>
+</html>

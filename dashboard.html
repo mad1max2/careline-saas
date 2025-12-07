@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>CareLine Driver Dashboard</title>
+  <title>CareLine Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -13,6 +13,7 @@
       --card: #ffffff;
       --muted: #607d8b;
       --danger: #c62828;
+      --ok: #2e7d32;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,15 +36,9 @@
       align-items: center;
     }
 
-    .brand {
-      font-weight: bold;
-      font-size: 17px;
-    }
+    .brand { font-weight: bold; font-size: 17px; }
 
-    .subtitle {
-      font-size: 11px;
-      opacity: 0.9;
-    }
+    .subtitle { font-size: 11px; opacity: 0.9; }
 
     .nav {
       display: flex;
@@ -58,13 +53,7 @@
       border-radius: 999px;
     }
 
-    .nav a:hover {
-      background: rgba(255,255,255,0.15);
-    }
-
-    .nav a.active {
-      background: rgba(255,255,255,0.2);
-    }
+    .nav a.active { background: rgba(255,255,255,0.2); }
 
     main {
       flex: 1;
@@ -74,14 +63,14 @@
       margin: 0 auto;
     }
 
-    h1 {
-      font-size: 20px;
-      margin-bottom: 4px;
-    }
+    h1 { font-size: 20px; margin-bottom: 4px; }
 
-    .small {
+    .small { font-size: 11px; color: var(--muted); }
+
+    .session-pill {
       font-size: 11px;
       color: var(--muted);
+      margin-top: 4px;
     }
 
     .top-row {
@@ -101,10 +90,75 @@
       margin-bottom: 12px;
     }
 
-    .session-pill {
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .metric-card {
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
+    .metric-label {
       font-size: 11px;
       color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .metric-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .split-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 10px;
+    }
+
+    .list {
+      max-height: 260px;
+      overflow-y: auto;
       margin-top: 4px;
+    }
+
+    .list-item {
+      padding: 6px 6px;
+      border-radius: 8px;
+      background: #f5f5f5;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .list-item strong { display: block; }
+
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 11px;
+      background: #eceff1;
+      color: #455a64;
+    }
+
+    .pill-ok {
+      background: #e8f5e9;
+      color: var(--ok);
+    }
+
+    .pill-danger {
+      background: #ffebee;
+      color: var(--danger);
     }
 
     .error {
@@ -117,127 +171,6 @@
       display: none;
     }
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 8px;
-      margin-bottom: 8px;
-    }
-
-    .stat-card {
-      background: #f5f5f5;
-      border-radius: 10px;
-      padding: 8px 10px;
-      text-align: left;
-    }
-
-    .stat-label {
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 2px;
-    }
-
-    .stat-value {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .stat-sub {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      margin-bottom: 3px;
-      color: #455a64;
-    }
-
-    input {
-      padding: 7px 9px;
-      border-radius: 8px;
-      border: 1px solid #b0bec5;
-      font-size: 13px;
-      width: 100%;
-      max-width: 250px;
-      margin-right: 6px;
-      margin-bottom: 6px;
-    }
-
-    button {
-      font-size: 12px;
-      padding: 7px 11px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-    }
-
-    button.primary {
-      background: var(--teal);
-      color: #ffffff;
-      font-weight: 600;
-    }
-
-    button.secondary {
-      background: #eceff1;
-      color: var(--dark);
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    th, td {
-      padding: 6px 8px;
-      border-bottom: 1px solid #eceff1;
-      text-align: left;
-    }
-
-    th {
-      font-weight: 600;
-      font-size: 11px;
-      color: #455a64;
-      white-space: nowrap;
-    }
-
-    tr:nth-child(even) {
-      background: #fafafa;
-    }
-
-    .status-pill {
-      display: inline-block;
-      border-radius: 999px;
-      padding: 2px 7px;
-      font-size: 11px;
-      background: #eceff1;
-      color: #455a64;
-    }
-
-    .status-complete {
-      background: #e8f5e9;
-      color: #2e7d32;
-    }
-
-    .status-pending {
-      background: #fff3e0;
-      color: #e65100;
-    }
-
-    .count-pill {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
     footer {
       font-size: 11px;
       text-align: center;
@@ -246,9 +179,12 @@
     }
 
     @media (max-width: 900px) {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .split-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 650px) {
+      .metrics-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -256,7 +192,7 @@
   <header>
     <div>
       <div class="brand">CareLine Medical Logistics</div>
-      <div class="subtitle">Driver Dashboard</div>
+      <div class="subtitle">Dashboard</div>
     </div>
     <nav class="nav" id="mainNav"></nav>
   </header>
@@ -264,72 +200,77 @@
   <main>
     <div class="top-row">
       <div>
-        <h1>Driver Overview</h1>
+        <h1>Welcome to CareLine</h1>
         <p class="small">
-          See your assigned stops, completion progress, and a quick overview of your workload.
+          High-level view of today’s operations for dispatch, drivers, and facility partners.
         </p>
-        <p class="session-pill" id="sessionUser">
-          Checking current session…
-        </p>
+        <p class="session-pill" id="sessionUser">Checking current session…</p>
       </div>
 
-      <section class="card" style="max-width:320px;">
-        <h2 style="font-size:14px;margin-bottom:4px;">Driver ID</h2>
-        <p class="small" style="margin-bottom:6px;">
-          This should match the <strong>driverId</strong> in your route assignments (for example, <code>driver1</code>).
-          It’s saved in this browser so you don’t have to type it again.
-        </p>
-        <div id="driverError" class="error"></div>
-        <label for="driverIdInput">My driver ID</label>
-        <input id="driverIdInput" type="text" placeholder="driver1" />
-        <button id="saveDriverIdBtn" class="primary" style="margin-top:4px;">Save & Refresh</button>
+      <section class="card" style="max-width:360px;">
+        <h2 style="font-size:14px;margin-bottom:4px;">System Health</h2>
+        <div id="dashError" class="error"></div>
+        <p class="small" id="healthText">Loading…</p>
       </section>
     </div>
 
     <section class="card">
-      <h2 style="font-size:14px;margin-bottom:4px;">Today’s Progress</h2>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total stops</div>
-          <div class="stat-value" id="statTotal">0</div>
+      <h2 style="font-size:14px;margin-bottom:4px;">Today’s Snapshot</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Deliveries today</div>
+          <div class="metric-value" id="metricDeliveriesToday">0</div>
+          <div class="metric-sub" id="metricDeliveriesSub"></div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Completed</div>
-          <div class="stat-value" id="statDone">0</div>
-          <div class="stat-sub" id="statDoneSub"></div>
+        <div class="metric-card">
+          <div class="metric-label">Active drivers</div>
+          <div class="metric-value" id="metricActiveDrivers">0</div>
+          <div class="metric-sub" id="metricDriversSub"></div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Pending</div>
-          <div class="stat-value" id="statPending">0</div>
-          <div class="stat-sub" id="statPendingSub"></div>
+        <div class="metric-card">
+          <div class="metric-label">Facilities served</div>
+          <div class="metric-value" id="metricFacilities">0</div>
+          <div class="metric-sub" id="metricFacilitiesSub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">On-time rate (today)</div>
+          <div class="metric-value" id="metricOnTimeToday">0%</div>
+          <div class="metric-sub" id="metricOnTimeSub"></div>
         </div>
       </div>
-      <p class="small">
-        Completion status is based on the stop’s <strong>status</strong> value. Values like
-        “Delivered” or “Completed” are treated as done.
-      </p>
     </section>
 
-    <section class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <h2 style="font-size:14px;">My Stops</h2>
-        <button id="refreshBtn" class="secondary">Refresh</button>
-      </div>
-      <div id="routesError" class="error"></div>
-      <table>
-        <thead>
-          <tr>
-            <th>Stop ID</th>
-            <th>Patient</th>
-            <th>Location</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="stopsBody">
-          <!-- rows injected -->
-        </tbody>
-      </table>
-      <p class="count-pill" id="stopsCount">No stops loaded yet.</p>
+    <section class="split-row">
+      <section class="card">
+        <h2 style="font-size:14px;margin-bottom:4px;">Live Exceptions</h2>
+        <p class="small">
+          Any stops marked as “Issue”, “Delayed”, or “Exception” today.
+        </p>
+        <div class="list" id="exceptionsList"></div>
+      </section>
+
+      <section class="card">
+        <h2 style="font-size:14px;margin-bottom:4px;">Quick Links</h2>
+        <p class="small">Jump straight into the key CareLine screens.</p>
+        <div class="list">
+          <div class="list-item">
+            <strong>Control Center</strong>
+            <div class="small">Manage routes, drivers, and stops in real time.</div>
+          </div>
+          <div class="list-item">
+            <strong>Driver Map</strong>
+            <div class="small">Live GPS-style view of all CareLine drivers.</div>
+          </div>
+          <div class="list-item">
+            <strong>Notifications Timeline</strong>
+            <div class="small">Audit trail of SMS, emails, and status updates.</div>
+          </div>
+          <div class="list-item">
+            <strong>Facility Reports</strong>
+            <div class="small">Monthly performance for each partner facility.</div>
+          </div>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -337,155 +278,90 @@
     CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
   </footer>
 
+  <script src="/js/careline-universal.js"></script>
   <script src="nav.js"></script>
   <script>
-    function requireLoggedIn() {
-      const token = localStorage.getItem('carelineToken');
-      if (!token) {
-        alert('You must be logged in to view this page.');
-        window.location.href = 'login.html';
-      }
-    }
-
-    function updateSessionLabel() {
-      const el = document.getElementById('sessionUser');
-      const userJson = localStorage.getItem('carelineUser');
-      if (!userJson) {
-        el.textContent = 'Not logged in.';
-        return;
-      }
-      try {
-        const user = JSON.parse(userJson);
-        el.textContent = (user.email || user.id || 'User') + ' — ' + (user.role || 'unknown');
-        if (user.role !== 'driver') {
-          el.textContent += ' (Note: this dashboard is designed for drivers.)';
-        }
-      } catch {
-        el.textContent = 'Session found, but user info could not be read.';
-      }
-    }
-
-    function loadSavedDriverId() {
-      return localStorage.getItem('carelineDriverId') || '';
-    }
-
-    function saveDriverId(id) {
-      localStorage.setItem('carelineDriverId', id);
-    }
-
-    function isCompleteStatus(statusRaw) {
-      if (!statusRaw) return false;
-      const s = statusRaw.toLowerCase();
-      const completeWords = ['done', 'delivered', 'completed', 'complete', 'closed'];
-      return completeWords.some(word => s.includes(word));
-    }
-
-    async function loadDriverStops() {
-      const driverError = document.getElementById('driverError');
-      const routesError = document.getElementById('routesError');
-      const stopsBody = document.getElementById('stopsBody');
-      const stopsCount = document.getElementById('stopsCount');
-
-      driverError.style.display = 'none';
-      routesError.style.display = 'none';
-      driverError.textContent = '';
-      routesError.textContent = '';
-
-      const driverId = loadSavedDriverId().trim();
-      if (!driverId) {
-        driverError.style.display = 'block';
-        driverError.textContent = 'Please enter and save your driver ID first.';
-        stopsBody.innerHTML = '';
-        stopsCount.textContent = 'No driver selected.';
-        return;
-      }
+    async function loadDashboard() {
+      const err = document.getElementById('dashError');
+      err.style.display = 'none';
+      err.textContent = '';
 
       try {
-        const res = await fetch('/routes.json', { cache: 'no-store' });
-        if (!res.ok) {
-          routesError.style.display = 'block';
-          routesError.textContent = 'Could not load routes.json from the server.';
-          return;
-        }
-        const data = await res.json();
-        const routes = data.routes || [];
+        // Assumed backend: GET /api/dashboard
+        const data = await carelineApiGet('/api/dashboard');
 
-        const myRoutes = routes.filter(r => r.driverId === driverId);
-        const myStops = [];
-        myRoutes.forEach(route => {
-          (route.stops || []).forEach(stop => {
-            myStops.push(stop);
+        const deliveriesToday = data.deliveriesToday || 0;
+        const deliveriesYesterday = data.deliveriesYesterday || 0;
+        const activeDrivers = data.activeDrivers || 0;
+        const totalDrivers = data.totalDrivers || activeDrivers;
+        const facilitiesServed = data.facilitiesServedToday || 0;
+        const facilitiesTotal = data.facilitiesTotal || facilitiesServed;
+        const onTimeTodayPct = data.onTimeTodayPct || 0;
+        const exceptionsToday = data.exceptions || [];
+
+        document.getElementById('metricDeliveriesToday').textContent = deliveriesToday;
+        document.getElementById('metricDeliveriesSub').textContent =
+          'Yesterday: ' + deliveriesYesterday;
+
+        document.getElementById('metricActiveDrivers').textContent = activeDrivers;
+        document.getElementById('metricDriversSub').textContent =
+          'Total drivers: ' + totalDrivers;
+
+        document.getElementById('metricFacilities').textContent = facilitiesServed;
+        document.getElementById('metricFacilitiesSub').textContent =
+          'Active facilities: ' + facilitiesTotal;
+
+        document.getElementById('metricOnTimeToday').textContent =
+          Math.round(onTimeTodayPct) + '%';
+        document.getElementById('metricOnTimeSub').textContent =
+          'Goal: 95%+ on-time same/next-day deliveries.';
+
+        const healthText = document.getElementById('healthText');
+        if (data.systemOk === false) {
+          healthText.innerHTML =
+            '<span class="pill pill-danger">Attention</span> ' +
+            (data.systemMessage || 'One or more services require attention.');
+        } else {
+          healthText.innerHTML =
+            '<span class="pill pill-ok">Healthy</span> All core CareLine services are responding.';
+        }
+
+        const list = document.getElementById('exceptionsList');
+        list.innerHTML = '';
+        if (!exceptionsToday.length) {
+          list.innerHTML =
+            '<div class="small">No exception stops yet today. Keep it smooth. 💚</div>';
+        } else {
+          exceptionsToday.forEach(ex => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            const timeStr = ex.time ? carelineFormatDateTimeShort(ex.time) : '';
+            div.innerHTML = `
+              <strong>${ex.stopId || 'Stop'}</strong>
+              <div class="small">
+                ${ex.patientName || 'Patient'} · ${ex.facilityName || 'Facility'}
+              </div>
+              <div class="small">
+                <span class="pill pill-danger">${ex.status || 'Issue'}</span>
+                ${timeStr ? ' · ' + timeStr : ''}
+              </div>
+            `;
+            list.appendChild(div);
           });
-        });
-
-        stopsBody.innerHTML = '';
-        if (myStops.length === 0) {
-          stopsCount.textContent = 'No stops found for driverId "' + driverId + '".';
-          return;
         }
-
-        let total = myStops.length;
-        let done = 0;
-
-        myStops.forEach(stop => {
-          const status = stop.status || '';
-          const complete = isCompleteStatus(status);
-          if (complete) done++;
-
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${stop.stopId || ''}</td>
-            <td>${stop.patientName || ''}</td>
-            <td>${stop.location || ''}</td>
-            <td>
-              <span class="status-pill ${complete ? 'status-complete' : 'status-pending'}">
-                ${status || (complete ? 'Done' : 'Pending')}
-              </span>
-            </td>
-          `;
-          stopsBody.appendChild(tr);
-        });
-
-        const pending = total - done;
-        document.getElementById('statTotal').textContent = total;
-        document.getElementById('statDone').textContent = done;
-        document.getElementById('statPending').textContent = pending;
-        document.getElementById('statDoneSub').textContent = total > 0 ? Math.round(done / total * 100) + '% complete' : '';
-        document.getElementById('statPendingSub').textContent = pending > 0 ? pending + ' stop(s) remaining' : 'All done 🎉';
-
-        stopsCount.textContent = 'Showing ' + total + ' stop(s) for driverId "' + driverId + '".';
-      } catch (err) {
-        console.error('Error loading driver stops', err);
-        routesError.style.display = 'block';
-        routesError.textContent = 'Network error while loading routes.';
+      } catch (e) {
+        console.error('Dashboard error', e);
+        err.style.display = 'block';
+        err.textContent = 'Error loading dashboard: ' + e.message;
+        document.getElementById('healthText').textContent = 'Unable to load system status.';
       }
     }
-
-    document.getElementById('saveDriverIdBtn').addEventListener('click', () => {
-      const input = document.getElementById('driverIdInput');
-      const val = (input.value || '').trim();
-      const driverError = document.getElementById('driverError');
-      driverError.style.display = 'none';
-      driverError.textContent = '';
-
-      if (!val) {
-        driverError.style.display = 'block';
-        driverError.textContent = 'Driver ID cannot be empty.';
-        return;
-      }
-
-      saveDriverId(val);
-      loadDriverStops();
-    });
-
-    document.getElementById('refreshBtn').addEventListener('click', loadDriverStops);
 
     // Boot
     requireLoggedIn();
-    buildRoleAwareNav('driver-dashboard');
+    buildRoleAwareNav('dashboard');
     updateSessionLabel();
-    document.getElementById('driverIdInput').value = loadSavedDriverId();
-    loadDriverStops();
+    loadDashboard();
   </script>
 </body>
 </html>

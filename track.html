@@ -5,471 +5,392 @@
   <title>CareLine Delivery Tracking</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Leaflet CSS for map -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-
   <style>
     :root {
-      --careline-teal: #0097a7;
-      --careline-dark: #004d52;
-      --careline-bg: #e7f7fb;
-      --careline-card: #ffffff;
-      --careline-accent: #ff9800;
-      --careline-success: #2e7d32;
+      --teal: #0097a7;
+      --dark: #004d40;
+      --bg: #e0f7fa;
+      --card: #ffffff;
+      --muted: #607d8b;
+      --danger: #c62828;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: Arial, sans-serif;
-      background: var(--careline-bg);
-      color: var(--careline-dark);
+      background: var(--bg);
+      color: var(--dark);
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      background: var(--careline-teal);
-      color: #fff;
-      padding: 14px 20px;
-      display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
+      padding: 14px;
     }
 
-    .brand {
+    .wrapper {
+      max-width: 480px;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .logo-title {
       font-weight: bold;
       font-size: 18px;
     }
 
-    .tagline {
+    .logo-subtitle {
       font-size: 11px;
-      opacity: 0.9;
+      color: var(--muted);
     }
 
-    .badge {
-      background: rgba(0, 0, 0, 0.15);
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-    }
-
-    main {
-      flex: 1;
-      padding: 14px;
-      max-width: 1100px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 1.2fr 1.8fr;
-      gap: 14px;
-    }
-
-    .card {
-      background: var(--careline-card);
-      border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    }
-
-    .card h2 {
-      font-size: 16px;
-      margin-bottom: 6px;
-    }
-
-    .card h3 {
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      background: #fff3e0;
-      color: #e65100;
-      margin-right: 6px;
-    }
-
-    .status-pill.complete {
-      background: #e8f5e9;
-      color: var(--careline-success);
-    }
-
-    .eta-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      background: #e0f7fa;
-      color: var(--careline-dark);
-    }
-
-    .meta {
-      margin-top: 10px;
-      font-size: 13px;
-    }
-
-    .meta-row {
+    h1 {
+      font-size: 18px;
+      text-align: center;
       margin-bottom: 4px;
-    }
-
-    .meta-label {
-      font-weight: bold;
-      margin-right: 4px;
     }
 
     .small {
       font-size: 11px;
-      color: #607d8b;
-      margin-top: 6px;
-    }
-
-    #mapCard {
-      padding: 0;
-      overflow: hidden;
-    }
-
-    #mapHeader {
-      padding: 10px 14px 4px 14px;
-    }
-
-    #map {
-      width: 100%;
-      height: 320px;
-    }
-
-    .map-footer {
-      padding: 6px 14px 12px 14px;
-      font-size: 11px;
-      color: #546e7a;
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 10px;
     }
 
     .error {
-      padding: 10px;
+      padding: 8px;
       background: #ffebee;
-      color: #b71c1c;
+      color: var(--danger);
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      margin-bottom: 6px;
+    }
+
+    .status-pill.pending {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .status-pill.exception {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: #455a64;
+      margin-top: 4px;
+    }
+
+    .field-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .progress {
       margin-top: 10px;
+      margin-bottom: 2px;
+      font-size: 12px;
+      color: #455a64;
     }
 
-    footer {
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #b2ebf2;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--teal);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .events {
+      margin-top: 12px;
+    }
+
+    .events-title {
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .event-item {
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .event-time {
+      color: var(--muted);
       font-size: 11px;
-      text-align: center;
-      padding: 8px 10px;
-      color: #607d8b;
     }
 
-    @media (max-width: 900px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-      #map {
-        height: 260px;
-      }
+    .code-input {
+      margin-top: 10px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .code-input input {
+      flex: 1;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #b0bec5;
+      font-size: 13px;
+    }
+
+    .code-input button {
+      padding: 7px 11px;
+      border-radius: 8px;
+      border: none;
+      font-size: 12px;
+      background: var(--teal);
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    .code-input button:active {
+      transform: scale(0.97);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 10px;
+      color: var(--muted);
     }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <div class="brand">CareLine Medical Logistics</div>
-      <div class="tagline">Care That Moves. Logistics That Deliver.</div>
+  <div class="wrapper">
+    <div class="card">
+      <div class="logo">
+        <div class="logo-title">CareLine Medical Logistics</div>
+        <div class="logo-subtitle">Care That Moves. Logistics That Deliver.</div>
+      </div>
+
+      <h1>Your Delivery Status</h1>
+      <p class="small">
+        Enter your CareLine tracking code, or use the secure link provided by your clinic.
+      </p>
+
+      <div id="trackError" class="error"></div>
+
+      <div class="code-input">
+        <input id="codeInput" type="text" placeholder="Tracking code (e.g. CL-ABC123)" />
+        <button id="codeBtn">Track</button>
+      </div>
+
+      <div id="contentArea" style="margin-top:12px; display:none;">
+        <div id="statusPill" class="status-pill">Loading…</div>
+
+        <div class="field-label">Patient</div>
+        <div class="field-value" id="patientName">—</div>
+
+        <div class="field-label">Facility</div>
+        <div class="field-value" id="facilityName">—</div>
+
+        <div class="field-label">Estimated Delivery</div>
+        <div class="field-value" id="etaText">—</div>
+
+        <div class="progress" id="progressText">Progress: —</div>
+        <div class="bar">
+          <div class="bar-fill" id="progressBar"></div>
+        </div>
+
+        <div class="events">
+          <div class="events-title">Recent Activity</div>
+          <div id="eventsList"></div>
+        </div>
+      </div>
     </div>
-    <div class="badge">
-      Patient & Facility Tracking View
+
+    <div class="footer">
+      If anything looks wrong, call your clinic or CareLine dispatcher.
     </div>
-  </header>
+  </div>
 
-  <main>
-    <div id="errorBox" class="error" style="display:none;"></div>
-
-    <div class="layout" id="layout" style="display:none;">
-      <!-- LEFT: DETAILS -->
-      <section class="card" id="detailsCard">
-        <h2>Your CareLine Delivery</h2>
-
-        <div style="margin:6px 0 10px 0;">
-          <span id="statusPill" class="status-pill">Loading status…</span>
-          <span id="etaPill" class="eta-pill">Calculating ETA…</span>
-        </div>
-
-        <div class="meta">
-          <div class="meta-row">
-            <span class="meta-label">Patient:</span>
-            <span id="patientName">—</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Facility:</span>
-            <span id="facilityName">—</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Delivery ID:</span>
-            <span id="stopId">—</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Driver:</span>
-            <span id="driverName">—</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Items:</span>
-            <span id="items">—</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Last Updated:</span>
-            <span id="lastUpdated">—</span>
-          </div>
-        </div>
-
-        <div class="small">
-          This page auto-refreshes every 10 seconds so you can see live ETA and driver movement.  
-          If you have questions about this delivery, please contact your CareLine coordinator.
-        </div>
-      </section>
-
-      <!-- RIGHT: MAP -->
-      <section class="card" id="mapCard">
-        <div id="mapHeader">
-          <h3>Live Map</h3>
-          <div class="small" id="mapStatus">
-            Waiting for live location…
-          </div>
-        </div>
-        <div id="map"></div>
-        <div class="map-footer">
-          • Orange marker = driver (live GPS)<br />
-          • Teal marker = your delivery location<br />
-          • Line between them shows the current route distance used for ETA.
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <footer>
-    Powered by CareLine Medical Logistics — secure, HIPAA-aware delivery tracking.
-  </footer>
-
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
-
+  <!-- Shared helpers (for formatting + query params) -->
+  <script src="/js/careline-universal.js"></script>
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const stopId = params.get('stopId');
-
-    const errorBox = document.getElementById('errorBox');
-    const layout = document.getElementById('layout');
-
-    const statusPill = document.getElementById('statusPill');
-    const etaPill = document.getElementById('etaPill');
-    const patientNameEl = document.getElementById('patientName');
-    const facilityNameEl = document.getElementById('facilityName');
-    const stopIdEl = document.getElementById('stopId');
-    const driverNameEl = document.getElementById('driverName');
-    const itemsEl = document.getElementById('items');
-    const lastUpdatedEl = document.getElementById('lastUpdated');
-    const mapStatus = document.getElementById('mapStatus');
-
-    let map;
-    let driverMarker = null;
-    let stopMarker = null;
-    let lineLayer = null;
-    let mapInitialized = false;
-
-    function showError(message) {
-      errorBox.style.display = 'block';
-      errorBox.textContent = message;
-      layout.style.display = 'none';
+    function resolveTrackingCode() {
+      const fromUrl =
+        carelineGetQueryParam('code') ||
+        carelineGetQueryParam('tracking') ||
+        carelineGetQueryParam('id') ||
+        '';
+      const input = document.getElementById('codeInput').value.trim();
+      return input || fromUrl;
     }
 
-    function clearError() {
-      errorBox.style.display = 'none';
-      layout.style.display = 'grid';
-    }
-
-    function initMap() {
-      if (mapInitialized) return;
-      map = L.map('map').setView([39.2904, -76.6122], 11); // default Baltimore-ish
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-
-      mapInitialized = true;
-    }
-
-    function updateStatusPill(status) {
-      const text = status || 'Out for delivery';
-      statusPill.textContent = text;
-      const s = text.toLowerCase();
-      statusPill.classList.remove('complete');
-      if (s.includes('complete') || s.includes('delivered')) {
-        statusPill.classList.add('complete');
-      }
-    }
-
-    function updateEtaPill(etaMinutes) {
-      if (etaMinutes == null) {
-        etaPill.textContent = 'Calculating ETA…';
+    function applyStatusPill(status) {
+      const pill = document.getElementById('statusPill');
+      const s = (status || '').toLowerCase();
+      pill.className = 'status-pill';
+      if (!s) {
+        pill.textContent = 'Status: Pending';
+        pill.classList.add('pending');
         return;
       }
-      if (etaMinutes <= 1) {
-        etaPill.textContent = 'About 1 minute away';
+
+      if (s.includes('exception') || s.includes('failed') || s.includes('issue')) {
+        pill.textContent = status;
+        pill.classList.add('exception');
+      } else if (s.includes('out') || s.includes('en route') || s.includes('pending')) {
+        pill.textContent = status;
+        pill.classList.add('pending');
       } else {
-        etaPill.textContent = `About ${etaMinutes} minutes away`;
+        pill.textContent = status;
       }
     }
 
-    function updateDetails(data) {
-      const stop = data.stop || {};
-      const driver = data.driver || null;
-      const live = data.liveLocation || null;
-
-      const patientName = stop.patientName || 'Patient';
-      const facilityName = stop.location || 'Your facility';
-      const items = stop.items || 'Medical supplies';
-
-      patientNameEl.textContent = patientName;
-      facilityNameEl.textContent = facilityName;
-      stopIdEl.textContent = stop.stopId || stopId || 'N/A';
-      driverNameEl.textContent = driver ? (driver.name || driver.id) : 'Assigned driver';
-      itemsEl.textContent = items;
-
-      updateStatusPill(stop.status);
-      updateEtaPill(data.etaMinutes);
-
-      if (live && live.updated) {
-        const t = new Date(live.updated);
-        lastUpdatedEl.textContent = t.toLocaleTimeString();
-      } else {
-        lastUpdatedEl.textContent = 'Waiting for live GPS…';
-      }
+    function setProgress(pct, label) {
+      const bar = document.getElementById('progressBar');
+      const txt = document.getElementById('progressText');
+      const safePct = Math.max(0, Math.min(100, pct || 0));
+      bar.style.width = safePct + '%';
+      txt.textContent = 'Progress: ' + safePct + '% ' + (label || '');
     }
 
-    function updateMapFromData(data) {
-      initMap();
+    async function fetchTracking(code) {
+      const errorBox = document.getElementById('trackError');
+      const contentArea = document.getElementById('contentArea');
+      const eventsList = document.getElementById('eventsList');
 
-      const stop = data.stop || {};
-      const live = data.liveLocation || null;
-      const latLngs = [];
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+      contentArea.style.display = 'none';
+      eventsList.innerHTML = '';
 
-      // Clear existing overlays
-      if (driverMarker) {
-        map.removeLayer(driverMarker);
-        driverMarker = null;
-      }
-      if (stopMarker) {
-        map.removeLayer(stopMarker);
-        stopMarker = null;
-      }
-      if (lineLayer) {
-        map.removeLayer(lineLayer);
-        lineLayer = null;
-      }
-
-      // Stop marker (teal)
-      if (typeof stop.lat === 'number' && typeof stop.lng === 'number') {
-        stopMarker = L.marker([stop.lat, stop.lng], {
-          title: stop.location || 'Delivery location'
-        }).addTo(map);
-        stopMarker.bindPopup(`<strong>Delivery Location</strong><br/>${stop.location || ''}`);
-        latLngs.push([stop.lat, stop.lng]);
-      }
-
-      // Driver marker (orange)
-      if (live && typeof live.lat === 'number' && typeof live.lng === 'number') {
-        driverMarker = L.circleMarker([live.lat, live.lng], {
-          radius: 8,
-          color: '#ff5722',
-          fillColor: '#ff5722',
-          fillOpacity: 0.9
-        }).addTo(map);
-        driverMarker.bindPopup('Current driver position (live)');
-        latLngs.push([live.lat, live.lng]);
-      }
-
-      if (live && stop.lat && stop.lng) {
-        mapStatus.textContent = 'Live GPS active. Positions updating automatically.';
-      } else if (!live && stop.lat && stop.lng) {
-        mapStatus.textContent = 'Waiting for driver GPS… Showing delivery location only.';
-      } else {
-        mapStatus.textContent = 'Map is waiting for location details.';
-      }
-
-      // Draw line between driver + stop
-      if (latLngs.length === 2) {
-        lineLayer = L.polyline(latLngs, {
-          color: '#0097a7',
-          weight: 3,
-          dashArray: '6, 6'
-        }).addTo(map);
-        map.fitBounds(latLngs, { padding: [40, 40] });
-      } else if (latLngs.length === 1) {
-        map.setView(latLngs[0], 13);
-      }
-    }
-
-    async function fetchStopData() {
-      if (!stopId) {
-        showError('Missing stopId in the link. Please contact your CareLine coordinator for a valid tracking link.');
+      if (!code) {
+        errorBox.style.display = 'block';
+        errorBox.textContent = 'Please enter or use a valid tracking code.';
         return;
       }
 
       try {
-        const res = await fetch(`/api/stop/${encodeURIComponent(stopId)}`, {
+        // Public-style endpoint; adjust path to match your server.
+        // Example server route: GET /api/track?code=CL-ABC123
+        const res = await fetch('/api/track?code=' + encodeURIComponent(code), {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
           cache: 'no-store'
         });
 
         if (!res.ok) {
-          showError('We could not find this delivery. It may be complete or no longer active. If you believe this is an error, please contact your CareLine coordinator.');
-          return;
+          throw new Error('Tracking code not found or expired.');
         }
 
         const data = await res.json();
-        if (!data.success) {
-          showError('We could not load tracking details for this delivery.');
-          return;
+
+        document.getElementById('patientName').textContent =
+          data.patientName || data.patient || '—';
+        document.getElementById('facilityName').textContent =
+          data.facilityName || data.facility || '—';
+
+        const etaStr = data.eta
+          ? carelineFormatDateTimeShort(data.eta)
+          : (data.etaText || '—');
+        document.getElementById('etaText').textContent = etaStr;
+
+        applyStatusPill(data.status || 'Pending');
+
+        const pct =
+          typeof data.progressPercent === 'number'
+            ? data.progressPercent
+            : (data.stage === 'delivered'
+                ? 100
+                : data.stage === 'out_for_delivery'
+                  ? 70
+                  : data.stage === 'packed'
+                    ? 40
+                    : 10);
+        setProgress(pct, '');
+
+        const events = (data.events || []).slice().sort((a, b) => {
+          const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          return tb - ta;
+        });
+
+        if (!events.length) {
+          eventsList.innerHTML =
+            '<div class="event-item">No events yet. Your order may still be getting prepared.</div>';
+        } else {
+          events.forEach(ev => {
+            const div = document.createElement('div');
+            div.className = 'event-item';
+            const time = ev.timestamp
+              ? carelineFormatDateTimeShort(ev.timestamp)
+              : '';
+            const msg =
+              ev.message ||
+              ev.status ||
+              ev.eventType ||
+              'Update recorded.';
+            div.innerHTML =
+              '<div>' + msg + '</div>' +
+              (time
+                ? '<div class="event-time">' + time + '</div>'
+                : '');
+            eventsList.appendChild(div);
+          });
         }
 
-        clearError();
-        updateDetails(data);
-        updateMapFromData(data);
+        contentArea.style.display = 'block';
       } catch (err) {
-        console.error('Error fetching stop details:', err);
-        showError('We are experiencing a temporary issue loading tracking data. Please refresh this page or try again shortly.');
+        console.error('Tracking error', err);
+        errorBox.style.display = 'block';
+        errorBox.textContent = err.message || 'Error loading tracking info.';
       }
     }
 
-    // Kick things off
-    if (!stopId) {
-      showError('Invalid tracking link. A stopId was not provided.');
-    } else {
-      layout.style.display = 'grid';
-      fetchStopData();
-      // Auto-refresh every 10 seconds
-      setInterval(fetchStopData, 10000);
-    }
+    document.getElementById('codeBtn').addEventListener('click', () => {
+      const code = resolveTrackingCode();
+      fetchTracking(code);
+    });
+
+    document.getElementById('codeInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const code = resolveTrackingCode();
+        fetchTracking(code);
+      }
+    });
+
+    // Auto-run if link already has ?code=...
+    window.addEventListener('load', () => {
+      const autoCode = resolveTrackingCode();
+      if (autoCode) {
+        document.getElementById('codeInput').value = autoCode;
+        fetchTracking(autoCode);
+      }
+    });
   </script>
 </body>
 </html>

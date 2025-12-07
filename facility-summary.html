@@ -12,13 +12,10 @@
       --bg: #e0f7fa;
       --card: #ffffff;
       --muted: #607d8b;
+      --danger: #c62828;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: Arial, sans-serif;
@@ -48,70 +45,58 @@
       opacity: 0.9;
     }
 
-    .pill {
-      background: rgba(0, 0, 0, 0.15);
-      padding: 4px 10px;
+    .nav {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .nav a {
+      color: #e0f7fa;
+      text-decoration: none;
+      padding: 4px 8px;
       border-radius: 999px;
-      font-size: 11px;
-      text-align: center;
+    }
+
+    .nav a:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .nav a.active {
+      background: rgba(255,255,255,0.2);
     }
 
     main {
       flex: 1;
-      padding: 12px;
-      max-width: 1000px;
-      margin: 0 auto;
+      padding: 14px;
+      max-width: 1100px;
       width: 100%;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .session-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
     }
 
     .top-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      gap: 8px;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
-    }
-
-    .top-row-left h1 {
-      font-size: 18px;
-      margin-bottom: 4px;
-    }
-
-    .top-row-left p {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    input, button {
-      font-size: 12px;
-      padding: 6px 8px;
-      border-radius: 999px;
-      border: 1px solid #b0bec5;
-      background: #ffffff;
-      cursor: pointer;
-    }
-
-    input {
-      min-width: 160px;
-    }
-
-    button.refresh-btn {
-      background: var(--teal);
-      color: #ffffff;
-      border: none;
-      font-weight: 600;
-    }
-
-    button:active {
-      transform: scale(0.98);
     }
 
     .card {
@@ -119,28 +104,82 @@
       border-radius: 12px;
       padding: 10px 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    .error {
+      padding: 8px;
+      background: #ffebee;
+      color: var(--danger);
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+      margin-bottom: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      color: #455a64;
+      margin-right: 4px;
+    }
+
+    input[type="text"],
+    input[type="date"] {
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #b0bec5;
+      font-size: 13px;
+    }
+
+    button {
+      font-size: 12px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--teal);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    button.secondary {
+      background: #eceff1;
+      color: var(--dark);
+    }
+
+    button:active {
+      transform: scale(0.98);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
-    }
-
-    thead {
-      background: #eceff1;
+      font-size: 12px;
+      margin-top: 6px;
     }
 
     th, td {
       padding: 6px 8px;
       border-bottom: 1px solid #eceff1;
       text-align: left;
+      vertical-align: top;
     }
 
     th {
       font-weight: 600;
-      font-size: 12px;
+      font-size: 11px;
       color: #455a64;
       white-space: nowrap;
     }
@@ -149,35 +188,28 @@
       background: #fafafa;
     }
 
-    .small {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
+    .bar-cell {
+      width: 40%;
     }
 
-    .error {
-      padding: 8px;
-      background: #ffebee;
-      color: #c62828;
-      border-radius: 8px;
-      font-size: 12px;
-      margin-bottom: 10px;
-      display: none;
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #b2ebf2;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--teal);
+      width: 0%;
     }
 
     .count-pill {
       font-size: 11px;
       color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .badge {
-      display: inline-block;
-      border-radius: 999px;
-      padding: 2px 7px;
-      font-size: 10px;
-      background: #e3f2fd;
-      color: #1565c0;
+      margin-top: 4px;
     }
 
     footer {
@@ -188,16 +220,9 @@
     }
 
     @media (max-width: 800px) {
-      header {
+      .filters-row {
         flex-direction: column;
         align-items: flex-start;
-        gap: 4px;
-      }
-      main {
-        padding: 10px;
-      }
-      table {
-        font-size: 12px;
       }
     }
   </style>
@@ -208,201 +233,252 @@
       <div class="brand">CareLine Medical Logistics</div>
       <div class="subtitle">Facility Summary Report</div>
     </div>
-    <div class="pill">
-      Internal • For Account Management & Sales
-    </div>
+    <nav class="nav" id="mainNav"></nav>
   </header>
 
   <main>
-    <div id="errorBox" class="error"></div>
-
     <div class="top-row">
-      <div class="top-row-left">
+      <div>
         <h1>Facility Summary</h1>
-        <p>High-level view of notifications and events grouped by facility name.</p>
+        <p class="small">
+          Grouped view of events and stops by facility — great for monthly reporting and contract reviews.
+        </p>
+        <p class="session-pill" id="sessionUser">Checking current session…</p>
       </div>
-      <div class="controls">
-        <input
-          id="facilityFilter"
-          type="text"
-          placeholder="Filter by facility name..."
-        />
-        <button class="refresh-btn" id="refreshBtn">Refresh</button>
-      </div>
+
+      <section class="card" style="max-width:380px;">
+        <h2 style="font-size:14px;margin-bottom:4px;">Filters & Export</h2>
+        <div id="fsError" class="error"></div>
+
+        <div class="filters-row">
+          <div>
+            <label for="startDate">From</label>
+            <input type="date" id="startDate" />
+          </div>
+          <div>
+            <label for="endDate">To</label>
+            <input type="date" id="endDate" />
+          </div>
+        </div>
+
+        <div class="filters-row">
+          <div>
+            <label for="facilitySearch">Facility contains</label>
+            <input id="facilitySearch" type="text" placeholder="Name filter..." />
+          </div>
+        </div>
+
+        <div class="filters-row">
+          <button id="applyBtn" class="primary">Apply</button>
+          <button id="resetBtn" class="secondary">Reset</button>
+        </div>
+
+        <div class="filters-row">
+          <button id="csvBtn" class="secondary">Download CSV</button>
+        </div>
+      </section>
     </div>
 
-    <div class="count-pill" id="countInfo">Loading facility summary…</div>
-
     <section class="card">
+      <h2 style="font-size:14px;margin-bottom:4px;">Facility Overview</h2>
+      <p class="small">
+        Facilities ranked by number of distinct stops with any events in the selected date range.
+      </p>
+
       <table>
         <thead>
           <tr>
             <th>Facility</th>
-            <th>Approx. Stops</th>
-            <th>Status Changes</th>
-            <th>SMS Sent</th>
-            <th>Facility Emails</th>
-            <th>Proof Uploaded</th>
-            <th>Last Event</th>
+            <th>Distinct Stops</th>
+            <th>Events</th>
+            <th class="bar-cell">Volume</th>
           </tr>
         </thead>
-        <tbody id="facilityBody">
-          <!-- Rows injected here -->
-        </tbody>
+        <tbody id="facilityBody"></tbody>
       </table>
-      <div class="small">
-        Facilities are grouped based on the <strong>facilityName</strong> stored in notification templates.  
-        Values are approximate, but good enough for account reviews and “who gets the most love” conversations.
-      </div>
+      <p class="count-pill" id="facilityCount">No data loaded yet.</p>
     </section>
   </main>
 
   <footer>
-    Powered by CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
+    CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
   </footer>
 
+  <script src="/js/careline-universal.js"></script>
+  <script src="nav.js"></script>
   <script>
-    const errorBox = document.getElementById('errorBox');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const facilityFilterInput = document.getElementById('facilityFilter');
-    const facilityBody = document.getElementById('facilityBody');
-    const countInfo = document.getElementById('countInfo');
+    let latestFacilities = [];
 
-    let grouped = [];
-
-    function showError(msg) {
-      errorBox.style.display = 'block';
-      errorBox.textContent = msg;
+    function buildBarFill(widthPct) {
+      const w = Math.max(0, Math.min(100, widthPct));
+      return '<div class="bar"><div class="bar-fill" style="width:' + w + '%;"></div></div>';
     }
 
-    function clearError() {
-      errorBox.style.display = 'none';
-      errorBox.textContent = '';
-    }
+    function computeFacilitySummary(events, startDate, endDate) {
+      const facilityMap = {};
 
-    function formatTime(iso) {
-      if (!iso) return '';
-      const d = new Date(iso);
-      return d.toLocaleString();
-    }
+      events.forEach(ev => {
+        if (!ev.createdAt) return;
+        const d = new Date(ev.createdAt);
+        if (isNaN(d.getTime())) return;
+        if (startDate && d < startDate) return;
+        if (endDate && d > endDate) return;
 
-    function computeFacilitySummary(notifications) {
-      const map = {};
-
-      notifications.forEach(ev => {
         const t = ev.templates || {};
-        const facilityName = (t.facilityName || 'Unknown facility').trim() || 'Unknown facility';
-        const key = facilityName.toLowerCase();
+        const facilityName = (t.facilityName || '').trim();
+        if (!facilityName) return;
 
-        if (!map[key]) {
-          map[key] = {
+        const stopId = ev.stopId || '';
+        if (!facilityMap[facilityName]) {
+          facilityMap[facilityName] = {
             facilityName,
-            stops: new Set(),
-            statusChanges: 0,
-            smsCount: 0,
-            emailCount: 0,
-            proofCount: 0,
-            lastEventTime: null,
+            stopIds: new Set(),
+            eventCount: 0
           };
         }
-
-        const bucket = map[key];
-
-        if (ev.stopId) bucket.stops.add(ev.stopId);
-
-        if (ev.eventType === 'status_change') bucket.statusChanges++;
-        if (ev.eventType === 'sms_sent') bucket.smsCount++;
-        if (ev.eventType === 'facility_email_sent') bucket.emailCount++;
-        if (ev.eventType === 'proof_uploaded') bucket.proofCount++;
-
-        if (ev.createdAt) {
-          const current = bucket.lastEventTime
-            ? new Date(bucket.lastEventTime).getTime()
-            : 0;
-          const next = new Date(ev.createdAt).getTime();
-          if (next > current) {
-            bucket.lastEventTime = ev.createdAt;
-          }
-        }
+        const entry = facilityMap[facilityName];
+        if (stopId) entry.stopIds.add(stopId);
+        entry.eventCount++;
       });
 
-      return Object.values(map)
-        .map(b => ({
-          facilityName: b.facilityName,
-          stopCount: b.stops.size,
-          statusChanges: b.statusChanges,
-          smsCount: b.smsCount,
-          emailCount: b.emailCount,
-          proofCount: b.proofCount,
-          lastEventTime: b.lastEventTime,
-        }))
-        .sort((a, b) => {
-          // sort by stopCount desc, then name
-          if (b.stopCount !== a.stopCount) return b.stopCount - a.stopCount;
-          return a.facilityName.localeCompare(b.facilityName);
-        });
+      return Object.values(facilityMap).map(entry => ({
+        facilityName: entry.facilityName,
+        distinctStops: entry.stopIds.size,
+        eventCount: entry.eventCount
+      }));
     }
 
-    async function loadSummary() {
-      clearError();
-      try {
-        const res = await fetch('/api/notifications', { cache: 'no-store' });
-        if (!res.ok) {
-          showError('Unable to load notifications from the server.');
-          return;
-        }
-        const data = await res.json();
-        const notifications = data.notifications || [];
-        grouped = computeFacilitySummary(notifications);
-        renderTable();
-      } catch (err) {
-        console.error('Error loading facility summary', err);
-        showError('There was a problem loading the facility summary. Please try again.');
-      }
-    }
+    function renderFacilities() {
+      const tbody = document.getElementById('facilityBody');
+      const countEl = document.getElementById('facilityCount');
+      const searchTerm = document.getElementById('facilitySearch').value.trim().toLowerCase();
 
-    function renderTable() {
-      const filterText = (facilityFilterInput.value || '').toLowerCase();
-      let rows = grouped;
+      tbody.innerHTML = '';
 
-      if (filterText) {
+      let rows = latestFacilities.slice();
+      if (searchTerm) {
         rows = rows.filter(r =>
-          r.facilityName.toLowerCase().includes(filterText)
+          r.facilityName.toLowerCase().includes(searchTerm)
         );
       }
 
-      countInfo.textContent =
-        rows.length === 0
-          ? 'No facilities match this filter yet.'
-          : `Showing ${rows.length} facility record(s).`;
+      if (!rows.length) {
+        countEl.textContent = 'No facilities match the current filters.';
+        return;
+      }
 
-      facilityBody.innerHTML = '';
+      rows.sort((a, b) => b.distinctStops - a.distinctStops);
+      const maxStops = rows[0].distinctStops || 1;
 
-      rows.forEach(r => {
+      rows.forEach(row => {
         const tr = document.createElement('tr');
+        const width = (row.distinctStops / maxStops) * 100;
         tr.innerHTML = `
-          <td>
-            <strong>${r.facilityName}</strong><br/>
-            <span class="badge">Active account</span>
-          </td>
-          <td>${r.stopCount}</td>
-          <td>${r.statusChanges}</td>
-          <td>${r.smsCount}</td>
-          <td>${r.emailCount}</td>
-          <td>${r.proofCount}</td>
-          <td>${r.lastEventTime ? formatTime(r.lastEventTime) : '—'}</td>
+          <td>${row.facilityName}</td>
+          <td>${row.distinctStops}</td>
+          <td>${row.eventCount}</td>
+          <td class="bar-cell">${buildBarFill(width)}</td>
         `;
-        facilityBody.appendChild(tr);
+        tbody.appendChild(tr);
       });
+
+      countEl.textContent = 'Showing ' + rows.length + ' facilit(ies).';
     }
 
-    refreshBtn.addEventListener('click', loadSummary);
-    facilityFilterInput.addEventListener('input', renderTable);
+    function toCsv(rows) {
+      const header = ['Facility', 'DistinctStops', 'EventCount'];
+      const lines = [header.join(',')];
+      rows.forEach(r => {
+        const line = [
+          '"' + (r.facilityName || '').replace(/"/g, '""') + '"',
+          r.distinctStops,
+          r.eventCount
+        ].join(',');
+        lines.push(line);
+      });
+      return lines.join('\r\n');
+    }
+
+    function downloadCsv(rows) {
+      if (!rows || !rows.length) {
+        carelineShowToast('No facility rows to export.');
+        return;
+      }
+      const csv = toCsv(rows);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const startVal = document.getElementById('startDate').value;
+      const endVal = document.getElementById('endDate').value;
+      const label = (startVal || 'start') + '_to_' + (endVal || 'end');
+
+      link.href = url;
+      link.download = 'careline_facility_summary_' + label + '.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    async function loadFacilitySummary() {
+      const errBox = document.getElementById('fsError');
+      errBox.style.display = 'none';
+      errBox.textContent = '';
+
+      const startVal = document.getElementById('startDate').value;
+      const endVal = document.getElementById('endDate').value;
+      const startDate = carelineParseInputDate(startVal, false);
+      const endDate = carelineParseInputDate(endVal, true);
+
+      try {
+        const data = await carelineApiGet('/api/notifications');
+        const events = data.notifications || [];
+        latestFacilities = computeFacilitySummary(events, startDate, endDate);
+        renderFacilities();
+      } catch (err) {
+        console.error('Facility summary error', err);
+        errBox.style.display = 'block';
+        errBox.textContent =
+          'Error loading facility summary: ' + err.message;
+      }
+    }
+
+    document.getElementById('applyBtn').addEventListener('click', loadFacilitySummary);
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      const today = new Date();
+      const thirtyAgo = new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000);
+      document.getElementById('endDate').value = today.toISOString().slice(0, 10);
+      document.getElementById('startDate').value = thirtyAgo.toISOString().slice(0, 10);
+      document.getElementById('facilitySearch').value = '';
+      loadFacilitySummary();
+    });
+
+    document.getElementById('facilitySearch').addEventListener('input', renderFacilities);
+
+    document.getElementById('csvBtn').addEventListener('click', () => {
+      let rows = latestFacilities.slice();
+      const searchTerm = document.getElementById('facilitySearch').value.trim().toLowerCase();
+      if (searchTerm) {
+        rows = rows.filter(r =>
+          r.facilityName.toLowerCase().includes(searchTerm)
+        );
+      }
+      downloadCsv(rows);
+    });
 
     // Boot
-    loadSummary();
-    // Optional: auto-refresh every 60s
-    setInterval(loadSummary, 60000);
+    requireLoggedIn();
+    buildRoleAwareNav('facility-summary');
+    updateSessionLabel();
+
+    (function initDates() {
+      const today = new Date();
+      const thirtyAgo = new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000);
+      document.getElementById('endDate').value = today.toISOString().slice(0, 10);
+      document.getElementById('startDate').value = thirtyAgo.toISOString().slice(0, 10);
+    })();
+
+    loadFacilitySummary();
   </script>
 </body>
 </html>

@@ -12,7 +12,7 @@
       --bg: #e0f7fa;
       --card: #ffffff;
       --muted: #607d8b;
-      --danger: #c62828;
+      --good: #2e7d32;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -58,10 +58,6 @@
       border-radius: 999px;
     }
 
-    .nav a:hover {
-      background: rgba(255,255,255,0.15);
-    }
-
     .nav a.active {
       background: rgba(255,255,255,0.2);
     }
@@ -69,7 +65,7 @@
     main {
       flex: 1;
       padding: 14px;
-      max-width: 1100px;
+      max-width: 1050px;
       width: 100%;
       margin: 0 auto;
     }
@@ -82,6 +78,12 @@
     .small {
       font-size: 11px;
       color: var(--muted);
+    }
+
+    .session-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
     }
 
     .top-row {
@@ -101,79 +103,28 @@
       margin-bottom: 12px;
     }
 
-    label {
-      display: block;
-      font-size: 12px;
-      margin-bottom: 3px;
-      color: #455a64;
-    }
-
-    input {
-      padding: 7px 9px;
-      border-radius: 8px;
-      border: 1px solid #b0bec5;
-      font-size: 13px;
-      width: 100%;
-      max-width: 260px;
-      margin-right: 6px;
-      margin-bottom: 6px;
-    }
-
-    button {
-      font-size: 12px;
-      padding: 7px 11px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-    }
-
-    button.primary {
-      background: var(--teal);
-      color: #ffffff;
-      font-weight: 600;
-    }
-
-    button.secondary {
-      background: #eceff1;
-      color: var(--dark);
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
     .error {
       padding: 8px;
       background: #ffebee;
-      color: var(--danger);
+      color: #c62828;
       border-radius: 8px;
       font-size: 12px;
       margin-bottom: 8px;
       display: none;
     }
 
-    .count-pill {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .session-pill {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
+      margin-top: 6px;
     }
 
     th, td {
       padding: 6px 8px;
       border-bottom: 1px solid #eceff1;
       text-align: left;
+      vertical-align: top;
     }
 
     th {
@@ -187,7 +138,7 @@
       background: #fafafa;
     }
 
-    .status-pill {
+    .pill-status {
       display: inline-block;
       border-radius: 999px;
       padding: 2px 7px;
@@ -196,25 +147,22 @@
       color: #455a64;
     }
 
-    .status-complete {
+    .pill-status-ok {
       background: #e8f5e9;
-      color: #2e7d32;
+      color: var(--good);
     }
 
-    .status-pending {
-      background: #fff3e0;
-      color: #e65100;
-    }
-
-    a.track-link {
+    .link-track {
       font-size: 11px;
-      color: var(--teal);
-      text-decoration: none;
-      font-weight: 600;
+      color: #1565c0;
+      text-decoration: underline;
+      cursor: pointer;
     }
 
-    a.track-link:hover {
-      text-decoration: underline;
+    .count-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
     }
 
     footer {
@@ -225,9 +173,7 @@
     }
 
     @media (max-width: 900px) {
-      .top-row {
-        flex-direction: column;
-      }
+      main { padding: 10px; }
     }
   </style>
 </head>
@@ -235,7 +181,7 @@
   <header>
     <div>
       <div class="brand">CareLine Medical Logistics</div>
-      <div class="subtitle">Facility Delivery Portal</div>
+      <div class="subtitle">Facility Portal</div>
     </div>
     <nav class="nav" id="mainNav"></nav>
   </header>
@@ -243,50 +189,63 @@
   <main>
     <div class="top-row">
       <div>
-        <h1>Facility Portal</h1>
+        <h1>Facility Deliveries</h1>
         <p class="small">
-          See recent deliveries, patient statuses, and tracking links for your facility — all in one place.
+          See today’s scheduled deliveries and recently completed drops for your facility.
         </p>
-        <p class="session-pill" id="sessionUser">
-          Checking current session…
-        </p>
+        <p class="session-pill" id="sessionUser">Checking current session…</p>
       </div>
 
-      <section class="card" style="max-width:340px;">
-        <h2 style="font-size:14px;margin-bottom:4px;">Select Facility</h2>
-        <p class="small" style="margin-bottom:6px;">
-          Type the facility name exactly (or close) to how it appears in your CareLine notifications,
-          and we’ll filter the log for you.
+      <section class="card" style="max-width:360px;">
+        <h2 style="font-size:14px;margin-bottom:4px;">Facility Details</h2>
+        <div id="fpError" class="error"></div>
+        <p class="small" id="facilityNameText">Facility: —</p>
+        <p class="small" id="facilityHint">
+          If this is not your facility, please contact CareLine support.
         </p>
-        <div id="portalError" class="error"></div>
-        <label for="facilityInput">Facility name</label>
-        <input id="facilityInput" type="text" placeholder="Example: Sunrise Wound Care Center" />
-        <button id="applyFacilityBtn" class="primary" style="margin-top:4px;">Apply</button>
-        <button id="clearFacilityBtn" class="secondary" style="margin-top:4px;margin-left:4px;">Clear</button>
       </section>
     </div>
 
     <section class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <h2 style="font-size:14px;">Recent Deliveries</h2>
-        <button id="refreshBtn" class="secondary">Refresh</button>
-      </div>
+      <h2 style="font-size:14px;margin-bottom:4px;">Today’s Deliveries</h2>
+      <p class="small">
+        Deliveries scheduled for today (including “out for delivery” and “delivered”).
+      </p>
 
       <table>
         <thead>
           <tr>
+            <th>ETA</th>
             <th>Patient</th>
-            <th>Stop ID</th>
+            <th>Items / Notes</th>
             <th>Status</th>
-            <th>Last Event</th>
-            <th>Track</th>
+            <th>Tracking</th>
           </tr>
         </thead>
-        <tbody id="deliveriesBody">
-          <!-- rows injected -->
-        </tbody>
+        <tbody id="todayBody"></tbody>
       </table>
-      <p class="count-pill" id="deliveriesCount">No facility selected yet.</p>
+      <p class="count-pill" id="todayCount">No deliveries for today.</p>
+    </section>
+
+    <section class="card">
+      <h2 style="font-size:14px;margin-bottom:4px;">Recent Deliveries</h2>
+      <p class="small">
+        Last 10 completed deliveries to this facility.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Delivered At</th>
+            <th>Patient</th>
+            <th>Items / Notes</th>
+            <th>Status</th>
+            <th>Tracking</th>
+          </tr>
+        </thead>
+        <tbody id="recentBody"></tbody>
+      </table>
+      <p class="count-pill" id="recentCount">No recent deliveries.</p>
     </section>
   </main>
 
@@ -294,216 +253,102 @@
     CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
   </footer>
 
+  <script src="/js/careline-universal.js"></script>
   <script src="nav.js"></script>
   <script>
-    function requireLoggedIn() {
-      const token = localStorage.getItem('carelineToken');
-      if (!token) {
-        alert('You must be logged in to view this page.');
-        window.location.href = 'login.html';
+    function statusClass(status) {
+      const s = (status || '').toLowerCase();
+      if (!s) return 'pill-status';
+      if (s.includes('delivered') || s.includes('complete')) {
+        return 'pill-status pill-status-ok';
       }
+      return 'pill-status';
     }
 
-    function getAuthHeaders() {
-      const token = localStorage.getItem('carelineToken');
-      return token ? { 'Authorization': 'Bearer ' + token } : {};
+    function buildTrackLink(trackingCode) {
+      if (!trackingCode) return '—';
+      const url = 'track.html?code=' + encodeURIComponent(trackingCode);
+      return '<a class="link-track" href="' + url + '" target="_blank">View tracking</a>';
     }
 
-    function updateSessionLabel() {
-      const el = document.getElementById('sessionUser');
-      const raw = localStorage.getItem('carelineUser');
-      if (!raw) {
-        el.textContent = 'Not logged in yet.';
-        return;
-      }
-      try {
-        const user = JSON.parse(raw);
-        el.textContent =
-          (user.email || user.id || 'User') +
-          ' — ' +
-          (user.role || 'unknown');
-        if (user.role !== 'facility' && user.role !== 'admin' && user.role !== 'dispatch') {
-          el.textContent += ' (Note: this portal is designed for facility/admin use.)';
-        }
-      } catch {
-        el.textContent = 'Session found, but user data could not be read.';
-      }
-    }
+    async function loadFacilityDeliveries() {
+      const errBox = document.getElementById('fpError');
+      errBox.style.display = 'none';
+      errBox.textContent = '';
 
-    function loadSavedFacilityName() {
-      return localStorage.getItem('carelineFacilityName') || '';
-    }
+      const todayBody = document.getElementById('todayBody');
+      const todayCount = document.getElementById('todayCount');
+      const recentBody = document.getElementById('recentBody');
+      const recentCount = document.getElementById('recentCount');
 
-    function saveFacilityName(name) {
-      localStorage.setItem('carelineFacilityName', name);
-    }
-
-    function isCompleteStatus(statusRaw) {
-      if (!statusRaw) return false;
-      const s = statusRaw.toLowerCase();
-      const completeWords = ['done', 'delivered', 'completed', 'complete', 'closed'];
-      return completeWords.some(word => s.includes(word));
-    }
-
-    function facilityMatches(target, facilityName) {
-      if (!target || !facilityName) return false;
-      return facilityName.toLowerCase().includes(target.toLowerCase());
-    }
-
-    async function loadDeliveries() {
-      const facilityName = (loadSavedFacilityName() || '').trim();
-      const deliveriesBody = document.getElementById('deliveriesBody');
-      const deliveriesCount = document.getElementById('deliveriesCount');
-      const portalError = document.getElementById('portalError');
-
-      portalError.style.display = 'none';
-      portalError.textContent = '';
-
-      deliveriesBody.innerHTML = '';
-
-      if (!facilityName) {
-        deliveriesCount.textContent = 'No facility selected yet.';
-        return;
-      }
+      todayBody.innerHTML = '';
+      recentBody.innerHTML = '';
+      todayCount.textContent = 'Loading…';
+      recentCount.textContent = '';
 
       try {
-        const res = await fetch('/api/notifications', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeaders()
-          },
-          cache: 'no-store'
-        });
+        // Backend route for facility user:
+        // GET /api/facility/deliveries  -> { facilityName, today:[], recent:[] }
+        const data = await carelineApiGet('/api/facility/deliveries');
+        const facilityName = data.facilityName || '—';
+        document.getElementById('facilityNameText').textContent = 'Facility: ' + facilityName;
 
-        if (!res.ok) {
-          deliveriesCount.textContent = 'Unable to load notifications.';
-          portalError.style.display = 'block';
-          portalError.textContent = 'Could not load notifications. Facility portal may require admin access.';
-          return;
-        }
+        const today = data.today || [];
+        const recent = data.recent || [];
 
-        const data = await res.json();
-        const notifications = data.notifications || [];
-
-        // Group by stopId/patientName for the selected facility
-        const grouped = {};
-        notifications.forEach(ev => {
-          const t = ev.templates || {};
-          const fName = (t.facilityName || '').trim();
-          if (!facilityMatches(facilityName, fName)) return;
-
-          const patient = (t.patientName || '').trim() || 'Unknown patient';
-          const key = ev.stopId || patient + '_' + fName;
-
-          if (!grouped[key]) {
-            grouped[key] = {
-              stopId: ev.stopId || '',
-              patientName: patient,
-              facilityName: fName || facilityName,
-              lastStatus: ev.status || '',
-              lastEventTime: ev.createdAt || null
-            };
-          } else {
-            // Update last event time
-            const current = grouped[key].lastEventTime
-              ? new Date(grouped[key].lastEventTime).getTime()
-              : 0;
-            const next = ev.createdAt ? new Date(ev.createdAt).getTime() : 0;
-            if (next > current) {
-              grouped[key].lastEventTime = ev.createdAt;
-              grouped[key].lastStatus = ev.status || grouped[key].lastStatus;
-            }
-          }
-        });
-
-        const rows = Object.values(grouped);
-        if (rows.length === 0) {
-          deliveriesCount.textContent = 'No deliveries found for "' + facilityName + '".';
-          return;
-        }
-
-        rows
-          .sort((a, b) => {
-            const ta = a.lastEventTime ? new Date(a.lastEventTime).getTime() : 0;
-            const tb = b.lastEventTime ? new Date(b.lastEventTime).getTime() : 0;
-            return tb - ta;
-          })
-          .forEach(row => {
-            const complete = isCompleteStatus(row.lastStatus);
+        if (!today.length) {
+          todayCount.textContent = 'No deliveries for today.';
+        } else {
+          today.forEach(d => {
             const tr = document.createElement('tr');
-
-            const stopId = row.stopId || '';
-            const trackUrl = stopId
-              ? 'track.html?stopId=' + encodeURIComponent(stopId)
-              : '';
-
-            const lastEvent = row.lastEventTime
-              ? new Date(row.lastEventTime).toLocaleString()
-              : '—';
-
+            const etaStr = d.eta
+              ? carelineFormatDateTimeShort(d.eta)
+              : (d.etaText || '—');
             tr.innerHTML = `
-              <td>${row.patientName}</td>
-              <td>${stopId}</td>
-              <td>
-                <span class="status-pill ${complete ? 'status-complete' : 'status-pending'}">
-                  ${row.lastStatus || (complete ? 'Delivered' : 'In progress')}
-                </span>
-              </td>
-              <td>${lastEvent}</td>
-              <td>
-                ${
-                  trackUrl
-                    ? `<a href="${trackUrl}" class="track-link" target="_blank">View</a>`
-                    : ''
-                }
-              </td>
+              <td>${etaStr}</td>
+              <td>${d.patientName || '—'}</td>
+              <td>${d.itemsSummary || d.notes || '—'}</td>
+              <td><span class="${statusClass(d.status)}">${d.status || 'Pending'}</span></td>
+              <td>${buildTrackLink(d.trackingCode)}</td>
             `;
-            deliveriesBody.appendChild(tr);
+            todayBody.appendChild(tr);
           });
+          todayCount.textContent = 'Showing ' + today.length + ' delivery(ies) for today.';
+        }
 
-        deliveriesCount.textContent =
-          'Showing ' + rows.length + ' delivery record(s) for "' + facilityName + '".';
+        if (!recent.length) {
+          recentCount.textContent = 'No recent deliveries.';
+        } else {
+          recent.forEach(d => {
+            const tr = document.createElement('tr');
+            const deliveredAt = d.deliveredAt
+              ? carelineFormatDateTimeShort(d.deliveredAt)
+              : '—';
+            tr.innerHTML = `
+              <td>${deliveredAt}</td>
+              <td>${d.patientName || '—'}</td>
+              <td>${d.itemsSummary || d.notes || '—'}</td>
+              <td><span class="${statusClass(d.status)}">${d.status || 'Delivered'}</span></td>
+              <td>${buildTrackLink(d.trackingCode)}</td>
+            `;
+            recentBody.appendChild(tr);
+          });
+          recentCount.textContent = 'Showing ' + recent.length + ' recent delivery(ies).';
+        }
       } catch (err) {
-        console.error('Facility portal load error', err);
-        portalError.style.display = 'block';
-        portalError.textContent = 'Network error while loading facility data.';
-        deliveriesCount.textContent = 'Network error.';
+        console.error('Facility portal error', err);
+        errBox.style.display = 'block';
+        errBox.textContent = 'Error loading facility deliveries: ' + err.message;
+        todayCount.textContent = 'Error loading data.';
       }
     }
 
-    document.getElementById('applyFacilityBtn').addEventListener('click', () => {
-      const input = document.getElementById('facilityInput');
-      const name = (input.value || '').trim();
-      const portalError = document.getElementById('portalError');
-      portalError.style.display = 'none';
-      portalError.textContent = '';
-
-      if (!name) {
-        portalError.style.display = 'block';
-        portalError.textContent = 'Facility name cannot be empty.';
-        return;
-      }
-
-      saveFacilityName(name);
-      loadDeliveries();
-    });
-
-    document.getElementById('clearFacilityBtn').addEventListener('click', () => {
-      localStorage.removeItem('carelineFacilityName');
-      document.getElementById('facilityInput').value = '';
-      document.getElementById('deliveriesBody').innerHTML = '';
-      document.getElementById('deliveriesCount').textContent = 'No facility selected yet.';
-    });
-
-    document.getElementById('refreshBtn').addEventListener('click', loadDeliveries);
-
-    // Boot
+    // Boot – facility or admin
     requireLoggedIn();
+    CareLine.requireRole(['facility', 'admin']);
     buildRoleAwareNav('facility-portal');
     updateSessionLabel();
-    document.getElementById('facilityInput').value = loadSavedFacilityName();
-    loadDeliveries();
+    loadFacilityDeliveries();
   </script>
 </body>
 </html>

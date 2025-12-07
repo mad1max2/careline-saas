@@ -2,559 +2,537 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>CareLine Control Center</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CareLine Control Center | Live Dispatch Dashboard</title>
-
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
 
   <style>
+    :root {
+      --teal: #0097a7;
+      --dark: #004d40;
+      --bg: #e0f7fa;
+      --card: #ffffff;
+      --muted: #607d8b;
+      --danger: #c62828;
+      --good: #2e7d32;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
-      background: #e3f2fd;
-      color: #263238;
-    }
-
-    header {
-      background: #006064;
-      color: #fff;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .title {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .subtitle {
-      font-size: 12px;
-      opacity: 0.9;
-    }
-
-    .pill {
-      background: #004d40;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 2fr 1.4fr;
-      grid-template-rows: auto 1fr;
-      grid-template-areas:
-        "summary map"
-        "table map";
-      gap: 12px;
-      padding: 12px;
-      height: calc(100vh - 56px);
-      box-sizing: border-box;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-      padding: 10px 12px;
-      box-sizing: border-box;
-    }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .summary-card {
-      padding: 10px;
-      border-radius: 8px;
-      color: #ffffff;
-    }
-
-    .s-total { background: #006064; }
-    .s-out { background: #0288d1; }
-    .s-complete { background: #2e7d32; }
-    .s-alerts { background: #e64a19; }
-
-    .summary-label {
-      font-size: 11px;
-      opacity: 0.9;
-    }
-
-    .summary-value {
-      font-size: 20px;
-      font-weight: bold;
-    }
-
-    #tableCard {
-      grid-area: table;
-      overflow: auto;
-    }
-
-    #summaryCard {
-      grid-area: summary;
-    }
-
-    #mapCard {
-      grid-area: map;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
-    #map {
+    header {
+      background: var(--teal);
+      color: #fff;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .nav a {
+      color: #e0f7fa;
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .nav a:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .nav a.active {
+      background: rgba(255,255,255,0.2);
+    }
+
+    main {
       flex: 1;
-      min-height: 260px;
+      padding: 14px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .session-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 12px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+      margin-bottom: 6px;
+    }
+
+    .metric-card {
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .metric-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .error {
+      padding: 8px;
+      background: #ffebee;
+      color: var(--danger);
       border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    .section-title {
+      font-size: 14px;
+      margin-bottom: 4px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
-    }
-
-    thead {
-      background: #eceff1;
+      font-size: 12px;
+      margin-top: 6px;
     }
 
     th, td {
       padding: 6px 8px;
       border-bottom: 1px solid #eceff1;
       text-align: left;
+      vertical-align: top;
     }
 
     th {
       font-weight: 600;
-      font-size: 12px;
+      font-size: 11px;
       color: #455a64;
+      white-space: nowrap;
     }
 
     tr:nth-child(even) {
       background: #fafafa;
     }
 
-    .tag {
-      padding: 2px 6px;
+    .pill {
+      display: inline-block;
       border-radius: 999px;
+      padding: 2px 7px;
       font-size: 11px;
-      display: inline-block;
+      background: #eceff1;
+      color: #455a64;
     }
 
-    .tag-out { background: #e3f2fd; color: #1565c0; }
-    .tag-complete { background: #e8f5e9; color: #2e7d32; }
-    .tag-alert { background: #ffebee; color: #c62828; }
-    .tag-pending { background: #fff8e1; color: #ef6c00; }
-
-    .small {
-      font-size: 11px;
-      color: #607d8b;
-      margin-top: 4px;
+    .pill-driver {
+      background: #e3f2fd;
+      color: #1565c0;
     }
 
-    .map-footer {
-      font-size: 11px;
-      margin-top: 6px;
-      color: #546e7a;
+    .pill-status-ok {
+      background: #e8f5e9;
+      color: #2e7d32;
     }
 
-    .btn-link {
-      display: inline-block;
-      padding: 4px 8px;
-      font-size: 11px;
-      border-radius: 999px;
-      border: 1px solid #0097a7;
-      color: #006064;
-      text-decoration: none;
-      margin-left: 6px;
-    }
-
-    .btn-link:hover {
-      background: #e0f7fa;
-    }
-
-    .action-btn {
-      padding: 3px 5px;
-      font-size: 11px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      margin-right: 4px;
-      margin-bottom: 2px;
-      display: inline-block;
-    }
-
-    .action-link {
-      background: #e0f7fa;
-      color: #006064;
-    }
-
-    .action-sms {
+    .pill-status-warn {
       background: #fff3e0;
       color: #e65100;
     }
 
-    .action-email {
-      background: #ede7f6;
-      color: #4527a0;
+    .count-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
     }
 
-    @media (max-width: 1000px) {
-      .layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-        grid-template-areas:
-          "summary"
-          "map"
-          "table";
-        height: auto;
+    footer {
+      font-size: 11px;
+      text-align: center;
+      padding: 8px 10px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      #map { min-height: 220px; }
+    }
+
+    @media (max-width: 600px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
   <header>
     <div>
-      <div class="title">CareLine Control Center</div>
-      <div class="subtitle">Live dispatch • Tracking • SMS & Email Hooks</div>
+      <div class="brand">CareLine Medical Logistics</div>
+      <div class="subtitle">Control Center</div>
     </div>
-    <div class="pill">Internal Operations Dashboard</div>
+    <nav class="nav" id="mainNav"></nav>
   </header>
 
-  <main class="layout">
-    <!-- SUMMARY CARD -->
-    <section id="summaryCard" class="card">
-      <div class="summary-grid">
-        <div class="summary-card s-total">
-          <div class="summary-label">Total Stops Today</div>
-          <div id="totalStops" class="summary-value">0</div>
-        </div>
-        <div class="summary-card s-out">
-          <div class="summary-label">Out for Delivery</div>
-          <div id="outForDelivery" class="summary-value">0</div>
-        </div>
-        <div class="summary-card s-complete">
-          <div class="summary-label">Completed</div>
-          <div id="completed" class="summary-value">0</div>
-        </div>
-        <div class="summary-card s-alerts">
-          <div class="summary-label">Needs Attention</div>
-          <div id="alerts" class="summary-value">0</div>
-        </div>
+  <main>
+    <div class="top-row">
+      <div>
+        <h1>Control Center</h1>
+        <p class="small">
+          High-level live view of routes, drivers, and notifications — your CareLine “mission control”.
+        </p>
+        <p class="session-pill" id="sessionUser">Checking current session…</p>
       </div>
-      <div class="small">
-        Auto-refresh every 5 seconds from <code>routes.json</code> and <code>gps.json</code>.
-        <a href="driver-map.html" class="btn-link" target="_blank">Open Live Driver Map</a>
+
+      <section class="card" style="max-width:360px;">
+        <h2 class="section-title">Status</h2>
+        <div id="ccError" class="error"></div>
+        <p class="small" id="lastUpdatedText">Last updated: —</p>
+        <button id="refreshBtn" class="secondary" style="margin-top:6px;">Refresh now</button>
+      </section>
+    </div>
+
+    <!-- Metrics row -->
+    <section class="card">
+      <h2 class="section-title">Today’s Metrics</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Active drivers</div>
+          <div class="metric-value" id="metricDrivers">0</div>
+          <div class="metric-sub" id="metricDriversSub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Routes today</div>
+          <div class="metric-value" id="metricRoutes">0</div>
+          <div class="metric-sub" id="metricRoutesSub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Stops today</div>
+          <div class="metric-value" id="metricStops">0</div>
+          <div class="metric-sub" id="metricStopsSub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Notifications (last 24h)</div>
+          <div class="metric-value" id="metricNotifs">0</div>
+          <div class="metric-sub" id="metricNotifsSub"></div>
+        </div>
       </div>
     </section>
 
-    <!-- TABLE CARD -->
-    <section id="tableCard" class="card">
-      <h3 style="margin:0 0 6px 0; font-size:14px;">Active Deliveries</h3>
+    <!-- Drivers snapshot -->
+    <section class="card">
+      <h2 class="section-title">Drivers Snapshot</h2>
+      <p class="small">
+        Quick overview of each driver with routes assigned today. For deep performance stats, use the Driver Performance and Ops Metrics pages.
+      </p>
       <table>
         <thead>
           <tr>
             <th>Driver</th>
-            <th>Stop</th>
-            <th>Location</th>
-            <th>Items</th>
+            <th>Routes today</th>
+            <th>Total stops</th>
             <th>Status</th>
-            <th>Last GPS</th>
-            <th>Actions</th>
           </tr>
         </thead>
-        <tbody id="deliveriesBody">
-          <!-- Rows injected by JS -->
+        <tbody id="driversBody">
         </tbody>
       </table>
-      <div class="small" id="tableInfo">
-        Waiting for first data load…
-      </div>
+      <p class="count-pill" id="driversCount">No driver data yet.</p>
     </section>
 
-    <!-- MAP CARD -->
-    <section id="mapCard" class="card">
-      <h3 style="margin:0 0 6px 0; font-size:14px;">Live Map (All Drivers)</h3>
-      <div id="map"></div>
-      <div class="map-footer">
-        • Green markers = stops • Orange markers = live driver positions  
-        • Use this for dispatch, customer calls, and escalation.
-      </div>
+    <!-- Recent notifications -->
+    <section class="card">
+      <h2 class="section-title">Recent Notifications</h2>
+      <p class="small">
+        Last 10 notification events across all channels.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Channel</th>
+            <th>Event</th>
+            <th>Context</th>
+          </tr>
+        </thead>
+        <tbody id="notifBody">
+        </tbody>
+      </table>
+      <p class="count-pill" id="notifCount">No notifications loaded yet.</p>
     </section>
   </main>
 
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <footer>
+    CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
+  </footer>
 
+  <script src="/js/careline-universal.js"></script>
+  <script src="nav.js"></script>
   <script>
-    const REFRESH_MS = 5000;
-    const DEFAULT_CENTER = [39.2904, -76.6122];
-
-    let map, mapLayer, driverMarkers = {};
-
-    function initMap() {
-      map = L.map('map').setView(DEFAULT_CENTER, 9);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-      mapLayer = L.layerGroup().addTo(map);
+    function buildContext(ev) {
+      const t = ev.templates || {};
+      const bits = [];
+      if (t.patientName) bits.push('Patient: ' + t.patientName);
+      if (t.facilityName) bits.push('Facility: ' + t.facilityName);
+      if (ev.driverId) bits.push('Driver: ' + ev.driverId);
+      if (ev.stopId) bits.push('Stop: ' + ev.stopId);
+      return bits.length ? bits.join(' · ') : '—';
     }
 
-    async function loadDashboard() {
+    function channelLabel(ev) {
+      const c = (ev.channel || '').toLowerCase();
+      if (!c) return '—';
+      return c.toUpperCase();
+    }
+
+    function channelClass(ev) {
+      const c = (ev.channel || '').toLowerCase();
+      if (c === 'sms') return 'pill pill-sms';
+      if (c === 'email') return 'pill pill-email';
+      if (c === 'status') return 'pill pill-status';
+      return 'pill';
+    }
+
+    async function loadControlCenter() {
+      const errorBox = document.getElementById('ccError');
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+
+      const driversBody = document.getElementById('driversBody');
+      const driversCount = document.getElementById('driversCount');
+      const notifBody = document.getElementById('notifBody');
+      const notifCount = document.getElementById('notifCount');
+
+      driversBody.innerHTML = '';
+      notifBody.innerHTML = '';
+
+      // Defaults
+      document.getElementById('metricDrivers').textContent = '0';
+      document.getElementById('metricRoutes').textContent = '0';
+      document.getElementById('metricStops').textContent = '0';
+      document.getElementById('metricNotifs').textContent = '0';
+      document.getElementById('metricDriversSub').textContent = '';
+      document.getElementById('metricRoutesSub').textContent = '';
+      document.getElementById('metricStopsSub').textContent = '';
+      document.getElementById('metricNotifsSub').textContent = '';
+
       try {
-        const [routesRes, gpsRes] = await Promise.all([
-          fetch('/routes.json', { cache: 'no-store' }),
-          fetch('/gps.json', { cache: 'no-store' }).catch(() => null)
+        const [routesRes, notifRes] = await Promise.all([
+          carelineApiGet('/routes.json'),
+          carelineApiGet('/api/notifications')
         ]);
 
-        const routesData = await routesRes.json();
-        let gpsData = null;
-        if (gpsRes && gpsRes.ok) {
-          gpsData = await gpsRes.json();
-        }
+        const routes = routesRes.routes || [];
+        const notifications = notifRes.notifications || [];
 
-        updateSummary(routesData);
-        updateTable(routesData, gpsData);
-        updateMap(routesData, gpsData);
+        const now = new Date();
+        const todayStart = new Date(now.toISOString().slice(0, 10) + 'T00:00:00');
+        const todayEnd = new Date(now.toISOString().slice(0, 10) + 'T23:59:59');
+        const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-      } catch (err) {
-        console.error('Dashboard load error', err);
-      }
-    }
+        // ========== ROUTES / DRIVERS / STOPS ==========
+        let totalRoutesToday = 0;
+        let totalStopsToday = 0;
+        const driverStats = {}; // driverId -> { routesToday, stopsToday }
 
-    function updateSummary(routesData) {
-      let total = 0;
-      let out = 0;
-      let complete = 0;
-      let alerts = 0;
+        routes.forEach(route => {
+          const driverId = route.driverId || 'unknown';
+          const routeDateStr = route.routeDate || route.date;
+          let routeIsToday = false;
+          if (routeDateStr) {
+            const d = new Date(routeDateStr);
+            if (!isNaN(d.getTime())) {
+              routeIsToday = d >= todayStart && d <= todayEnd;
+            }
+          } else {
+            // if no route date, treat as today (optional)
+            routeIsToday = true;
+          }
 
-      routesData.routes.forEach(route => {
-        route.stops.forEach(stop => {
-          total++;
-          const status = (stop.status || '').toLowerCase();
-          if (status.includes('complete')) complete++;
-          else if (status.includes('out')) out++;
-          else if (status.includes('issue') || status.includes('delayed')) alerts++;
-          else alerts++; // unknown -> needs attention
-        });
-      });
+          if (!driverStats[driverId]) {
+            driverStats[driverId] = { routesToday: 0, stopsToday: 0 };
+          }
 
-      document.getElementById('totalStops').textContent = total;
-      document.getElementById('outForDelivery').textContent = out;
-      document.getElementById('completed').textContent = complete;
-      document.getElementById('alerts').textContent = alerts;
-    }
+          const stops = route.stops || [];
 
-    function statusTag(status) {
-      const s = (status || '').toLowerCase();
-      if (s.includes('complete')) return '<span class="tag tag-complete">Completed</span>';
-      if (s.includes('out')) return '<span class="tag tag-out">Out for delivery</span>';
-      if (s.includes('issue') || s.includes('delay')) return '<span class="tag tag-alert">Issue</span>';
-      return '<span class="tag tag-pending">Pending</span>';
-    }
-
-    function formatGpsTime(driverId, gpsData) {
-      if (!gpsData || !gpsData.drivers || !gpsData.drivers[driverId]) {
-        return '<span class="small">No live data</span>';
-      }
-      const d = gpsData.drivers[driverId];
-      const t = new Date(d.updated);
-      return `<span class="small">${t.toLocaleTimeString()}</span>`;
-    }
-
-    function updateTable(routesData, gpsData) {
-      const body = document.getElementById('deliveriesBody');
-      const info = document.getElementById('tableInfo');
-      body.innerHTML = '';
-
-      let rowCount = 0;
-
-      routesData.routes.forEach(route => {
-        const driver = routesData.drivers.find(d => d.id === route.driverId);
-        const driverName = driver ? driver.name : route.driverId;
-
-        route.stops.forEach((stop, index) => {
-          const tr = document.createElement('tr');
-
-          tr.innerHTML = `
-            <td>${driverName}</td>
-            <td>${index + 1} (${stop.stopId})</td>
-            <td>${stop.location || ''}</td>
-            <td>${stop.items || ''}</td>
-            <td>${statusTag(stop.status)}</td>
-            <td>${formatGpsTime(route.driverId, gpsData)}</td>
-            <td>
-              <button class="action-btn action-link" onclick="showTrackingLink('${stop.stopId}')">Link</button>
-              <button class="action-btn action-sms" onclick="sendPatientSms('${stop.stopId}')">Send SMS</button>
-              <button class="action-btn action-email" onclick="sendFacilityEmail('${stop.stopId}')">Facility Email</button>
-            </td>
-          `;
-
-          body.appendChild(tr);
-          rowCount++;
-        });
-      });
-
-      info.textContent = rowCount === 0
-        ? 'No active stops found in routes.json.'
-        : `Showing ${rowCount} stops across ${routesData.routes.length} route(s).`;
-    }
-
-    function updateMap(routesData, gpsData) {
-      mapLayer.clearLayers();
-      driverMarkers = {};
-
-      const bounds = [];
-
-      // Stops (green)
-      routesData.routes.forEach(route => {
-        const driver = routesData.drivers.find(d => d.id === route.driverId);
-        const driverName = driver ? driver.name : route.driverId;
-
-        route.stops.forEach((stop, index) => {
-          if (typeof stop.lat === 'number' && typeof stop.lng === 'number') {
-            const m = L.marker([stop.lat, stop.lng], {
-              title: `Stop ${index + 1} (${driverName})`
-            }).addTo(mapLayer);
-            m.bindPopup(
-              `<strong>${driverName}</strong><br/>
-               Stop ${index + 1} — ${stop.stopId}<br/>
-               ${stop.location || ''}<br/>
-               Items: ${stop.items || ''}<br/>
-               Status: ${stop.status || 'Unknown'}`
-            );
-            bounds.push([stop.lat, stop.lng]);
+          if (routeIsToday) {
+            totalRoutesToday++;
+            driverStats[driverId].routesToday++;
+            totalStopsToday += stops.length;
+            driverStats[driverId].stopsToday += stops.length;
           }
         });
-      });
 
-      // Live drivers (orange)
-      if (gpsData && gpsData.drivers) {
-        Object.keys(gpsData.drivers).forEach(driverId => {
-          const d = gpsData.drivers[driverId];
-          const lat = parseFloat(d.lat);
-          const lng = parseFloat(d.lng);
-          if (isNaN(lat) || isNaN(lng)) return;
+        const activeDrivers = Object.keys(driverStats).filter(
+          id => driverStats[id].routesToday > 0
+        ).length;
 
-          const driver = routesData.drivers.find(dr => dr.id === driverId);
-          const driverName = driver ? driver.name : driverId;
+        document.getElementById('metricDrivers').textContent = activeDrivers;
+        document.getElementById('metricRoutes').textContent = totalRoutesToday;
+        document.getElementById('metricStops').textContent = totalStopsToday;
+        document.getElementById('metricDriversSub').textContent =
+          activeDrivers > 0
+            ? 'Drivers with routes today'
+            : 'No active drivers yet today.';
+        document.getElementById('metricRoutesSub').textContent =
+          totalRoutesToday + ' route(s) scheduled for today.';
+        document.getElementById('metricStopsSub').textContent =
+          totalStopsToday + ' total stop(s) on today’s routes.';
 
-          const marker = L.circleMarker([lat, lng], {
-            radius: 8,
-            color: '#ff5722',
-            fillColor: '#ff5722',
-            fillOpacity: 0.9
-          }).addTo(mapLayer);
+        // Build drivers table
+        const driverRows = Object.keys(driverStats)
+          .map(id => ({
+            driverId: id,
+            routesToday: driverStats[id].routesToday,
+            stopsToday: driverStats[id].stopsToday
+          }))
+          .filter(d => d.routesToday > 0)
+          .sort((a, b) => b.stopsToday - a.stopsToday);
 
-          marker.bindPopup(
-            `<strong>${driverName}</strong><br/>
-             Live position<br/>
-             ${lat.toFixed(5)}, ${lng.toFixed(5)}<br/>
-             Updated: ${new Date(d.updated).toLocaleTimeString()}`
-          );
+        if (!driverRows.length) {
+          driversCount.textContent = 'No driver routes found for today.';
+        } else {
+          driverRows.forEach(d => {
+            const tr = document.createElement('tr');
+            let statusClass = 'pill-status-ok';
+            let statusText = 'Active';
 
-          bounds.push([lat, lng]);
-          driverMarkers[driverId] = marker;
-        });
-      }
+            if (d.stopsToday === 0) {
+              statusClass = 'pill-status-warn';
+              statusText = 'Needs stops';
+            }
 
-      if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [40, 40] });
-      } else {
-        map.setView(DEFAULT_CENTER, 9);
-      }
-    }
+            tr.innerHTML = `
+              <td><span class="pill pill-driver">${d.driverId}</span></td>
+              <td>${d.routesToday}</td>
+              <td>${d.stopsToday}</td>
+              <td><span class="pill ${statusClass}">${statusText}</span></td>
+            `;
+            driversBody.appendChild(tr);
+          });
 
-    // ============ NOTIFICATION ACTIONS ============
-
-    async function showTrackingLink(stopId) {
-      try {
-        const res = await fetch('/api/share-link/' + encodeURIComponent(stopId));
-        const data = await res.json();
-        if (!data.success) {
-          alert('Could not generate tracking link for this stop.');
-          return;
+          driversCount.textContent =
+            'Showing ' + driverRows.length + ' driver(s) with routes today.';
         }
-        const msg = `Tracking link for ${stopId}:\n\n${data.trackingUrl}\n\nCopy this into a text or email.`;
-        alert(msg);
+
+        // ========== NOTIFICATIONS (LAST 24H) ==========
+        const recentNotifs = notifications
+          .filter(ev => {
+            if (!ev.createdAt) return false;
+            const d = new Date(ev.createdAt);
+            if (isNaN(d.getTime())) return false;
+            return d >= dayAgo;
+          })
+          .sort((a, b) => {
+            const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return tb - ta;
+          });
+
+        document.getElementById('metricNotifs').textContent = recentNotifs.length;
+        document.getElementById('metricNotifsSub').textContent =
+          'Events in the last 24 hours.';
+
+        const topTen = recentNotifs.slice(0, 10);
+
+        if (!topTen.length) {
+          notifCount.textContent = 'No notifications in the last 24 hours.';
+        } else {
+          topTen.forEach(ev => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${carelineFormatDateTimeShort(ev.createdAt)}</td>
+              <td><span class="${channelClass(ev)}">${channelLabel(ev)}</span></td>
+              <td>${ev.eventType || ev.status || '—'}</td>
+              <td>${buildContext(ev)}</td>
+            `;
+            notifBody.appendChild(tr);
+          });
+
+          notifCount.textContent =
+            'Showing latest ' + topTen.length + ' event(s) of ' + recentNotifs.length + ' in last 24h.';
+        }
+
+        document.getElementById('lastUpdatedText').textContent =
+          'Last updated: ' + carelineFormatDateTimeShort(new Date());
       } catch (err) {
-        console.error('Error getting share link', err);
-        alert('Error getting tracking link.');
+        console.error('Control center load error', err);
+        errorBox.style.display = 'block';
+        errorBox.textContent = 'Error loading dashboard data: ' + err.message;
       }
     }
 
-    async function sendPatientSms(stopId) {
-      const phone = prompt('Enter patient phone number (digits only):');
-      if (!phone) return;
-      try {
-        const res = await fetch('/api/send-sms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ stopId, phone })
-        });
-        const data = await res.json();
-        if (!data.success) {
-          alert('Could not send SMS. Check number or try again.');
-          return;
-        }
-        alert(
-          'SMS logged as sent to ' +
-          phone +
-          '.\n\nMessage:\n\n' +
-          data.smsText
-        );
-      } catch (err) {
-        console.error('Error sending SMS', err);
-        alert('Error sending SMS.');
-      }
-    }
-
-    async function sendFacilityEmail(stopId) {
-      const email = prompt('Enter facility email address:');
-      if (!email) return;
-      try {
-        const res = await fetch('/api/send-facility-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ stopId, email })
-        });
-        const data = await res.json();
-        if (!data.success) {
-          alert('Could not send email. Check address or try again.');
-          return;
-        }
-        alert(
-          'Email logged as sent to ' +
-          email +
-          '.\n\nSubject:\n' +
-          data.emailPayload.subject +
-          '\n\nBody:\n\n' +
-          data.emailPayload.body
-        );
-      } catch (err) {
-        console.error('Error sending email', err);
-        alert('Error sending email.');
-      }
-    }
+    document.getElementById('refreshBtn').addEventListener('click', loadControlCenter);
 
     // Boot
-    initMap();
-    loadDashboard();
-    setInterval(loadDashboard, REFRESH_MS);
+    requireLoggedIn();
+    buildRoleAwareNav('control-center');
+    updateSessionLabel();
+    loadControlCenter();
   </script>
 </body>
 </html>

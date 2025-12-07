@@ -151,6 +151,12 @@
       display: none;
     }
 
+    .session-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -231,12 +237,6 @@
       margin-top: 4px;
     }
 
-    .session-pill {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
     footer {
       font-size: 11px;
       text-align: center;
@@ -273,15 +273,13 @@
         <p class="small">
           Select a driver to see assigned stops, completion rates, and notification activity.
         </p>
-        <p class="session-pill" id="sessionUser">
-          Checking current session…
-        </p>
+        <p class="session-pill" id="sessionUser">Checking current session…</p>
       </div>
 
       <section class="card" style="max-width:340px;">
         <h2 style="font-size:14px;margin-bottom:4px;">Select Driver</h2>
         <p class="small" style="margin-bottom:6px;">
-          Choose from known drivers (from routes.json) or enter a driver ID manually if needed.
+          Choose from known drivers (from routes.json) or enter a driver ID manually.
         </p>
 
         <div id="driverPerfError" class="error"></div>
@@ -345,7 +343,6 @@
           </tr>
         </thead>
         <tbody id="stopsBody">
-          <!-- rows injected -->
         </tbody>
       </table>
       <p class="count-pill" id="stopsCount">No driver selected yet.</p>
@@ -356,36 +353,9 @@
     CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
   </footer>
 
+  <script src="/js/careline-universal.js"></script>
   <script src="nav.js"></script>
   <script>
-    function requireLoggedIn() {
-      const token = localStorage.getItem('carelineToken');
-      if (!token) {
-        alert('You must be logged in to view this page.');
-        window.location.href = 'login.html';
-      }
-    }
-
-    function getAuthHeaders() {
-      const token = localStorage.getItem('carelineToken');
-      return token ? { 'Authorization': 'Bearer ' + token } : {};
-    }
-
-    function updateSessionLabel() {
-      const el = document.getElementById('sessionUser');
-      const raw = localStorage.getItem('carelineUser');
-      if (!raw) {
-        el.textContent = 'Not logged in.';
-        return;
-      }
-      try {
-        const user = JSON.parse(raw);
-        el.textContent = (user.email || user.id || 'User') + ' — ' + (user.role || 'unknown');
-      } catch {
-        el.textContent = 'Session found, but user data could not be read.';
-      }
-    }
-
     function isCompleteStatus(statusRaw) {
       if (!statusRaw) return false;
       const s = statusRaw.toLowerCase();
@@ -395,13 +365,9 @@
 
     async function loadDriversIntoSelect() {
       try {
-        const res = await fetch('/routes.json', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await carelineApiGet('/routes.json');
         const drivers = data.drivers || [];
         const select = document.getElementById('driverSelect');
-
-        // Clear except first option
         select.innerHTML = '<option value="">-- Select driver --</option>';
 
         const seen = new Set();
@@ -432,137 +398,104 @@
         return;
       }
 
-      let routesData = null;
-      let notifyData = null;
-
       try {
         const [routesRes, notifyRes] = await Promise.all([
-          fetch('/routes.json', { cache: 'no-store' }),
-          fetch('/api/notifications', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              ...getAuthHeaders()
-            },
-            cache: 'no-store'
-          })
+          carelineApiGet('/routes.json'),
+          carelineApiGet('/api/notifications')
         ]);
 
-        if (!routesRes.ok) {
-          errBox.style.display = 'block';
-          errBox.textContent = 'Could not load routes.json.';
-          return;
-        }
+        const routes = routesRes.routes || [];
+        const notifications = notifyRes.notifications || [];
 
-        if (!notifyRes.ok) {
-          errBox.style.display = 'block';
-          errBox.textContent = 'Could not load notifications; make sure you have access.';
-          return;
-        }
-
-        routesData = await routesRes.json();
-        notifyData = await notifyRes.json();
-      } catch (err) {
-        console.error('Error loading performance data', err);
-        errBox.style.display = 'block';
-        errBox.textContent = 'Network error while loading data.';
-        return;
-      }
-
-      const routes = routesData.routes || [];
-      const notifications = notifyData.notifications || [];
-
-      // Collect stops for this driver
-      const myStops = [];
-      routes
-        .filter(r => r.driverId === driverId)
-        .forEach(route => {
-          (route.stops || []).forEach(stop => {
-            myStops.push(stop);
+        const myStops = [];
+        routes
+          .filter(r => r.driverId === driverId)
+          .forEach(route => {
+            (route.stops || []).forEach(stop => {
+              myStops.push(stop);
+            });
           });
+
+        if (!myStops.length) {
+          stopsCount.textContent = 'No stops found for driverId "' + driverId + '".';
+        }
+
+        const eventsByStop = {};
+        notifications.forEach(ev => {
+          if (ev.driverId !== driverId) return;
+          const stopId = ev.stopId || '(no stop id)';
+          if (!eventsByStop[stopId]) {
+            eventsByStop[stopId] = { count: 0, lastEventTime: null };
+          }
+          eventsByStop[stopId].count++;
+          if (ev.createdAt) {
+            const ts = new Date(ev.createdAt).getTime();
+            const current = eventsByStop[stopId].lastEventTime
+              ? new Date(eventsByStop[stopId].lastEventTime).getTime()
+              : 0;
+            if (ts > current) {
+              eventsByStop[stopId].lastEventTime = ev.createdAt;
+            }
+          }
         });
 
-      if (myStops.length === 0) {
-        stopsCount.textContent = 'No stops found for driverId "' + driverId + '".';
-      }
+        let totalStops = myStops.length;
+        let completed = 0;
 
-      // Build event counts per stop
-      const eventsByStop = {};
-      notifications.forEach(ev => {
-        if (ev.driverId !== driverId) return;
-        const stopId = ev.stopId || '(no stop id)';
-        if (!eventsByStop[stopId]) {
-          eventsByStop[stopId] = {
-            count: 0,
-            lastEventTime: null
-          };
+        myStops.forEach(stop => {
+          if (isCompleteStatus(stop.status || '')) completed++;
+        });
+
+        const pending = totalStops - completed;
+        const eventCount = notifications.filter(ev => ev.driverId === driverId).length;
+
+        document.getElementById('statTotalStops').textContent = totalStops;
+        document.getElementById('statCompletedStops').textContent = completed;
+        document.getElementById('statPendingStops').textContent = pending;
+        document.getElementById('statEventCount').textContent = eventCount;
+
+        if (totalStops > 0) {
+          const pct = Math.round((completed / totalStops) * 100);
+          document.getElementById('statCompletedPct').textContent = pct + '% complete';
+          document.getElementById('statPendingInfo').textContent =
+            pending > 0 ? pending + ' stop(s) remaining' : 'All assigned stops completed 🎉';
+        } else {
+          document.getElementById('statCompletedPct').textContent = '';
+          document.getElementById('statPendingInfo').textContent = '';
         }
-        eventsByStop[stopId].count++;
-        if (ev.createdAt) {
-          const ts = new Date(ev.createdAt).getTime();
-          const current = eventsByStop[stopId].lastEventTime
-            ? new Date(eventsByStop[stopId].lastEventTime).getTime()
-            : 0;
-          if (ts > current) {
-            eventsByStop[stopId].lastEventTime = ev.createdAt;
-          }
+
+        document.getElementById('statEventInfo').textContent =
+          eventCount + ' total event(s) logged for this driver.';
+
+        myStops.forEach(stop => {
+          const stopId = stop.stopId || '';
+          const status = stop.status || '';
+          const complete = isCompleteStatus(status);
+          const evInfo = eventsByStop[stopId] || { count: 0, lastEventTime: null };
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${stopId}</td>
+            <td>${stop.patientName || ''}</td>
+            <td>${stop.location || ''}</td>
+            <td>
+              <span class="status-pill ${complete ? 'status-complete' : 'status-pending'}">
+                ${status || (complete ? 'Delivered' : 'Pending')}
+              </span>
+            </td>
+            <td>${evInfo.count}</td>
+            <td>${evInfo.lastEventTime ? carelineFormatDateTimeShort(evInfo.lastEventTime) : '—'}</td>
+          `;
+          stopsBody.appendChild(tr);
+        });
+
+        if (totalStops > 0) {
+          stopsCount.textContent = 'Showing ' + totalStops + ' stop(s) for driverId "' + driverId + '".';
         }
-      });
-
-      // Stats
-      let totalStops = myStops.length;
-      let completed = 0;
-
-      myStops.forEach(stop => {
-        if (isCompleteStatus(stop.status || '')) completed++;
-      });
-
-      const pending = totalStops - completed;
-      const eventCount = notifications.filter(ev => ev.driverId === driverId).length;
-
-      document.getElementById('statTotalStops').textContent = totalStops;
-      document.getElementById('statCompletedStops').textContent = completed;
-      document.getElementById('statPendingStops').textContent = pending;
-      document.getElementById('statEventCount').textContent = eventCount;
-
-      if (totalStops > 0) {
-        const pct = Math.round((completed / totalStops) * 100);
-        document.getElementById('statCompletedPct').textContent = pct + '% complete';
-        document.getElementById('statPendingInfo').textContent =
-          pending > 0 ? pending + ' stop(s) remaining' : 'All assigned stops completed 🎉';
-      } else {
-        document.getElementById('statCompletedPct').textContent = '';
-        document.getElementById('statPendingInfo').textContent = '';
-      }
-
-      document.getElementById('statEventInfo').textContent =
-        eventCount + ' total event(s) logged for this driver.';
-
-      // Table rows
-      myStops.forEach(stop => {
-        const stopId = stop.stopId || '';
-        const status = stop.status || '';
-        const complete = isCompleteStatus(status);
-        const evInfo = eventsByStop[stopId] || { count: 0, lastEventTime: null };
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${stopId}</td>
-          <td>${stop.patientName || ''}</td>
-          <td>${stop.location || ''}</td>
-          <td>
-            <span class="status-pill ${complete ? 'status-complete' : 'status-pending'}">
-              ${status || (complete ? 'Delivered' : 'Pending')}
-            </span>
-          </td>
-          <td>${evInfo.count}</td>
-          <td>${evInfo.lastEventTime ? new Date(evInfo.lastEventTime).toLocaleString() : '—'}</td>
-        `;
-        stopsBody.appendChild(tr);
-      });
-
-      if (totalStops > 0) {
-        stopsCount.textContent = 'Showing ' + totalStops + ' stop(s) for driverId "' + driverId + '".';
+      } catch (err) {
+        console.error('Error loading driver performance', err);
+        errBox.style.display = 'block';
+        errBox.textContent = 'Error loading performance data: ' + err.message;
       }
     }
 
@@ -584,7 +517,6 @@
         return;
       }
 
-      // Save last selected for convenience
       localStorage.setItem('carelinePerfDriverId', driverId);
       loadDriverPerformance(driverId);
     });
@@ -604,7 +536,6 @@
     updateSessionLabel();
     loadDriversIntoSelect();
 
-    // Auto-load last selected driver if any
     const lastDriver = localStorage.getItem('carelinePerfDriverId') || '';
     if (lastDriver) {
       document.getElementById('driverManual').value = lastDriver;

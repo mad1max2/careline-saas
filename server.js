@@ -1,214 +1,172 @@
-// ==============================
-// CARELINE MASTER SERVER.JS
-// ==============================
-
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const jwt = require("jsonwebtoken");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = 'careline_super_secret_key';
-
 app.use(express.json());
-app.use(express.static(__dirname));
 
-// ==============================
-// USER DATABASE STORAGE
-// ==============================
+const SECRET = "careline_secure_secret_key";
+const USERS_FILE = "./users.json";
+const AUDIT_LOG_FILE = "./hipaa-audit-log.json";
+const ADMIN_ALERTS_FILE = "./admin-alerts.json";
 
-const USERS_FILE = path.join(__dirname, 'users.json');
+/* ================================
+   FILE HELPERS
+================================ */
 
-function loadUsers() {
-  if (!fs.existsSync(USERS_FILE)) {
-    fs.writeFileSync(USERS_FILE, JSON.stringify({ users: [] }, null, 2));
-  }
-  return JSON.parse(fs.readFileSync(USERS_FILE));
+function readFileSafe(file) {
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file)) : [];
 }
 
-function saveUsers(data) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2));
+function writeFileSafe(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
-// ==============================
-// PASSWORD SECURITY
-// ==============================
-
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto
-    .pbkdf2Sync(password, salt, 100000, 64, 'sha512')
-    .toString('hex');
-  return { salt, hash };
-}
-
-function verifyPassword(password, salt, hash) {
-  const verify = crypto
-    .pbkdf2Sync(password, salt, 100000, 64, 'sha512')
-    .toString('hex');
-  return verify === hash;
-}
-
-// ==============================
-// AUTH MIDDLEWARE
-// ==============================
+/* ================================
+   AUTH MIDDLEWARE
+================================ */
 
 function requireAuth(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ success: false, error: 'No token' });
+  const header = req.headers.authorization;
+  if (!header) return res.status(401).json({ success: false, error: "No token" });
 
-  const token = authHeader.replace('Bearer ', '');
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const token = header.split(" ")[1];
+    const decoded = jwt.verify(token, SECRET);
     req.user = decoded;
     next();
   } catch {
-    return res.status(403).json({ success: false, error: 'Invalid token' });
+    return res.status(403).json({ success: false, error: "Invalid token" });
   }
 }
 
-function requireRole(roles) {
+function requireRole(roles = []) {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ success: false, error: 'Insufficient permissions' });
+      sendAdminAlert({
+        type: "SECURITY_VIOLATION",
+        user: req.user.email,
+        reason: "Unauthorized Role Access"
+      });
+      return res.status(403).json({ success: false, error: "Unauthorized role" });
     }
     next();
   };
 }
 
-// ==============================
-// LOGIN API
-// ==============================
+/* ================================
+   HIPAA AUDIT LOGGING
+================================ */
 
-app.post('/api/auth/login', (req, res) => {
+function writeAuditLog(entry) {
+  const logs = readFileSafe(AUDIT_LOG_FILE);
+  logs.push({ ...entry, timestamp: new Date().toISOString() });
+  writeFileSafe(AUDIT_LOG_FILE, logs);
+}
+
+/* ================================
+   ADMIN BREACH ALERT SYSTEM
+================================ */
+
+function sendAdminAlert(alert) {
+  const alerts = readFileSafe(ADMIN_ALERTS_FILE);
+  alerts.push({
+    ...alert,
+    timestamp: new Date().toISOString(),
+    acknowledged: false
+  });
+  writeFileSafe(ADMIN_ALERTS_FILE, alerts);
+}
+
+/* ================================
+   AUTH ROUTES
+================================ */
+
+app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body;
-  const data = loadUsers();
-  const users = data.users || [];
-  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  const users = readFileSafe(USERS_FILE);
 
-  if (!user || !verifyPassword(password, user.salt, user.hash)) {
-    return res.status(401).json({ success: false, error: 'Invalid login' });
+  const user = users.find(u => u.email === email && u.password === password);
+  if (!user) {
+    sendAdminAlert({
+      type: "FAILED_LOGIN",
+      user: email
+    });
+    return res.status(401).json({ success: false, error: "Invalid login" });
   }
 
   const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    JWT_SECRET,
-    { expiresIn: '7d' }
+    { email: user.email, role: user.role },
+    SECRET,
+    { expiresIn: "8h" }
   );
+
+  writeAuditLog({
+    type: "LOGIN",
+    user: user.email
+  });
 
   res.json({
     success: true,
     token,
-    user: { id: user.id, email: user.email, role: user.role }
+    role: user.role
   });
 });
 
-// ==============================
-// ✅ USER MANAGEMENT (Admin Only)
-// ==============================
+/* ================================
+   LIVE AUDIT LOG RECEIVE
+================================ */
 
-// LIST USERS
-app.get('/api/users', requireAuth, requireRole(['admin']), (req, res) => {
-  const data = loadUsers();
-  const safeUsers = (data.users || []).map(u => ({
-    id: u.id,
-    email: u.email,
-    role: u.role
-  }));
-  res.json({ success: true, users: safeUsers });
-});
-
-// CREATE USER
-app.post('/api/users', requireAuth, requireRole(['admin']), (req, res) => {
-  const { email, password, role } = req.body || {};
-  if (!email || !password || !role) {
-    return res.status(400).json({ success: false, error: 'email, password, role required' });
-  }
-
-  const data = loadUsers();
-  const users = data.users || [];
-
-  if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-    return res.status(409).json({ success: false, error: 'User already exists' });
-  }
-
-  const { salt, hash } = hashPassword(password);
-  const newUser = {
-    id: `user_${Date.now()}`,
-    email,
-    role,
-    salt,
-    hash
-  };
-
-  users.push(newUser);
-  saveUsers({ users });
-
-  res.json({
-    success: true,
-    user: { id: newUser.id, email: newUser.email, role: newUser.role }
+app.post("/api/audit", requireAuth, (req, res) => {
+  writeAuditLog({
+    type: req.body.action,
+    user: req.user.email,
+    details: req.body.details
   });
+
+  res.json({ success: true });
 });
 
-// UPDATE USER
-app.put('/api/users/:id', requireAuth, requireRole(['admin']), (req, res) => {
-  const userId = req.params.id;
-  const { role, password } = req.body || {};
+/* ================================
+   DRIVER GPS TRACKING
+================================ */
 
-  const data = loadUsers();
-  const users = data.users || [];
-  const user = users.find(u => u.id === userId);
-
-  if (!user) {
-    return res.status(404).json({ success: false, error: 'User not found' });
-  }
-
-  if (role) user.role = role;
-
-  if (password) {
-    const { salt, hash } = hashPassword(password);
-    user.salt = salt;
-    user.hash = hash;
-  }
-
-  saveUsers({ users });
-
-  res.json({
-    success: true,
-    user: { id: user.id, email: user.email, role: user.role }
+app.post("/api/driver/gps", requireAuth, requireRole(["driver", "admin"]), (req, res) => {
+  writeAuditLog({
+    type: "GPS_UPDATE",
+    user: req.user.email,
+    location: req.body
   });
+
+  res.json({ success: true });
 });
 
-// DELETE USER
-app.delete('/api/users/:id', requireAuth, requireRole(['admin']), (req, res) => {
-  const userId = req.params.id;
+/* ================================
+   ADMIN DASHBOARD APIs
+================================ */
 
-  const data = loadUsers();
-  const users = data.users || [];
-  const filtered = users.filter(u => u.id !== userId);
-
-  if (filtered.length === users.length) {
-    return res.status(404).json({ success: false, error: 'User not found' });
-  }
-
-  saveUsers({ users: filtered });
-  res.json({ success: true, deletedId: userId });
+app.get("/api/audit-logs", requireAuth, requireRole(["admin"]), (req, res) => {
+  const logs = readFileSafe(AUDIT_LOG_FILE);
+  res.json({ success: true, logs });
 });
 
-// ==============================
-// DEFAULT ROUTE
-// ==============================
-
-app.get('/', (req, res) => {
-  res.send('CareLine API is running');
+app.get("/api/admin/alerts", requireAuth, requireRole(["admin"]), (req, res) => {
+  const alerts = readFileSafe(ADMIN_ALERTS_FILE);
+  res.json({ success: true, alerts });
 });
 
-// ==============================
-// START SERVER
-// ==============================
+/* ================================
+   STATIC FILE SERVING
+================================ */
 
+app.use(express.static("public"));
+
+/* ================================
+   SERVER START
+================================ */
+
+const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`✅ CareLine API running on port ${PORT}`);
+  console.log("✅ CareLine Enterprise Server Running on Port", PORT);
 });
