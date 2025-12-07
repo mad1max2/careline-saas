@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CareLine Facility Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --teal: #0097a7;
+      --dark: #004d40;
+      --bg: #e0f7fa;
+      --card: #ffffff;
+      --muted: #607d8b;
+      --danger: #c62828;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--teal);
+      color: #fff;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .nav a {
+      color: #e0f7fa;
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .nav a:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .nav a.active {
+      background: rgba(255,255,255,0.2);
+    }
+
+    main {
+      flex: 1;
+      padding: 14px;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 3px;
+      color: #455a64;
+    }
+
+    input {
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #b0bec5;
+      font-size: 13px;
+      width: 100%;
+      max-width: 260px;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    button {
+      font-size: 12px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--teal);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    button.secondary {
+      background: #eceff1;
+      color: var(--dark);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .error {
+      padding: 8px;
+      background: #ffebee;
+      color: var(--danger);
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    .count-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .session-pill {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #eceff1;
+      text-align: left;
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 11px;
+      color: #455a64;
+      white-space: nowrap;
+    }
+
+    tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .status-pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 11px;
+      background: #eceff1;
+      color: #455a64;
+    }
+
+    .status-complete {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .status-pending {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    a.track-link {
+      font-size: 11px;
+      color: var(--teal);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a.track-link:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      font-size: 11px;
+      text-align: center;
+      padding: 8px 10px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .top-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="brand">CareLine Medical Logistics</div>
+      <div class="subtitle">Facility Delivery Portal</div>
+    </div>
+    <nav class="nav" id="mainNav"></nav>
+  </header>
+
+  <main>
+    <div class="top-row">
+      <div>
+        <h1>Facility Portal</h1>
+        <p class="small">
+          See recent deliveries, patient statuses, and tracking links for your facility — all in one place.
+        </p>
+        <p class="session-pill" id="sessionUser">
+          Checking current session…
+        </p>
+      </div>
+
+      <section class="card" style="max-width:340px;">
+        <h2 style="font-size:14px;margin-bottom:4px;">Select Facility</h2>
+        <p class="small" style="margin-bottom:6px;">
+          Type the facility name exactly (or close) to how it appears in your CareLine notifications,
+          and we’ll filter the log for you.
+        </p>
+        <div id="portalError" class="error"></div>
+        <label for="facilityInput">Facility name</label>
+        <input id="facilityInput" type="text" placeholder="Example: Sunrise Wound Care Center" />
+        <button id="applyFacilityBtn" class="primary" style="margin-top:4px;">Apply</button>
+        <button id="clearFacilityBtn" class="secondary" style="margin-top:4px;margin-left:4px;">Clear</button>
+      </section>
+    </div>
+
+    <section class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <h2 style="font-size:14px;">Recent Deliveries</h2>
+        <button id="refreshBtn" class="secondary">Refresh</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Stop ID</th>
+            <th>Status</th>
+            <th>Last Event</th>
+            <th>Track</th>
+          </tr>
+        </thead>
+        <tbody id="deliveriesBody">
+          <!-- rows injected -->
+        </tbody>
+      </table>
+      <p class="count-pill" id="deliveriesCount">No facility selected yet.</p>
+    </section>
+  </main>
+
+  <footer>
+    CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
+  </footer>
+
+  <script src="nav.js"></script>
+  <script>
+    function requireLoggedIn() {
+      const token = localStorage.getItem('carelineToken');
+      if (!token) {
+        alert('You must be logged in to view this page.');
+        window.location.href = 'login.html';
+      }
+    }
+
+    function getAuthHeaders() {
+      const token = localStorage.getItem('carelineToken');
+      return token ? { 'Authorization': 'Bearer ' + token } : {};
+    }
+
+    function updateSessionLabel() {
+      const el = document.getElementById('sessionUser');
+      const raw = localStorage.getItem('carelineUser');
+      if (!raw) {
+        el.textContent = 'Not logged in yet.';
+        return;
+      }
+      try {
+        const user = JSON.parse(raw);
+        el.textContent =
+          (user.email || user.id || 'User') +
+          ' — ' +
+          (user.role || 'unknown');
+        if (user.role !== 'facility' && user.role !== 'admin' && user.role !== 'dispatch') {
+          el.textContent += ' (Note: this portal is designed for facility/admin use.)';
+        }
+      } catch {
+        el.textContent = 'Session found, but user data could not be read.';
+      }
+    }
+
+    function loadSavedFacilityName() {
+      return localStorage.getItem('carelineFacilityName') || '';
+    }
+
+    function saveFacilityName(name) {
+      localStorage.setItem('carelineFacilityName', name);
+    }
+
+    function isCompleteStatus(statusRaw) {
+      if (!statusRaw) return false;
+      const s = statusRaw.toLowerCase();
+      const completeWords = ['done', 'delivered', 'completed', 'complete', 'closed'];
+      return completeWords.some(word => s.includes(word));
+    }
+
+    function facilityMatches(target, facilityName) {
+      if (!target || !facilityName) return false;
+      return facilityName.toLowerCase().includes(target.toLowerCase());
+    }
+
+    async function loadDeliveries() {
+      const facilityName = (loadSavedFacilityName() || '').trim();
+      const deliveriesBody = document.getElementById('deliveriesBody');
+      const deliveriesCount = document.getElementById('deliveriesCount');
+      const portalError = document.getElementById('portalError');
+
+      portalError.style.display = 'none';
+      portalError.textContent = '';
+
+      deliveriesBody.innerHTML = '';
+
+      if (!facilityName) {
+        deliveriesCount.textContent = 'No facility selected yet.';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/notifications', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
+          cache: 'no-store'
+        });
+
+        if (!res.ok) {
+          deliveriesCount.textContent = 'Unable to load notifications.';
+          portalError.style.display = 'block';
+          portalError.textContent = 'Could not load notifications. Facility portal may require admin access.';
+          return;
+        }
+
+        const data = await res.json();
+        const notifications = data.notifications || [];
+
+        // Group by stopId/patientName for the selected facility
+        const grouped = {};
+        notifications.forEach(ev => {
+          const t = ev.templates || {};
+          const fName = (t.facilityName || '').trim();
+          if (!facilityMatches(facilityName, fName)) return;
+
+          const patient = (t.patientName || '').trim() || 'Unknown patient';
+          const key = ev.stopId || patient + '_' + fName;
+
+          if (!grouped[key]) {
+            grouped[key] = {
+              stopId: ev.stopId || '',
+              patientName: patient,
+              facilityName: fName || facilityName,
+              lastStatus: ev.status || '',
+              lastEventTime: ev.createdAt || null
+            };
+          } else {
+            // Update last event time
+            const current = grouped[key].lastEventTime
+              ? new Date(grouped[key].lastEventTime).getTime()
+              : 0;
+            const next = ev.createdAt ? new Date(ev.createdAt).getTime() : 0;
+            if (next > current) {
+              grouped[key].lastEventTime = ev.createdAt;
+              grouped[key].lastStatus = ev.status || grouped[key].lastStatus;
+            }
+          }
+        });
+
+        const rows = Object.values(grouped);
+        if (rows.length === 0) {
+          deliveriesCount.textContent = 'No deliveries found for "' + facilityName + '".';
+          return;
+        }
+
+        rows
+          .sort((a, b) => {
+            const ta = a.lastEventTime ? new Date(a.lastEventTime).getTime() : 0;
+            const tb = b.lastEventTime ? new Date(b.lastEventTime).getTime() : 0;
+            return tb - ta;
+          })
+          .forEach(row => {
+            const complete = isCompleteStatus(row.lastStatus);
+            const tr = document.createElement('tr');
+
+            const stopId = row.stopId || '';
+            const trackUrl = stopId
+              ? 'track.html?stopId=' + encodeURIComponent(stopId)
+              : '';
+
+            const lastEvent = row.lastEventTime
+              ? new Date(row.lastEventTime).toLocaleString()
+              : '—';
+
+            tr.innerHTML = `
+              <td>${row.patientName}</td>
+              <td>${stopId}</td>
+              <td>
+                <span class="status-pill ${complete ? 'status-complete' : 'status-pending'}">
+                  ${row.lastStatus || (complete ? 'Delivered' : 'In progress')}
+                </span>
+              </td>
+              <td>${lastEvent}</td>
+              <td>
+                ${
+                  trackUrl
+                    ? `<a href="${trackUrl}" class="track-link" target="_blank">View</a>`
+                    : ''
+                }
+              </td>
+            `;
+            deliveriesBody.appendChild(tr);
+          });
+
+        deliveriesCount.textContent =
+          'Showing ' + rows.length + ' delivery record(s) for "' + facilityName + '".';
+      } catch (err) {
+        console.error('Facility portal load error', err);
+        portalError.style.display = 'block';
+        portalError.textContent = 'Network error while loading facility data.';
+        deliveriesCount.textContent = 'Network error.';
+      }
+    }
+
+    document.getElementById('applyFacilityBtn').addEventListener('click', () => {
+      const input = document.getElementById('facilityInput');
+      const name = (input.value || '').trim();
+      const portalError = document.getElementById('portalError');
+      portalError.style.display = 'none';
+      portalError.textContent = '';
+
+      if (!name) {
+        portalError.style.display = 'block';
+        portalError.textContent = 'Facility name cannot be empty.';
+        return;
+      }
+
+      saveFacilityName(name);
+      loadDeliveries();
+    });
+
+    document.getElementById('clearFacilityBtn').addEventListener('click', () => {
+      localStorage.removeItem('carelineFacilityName');
+      document.getElementById('facilityInput').value = '';
+      document.getElementById('deliveriesBody').innerHTML = '';
+      document.getElementById('deliveriesCount').textContent = 'No facility selected yet.';
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', loadDeliveries);
+
+    // Boot
+    requireLoggedIn();
+    buildRoleAwareNav('facility-portal');
+    updateSessionLabel();
+    document.getElementById('facilityInput').value = loadSavedFacilityName();
+    loadDeliveries();
+  </script>
+</body>
+</html>
