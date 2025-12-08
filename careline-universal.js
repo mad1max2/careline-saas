@@ -1,391 +1,202 @@
 // careline-universal.js
-// Shared helpers for the CareLine app (auth, session, formatting, API helpers)
+// Shared helpers (tokens, basic auth info, AND the floating AI bus assistant)
 
-/* global window, localStorage, fetch */
-
-;(function (window) {
-  'use strict';
-
-  // Namespace (if you ever want to hang extra helpers)
-  var CareLine = window.CareLine || {};
-
+(function () {
   // -----------------------------
-  // TOKEN & AUTH HELPERS
+  // Basic CareLine namespace
   // -----------------------------
+  window.CareLine = window.CareLine || {};
 
-  /**
-   * Get the stored JWT token for the current user.
-   */
-  CareLine.getToken = function getToken() {
-    try {
-      return localStorage.getItem('carelineToken') || '';
-    } catch (e) {
-      console.error('Error reading carelineToken from localStorage', e);
-      return '';
-    }
-  };
-
-  /**
-   * Save token (if you ever want to centralize login).
-   */
-  CareLine.setToken = function setToken(token) {
-    try {
-      if (token) {
-        localStorage.setItem('carelineToken', token);
-      } else {
-        localStorage.removeItem('carelineToken');
-      }
-    } catch (e) {
-      console.error('Error writing carelineToken to localStorage', e);
-    }
-  };
-
-  /**
-   * Get user object from localStorage (parsed JSON or null).
-   */
-  CareLine.getUser = function getUser() {
-    try {
-      var raw = localStorage.getItem('carelineUser');
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch (e) {
-      console.error('Error parsing carelineUser from localStorage', e);
-      return null;
-    }
-  };
-
-  /**
-   * Save user object (if you ever want to centralize login).
-   */
-  CareLine.setUser = function setUser(user) {
-    try {
-      if (!user) {
-        localStorage.removeItem('carelineUser');
-      } else {
-        localStorage.setItem('carelineUser', JSON.stringify(user));
-      }
-    } catch (e) {
-      console.error('Error writing carelineUser to localStorage', e);
-    }
-  };
-
-  /**
-   * Build auth headers for fetch.
-   * This matches what your pages already expect: `getAuthHeaders()`.
-   */
-  function getAuthHeaders() {
-    var token = CareLine.getToken();
-    return token ? { Authorization: 'Bearer ' + token } : {};
+  // You can overwrite this from login/token logic.
+  if (!CareLine.currentUser) {
+    CareLine.currentUser = {
+      id: 'max',
+      name: 'Maxwell Worthington',
+      role: 'owner'
+    };
   }
 
-  /**
-   * Ensure user is logged in; otherwise redirect to login.html
-   * This matches what your pages already expect: `requireLoggedIn()`.
-   */
-  function requireLoggedIn() {
-    var token = CareLine.getToken();
-    if (!token) {
-      try {
-        alert('You must be logged in to view this page.');
-      } catch (e) {
-        // ignore if alert is blocked
-      }
-      window.location.href = 'login.html';
-    }
+  // Helper to safely add a <style> block
+  function injectStyles(cssText) {
+    const style = document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(document.createTextNode(cssText));
+    document.head.appendChild(style);
   }
 
-  /**
-   * Optionally enforce role(s). If user is not one of the allowed roles,
-   * you can choose to redirect or just warn.
-   */
-  CareLine.requireRole = function requireRole(allowedRoles, options) {
-    options = options || {};
-    var redirect = options.redirect !== false; // default true
-    var target = options.redirectTo || 'login.html';
-
-    var user = CareLine.getUser();
-    if (!user || !user.role) {
-      if (redirect) {
-        try {
-          alert('You do not have access to this page.');
-        } catch (e) {}
-        window.location.href = target;
-      }
-      return false;
+  // -----------------------------
+  // AI Assistant widget styles
+  // -----------------------------
+  injectStyles(`
+    .cl-ai-bubble {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #00a6b8;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 9999;
+      border: 3px solid #ffffff;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .cl-ai-bubble:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    }
+    .cl-ai-bus-sm {
+      width: 46px;
+      height: 28px;
+      border-radius: 9px;
+      background: #ffffff;
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding-left: 5px;
+      overflow: hidden;
+    }
+    .cl-ai-bus-sm::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 58%;
+      height: 100%;
+      background: #00889a;
+    }
+    .cl-ai-bus-eyes-sm {
+      display: flex;
+      gap: 3px;
+      position: relative;
+      z-index: 2;
+    }
+    .cl-eye-sm {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #064b5a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cl-eye-dot-sm {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #064b5a;
     }
 
-    if (allowedRoles.indexOf(user.role) === -1) {
-      if (redirect) {
-        try {
-          alert('You do not have access to this page.');
-        } catch (e) {}
-        window.location.href = target;
-      }
-      return false;
+    .cl-ai-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 0;
+      max-width: 480px;
+      height: 100vh;
+      background: #f4fbfd;
+      box-shadow: -4px 0 14px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      z-index: 9998;
+      transition: width 0.18s ease-out;
+      display: flex;
+      flex-direction: column;
     }
-
-    return true;
-  };
-
-  // Expose the two universal helpers as globals (for older page scripts)
-  window.getAuthHeaders = getAuthHeaders;
-  window.requireLoggedIn = requireLoggedIn;
-
-  // Also attach to CareLine namespace for future:
-  CareLine.getAuthHeaders = getAuthHeaders;
-  CareLine.requireLoggedIn = requireLoggedIn;
-
-  // -----------------------------
-  // SESSION LABEL / UI HELPERS
-  // -----------------------------
-
-  /**
-   * Update a little "session" text on the page.
-   * If no element is passed, it will look for #sessionUser.
-   *
-   * Usage:
-   *   updateSessionLabel();
-   *   updateSessionLabel('myElementId');
-   *   updateSessionLabel(document.getElementById('something'));
-   */
-  function updateSessionLabel(target) {
-    var el = null;
-
-    if (!target) {
-      el = document.getElementById('sessionUser');
-    } else if (typeof target === 'string') {
-      el = document.getElementById(target);
-    } else if (target && target.nodeType === 1) {
-      el = target;
+    .cl-ai-drawer.open {
+      width: 420px;
     }
-
-    if (!el) return;
-
-    var user = CareLine.getUser();
-    if (!user) {
-      el.textContent = 'Not logged in.';
-      return;
+    @media (max-width: 700px) {
+      .cl-ai-drawer.open {
+        width: 100%;
+      }
     }
-
-    var label = (user.email || user.id || 'User') + ' — ' + (user.role || 'unknown');
-    el.textContent = label;
-  }
-
-  window.updateSessionLabel = updateSessionLabel;
-  CareLine.updateSessionLabel = updateSessionLabel;
-
-  // -----------------------------
-  // DATE/TIME HELPERS
-  // -----------------------------
-
-  /**
-   * Format a timestamp to a short local string (no seconds).
-   */
-  function formatDateTimeShort(ts) {
-    if (!ts) return '—';
-    var d = ts instanceof Date ? ts : new Date(ts);
-    if (isNaN(d.getTime())) return '—';
-
-    return (
-      d.toLocaleDateString() +
-      ' ' +
-      d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    );
-  }
-
-  /**
-   * Format date only.
-   */
-  function formatDateOnly(ts) {
-    if (!ts) return '—';
-    var d = ts instanceof Date ? ts : new Date(ts);
-    if (isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString();
-  }
-
-  /**
-   * Parse a yyyy-mm-dd string (from <input type="date">) into Date.
-   * If includeEndOfDay is true, sets time to 23:59:59.
-   */
-  function parseInputDate(value, includeEndOfDay) {
-    if (!value) return null;
-    var suffix = includeEndOfDay ? 'T23:59:59' : 'T00:00:00';
-    var d = new Date(value + suffix);
-    if (isNaN(d.getTime())) return null;
-    return d;
-  }
-
-  CareLine.formatDateTimeShort = formatDateTimeShort;
-  CareLine.formatDateOnly = formatDateOnly;
-  CareLine.parseInputDate = parseInputDate;
-
-  window.carelineFormatDateTimeShort = formatDateTimeShort;
-  window.carelineFormatDateOnly = formatDateOnly;
-  window.carelineParseInputDate = parseInputDate;
-
-  // -----------------------------
-  // QUERY STRING HELPERS
-  // -----------------------------
-
-  /**
-   * Get a single query param from the URL.
-   * Example: carelineGetQueryParam('stopId')
-   */
-  function getQueryParam(name) {
-    if (!name) return '';
-    try {
-      var params = new URLSearchParams(window.location.search);
-      return params.get(name) || '';
-    } catch (e) {
-      // Fallback for older environments
-      var query = window.location.search || '';
-      if (query.charAt(0) === '?') query = query.substring(1);
-      var parts = query.split('&');
-      for (var i = 0; i < parts.length; i++) {
-        var kv = parts[i].split('=');
-        if (decodeURIComponent(kv[0] || '') === name) {
-          return decodeURIComponent(kv[1] || '');
-        }
-      }
-      return '';
+    .cl-ai-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: linear-gradient(90deg, #00a6b8, #064b5a);
+      color: #ffffff;
+      font-size: 14px;
     }
-  }
-
-  CareLine.getQueryParam = getQueryParam;
-  window.carelineGetQueryParam = getQueryParam;
+    .cl-ai-drawer-header span {
+      font-weight: 600;
+    }
+    .cl-ai-drawer-close {
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .cl-ai-drawer-iframe {
+      border: none;
+      width: 100%;
+      flex: 1;
+      background: #f4fbfd;
+    }
+  `);
 
   // -----------------------------
-  // API WRAPPERS (GET/POST)
+  // Attach AI bus assistant
   // -----------------------------
+  function attachAssistantWidget() {
+    // If it's already there, don't double-add
+    if (document.getElementById('cl-ai-bubble')) return;
 
-  /**
-   * Generic GET wrapper that adds auth headers and basic error handling.
-   *
-   * Usage:
-   *   carelineApiGet('/api/notifications')
-   *     .then(data => { ... })
-   *     .catch(err => { ... });
-   */
-  function apiGet(url) {
-    return fetch(url, {
-      method: 'GET',
-      headers: Object.assign(
-        {
-          'Content-Type': 'application/json'
-        },
-        getAuthHeaders()
-      ),
-      cache: 'no-store'
-    }).then(function (res) {
-      if (res.status === 401 || res.status === 403) {
-        // unauthorized - force relogin
-        console.warn('Unauthorized, redirecting to login.');
-        requireLoggedIn();
-        throw new Error('Unauthorized');
-      }
-      if (!res.ok) {
-        throw new Error('Request failed with status ' + res.status);
-      }
-      return res.json();
+    // Bubble
+    const bubble = document.createElement('div');
+    bubble.id = 'cl-ai-bubble';
+    bubble.className = 'cl-ai-bubble';
+    bubble.title = 'Open CareLine AI';
+
+    bubble.innerHTML = `
+      <div class="cl-ai-bus-sm">
+        <div class="cl-ai-bus-eyes-sm">
+          <div class="cl-eye-sm"><div class="cl-eye-dot-sm"></div></div>
+          <div class="cl-eye-sm"><div class="cl-eye-dot-sm"></div></div>
+        </div>
+      </div>
+    `;
+
+    // Drawer
+    const drawer = document.createElement('div');
+    drawer.id = 'cl-ai-drawer';
+    drawer.className = 'cl-ai-drawer';
+    drawer.innerHTML = `
+      <div class="cl-ai-drawer-header">
+        <span>CareLine AI Assistant</span>
+        <div class="cl-ai-drawer-close" aria-label="Close AI panel">&times;</div>
+      </div>
+      <iframe class="cl-ai-drawer-iframe" src="ai-admin.html"></iframe>
+    `;
+
+    document.body.appendChild(drawer);
+    document.body.appendChild(bubble);
+
+    const closeBtn = drawer.querySelector('.cl-ai-drawer-close');
+
+    bubble.addEventListener('click', () => {
+      drawer.classList.add('open');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      drawer.classList.remove('open');
     });
   }
 
-  /**
-   * Generic POST wrapper with JSON body.
-   *
-   * Usage:
-   *   carelineApiPost('/api/something', { foo: 'bar' })
-   *     .then(data => { ... })
-   *     .catch(err => { ... });
-   */
-  function apiPost(url, body) {
-    return fetch(url, {
-      method: 'POST',
-      headers: Object.assign(
-        {
-          'Content-Type': 'application/json'
-        },
-        getAuthHeaders()
-      ),
-      body: JSON.stringify(body || {})
-    }).then(function (res) {
-      if (res.status === 401 || res.status === 403) {
-        console.warn('Unauthorized, redirecting to login.');
-        requireLoggedIn();
-        throw new Error('Unauthorized');
-      }
-      if (!res.ok) {
-        throw new Error('Request failed with status ' + res.status);
-      }
-      return res.json();
-    });
+  // -----------------------------
+  // DOM ready
+  // -----------------------------
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachAssistantWidget);
+  } else {
+    attachAssistantWidget();
   }
-
-  CareLine.apiGet = apiGet;
-  CareLine.apiPost = apiPost;
-
-  window.carelineApiGet = apiGet;
-  window.carelineApiPost = apiPost;
-
-  // -----------------------------
-  // MISC SMALL HELPERS
-  // -----------------------------
-
-  /**
-   * Safely parse JSON, returning fallback on error.
-   */
-  function safeJsonParse(str, fallback) {
-    try {
-      return JSON.parse(str);
-    } catch (e) {
-      return typeof fallback === 'undefined' ? null : fallback;
-    }
-  }
-
-  CareLine.safeJsonParse = safeJsonParse;
-  window.carelineSafeJsonParse = safeJsonParse;
-
-  /**
-   * Simple "toast" style message (non-blocking).
-   * Minimal, can be styled later if you want.
-   */
-  function showToast(message, durationMs) {
-    durationMs = durationMs || 2500;
-
-    var existing = document.getElementById('careline-toast');
-    if (existing) {
-      existing.parentNode.removeChild(existing);
-    }
-
-    var div = document.createElement('div');
-    div.id = 'careline-toast';
-    div.textContent = message || '';
-    div.style.position = 'fixed';
-    div.style.bottom = '16px';
-    div.style.right = '16px';
-    div.style.padding = '8px 12px';
-    div.style.borderRadius = '999px';
-    div.style.background = 'rgba(0, 151, 167, 0.95)';
-    div.style.color = '#ffffff';
-    div.style.fontSize = '12px';
-    div.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-    div.style.zIndex = '9999';
-
-    document.body.appendChild(div);
-
-    setTimeout(function () {
-      if (div && div.parentNode) {
-        div.parentNode.removeChild(div);
-      }
-    }, durationMs);
-  }
-
-  CareLine.showToast = showToast;
-  window.carelineShowToast = showToast;
-
-  // -----------------------------
-  // FINAL EXPORT
-  // -----------------------------
-
-  window.CareLine = CareLine;
-})(window);
+})();

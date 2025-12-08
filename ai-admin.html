@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CareLine AI Control Center</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --cl-teal: #00a6b8;
+      --cl-dark: #064b5a;
+      --cl-bg: #f4fbfd;
+      --cl-card: #ffffff;
+      --cl-border: #d6e8ee;
+      --cl-text: #16313c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--cl-bg);
+      color: var(--cl-text);
+    }
+
+    header {
+      background: linear-gradient(90deg, var(--cl-teal), var(--cl-dark));
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .cl-logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .cl-logo-bus {
+      width: 52px;
+      height: 32px;
+      border-radius: 10px;
+      background: #ffffff;
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      padding-left: 6px;
+      overflow: hidden;
+    }
+    .cl-logo-bus::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 60%;
+      height: 100%;
+      background: var(--cl-teal);
+    }
+    .cl-logo-bus-eyes {
+      display: flex;
+      gap: 4px;
+      position: relative;
+      z-index: 2;
+    }
+    .cl-eye {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--cl-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .cl-eye-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--cl-dark);
+    }
+    .cl-bus-mouth {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      width: 18px;
+      height: 10px;
+      margin-left: -9px;
+      border-radius: 0 0 18px 18px;
+      border-bottom: 3px solid var(--cl-dark);
+      border-left: 3px solid transparent;
+      border-right: 3px solid transparent;
+    }
+
+    .cl-logo-title {
+      font-weight: 600;
+      font-size: 18px;
+    }
+    .cl-logo-sub {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+      gap: 24px;
+      padding: 20px 24px 28px;
+    }
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .cl-card {
+      background: var(--cl-card);
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 1px 4px rgba(6, 75, 90, 0.12);
+      border: 1px solid var(--cl-border);
+    }
+    .cl-card h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    .cl-card p {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: #4b6873;
+    }
+
+    .cl-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.2);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .cl-chat-shell {
+      display: flex;
+      flex-direction: column;
+      height: 68vh;
+      max-height: 720px;
+    }
+    .cl-chat-window {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 4px 4px;
+      border-radius: 10px;
+      background: #f7fbfc;
+      border: 1px solid var(--cl-border);
+      margin-bottom: 10px;
+    }
+    .cl-msg {
+      max-width: 88%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      margin: 4px 0;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .cl-msg.ai {
+      background: #ffffff;
+      border: 1px solid var(--cl-border);
+      margin-right: auto;
+    }
+    .cl-msg.user {
+      background: var(--cl-teal);
+      color: #fff;
+      margin-left: auto;
+    }
+    .cl-msg small {
+      display: block;
+      font-size: 11px;
+      opacity: 0.7;
+      margin-bottom: 2px;
+    }
+
+    .cl-chat-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .cl-chat-input-row textarea {
+      flex: 1;
+      resize: vertical;
+      min-height: 44px;
+      max-height: 100px;
+      border-radius: 10px;
+      border: 1px solid var(--cl-border);
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    .cl-btn-primary {
+      background: var(--cl-teal);
+      border: none;
+      color: #fff;
+      border-radius: 999px;
+      padding: 9px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+    }
+
+    .cl-quick-cards {
+      display: grid;
+      gap: 10px;
+    }
+    .cl-quick-card {
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--cl-border);
+      background: #ffffff;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      font-size: 13px;
+    }
+    .cl-quick-card strong {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--cl-dark);
+    }
+    .cl-quick-card span {
+      font-size: 12px;
+      color: #5b7480;
+    }
+    .cl-quick-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+    .cl-section-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #5a7480;
+      margin: 6px 0 4px;
+    }
+
+    .cl-badge-role {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .cl-header-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="cl-logo-row">
+    <div class="cl-logo-bus" aria-hidden="true">
+      <div class="cl-logo-bus-eyes">
+        <div class="cl-eye"><div class="cl-eye-dot"></div></div>
+        <div class="cl-eye"><div class="cl-eye-dot"></div></div>
+      </div>
+      <div class="cl-bus-mouth"></div>
+    </div>
+    <div>
+      <div class="cl-logo-title">CareLine AI Control Center</div>
+      <div class="cl-logo-sub">For Max, Nyghai & Lena • Wound-Care Logistics Brain</div>
+    </div>
+  </div>
+
+  <div class="cl-header-right">
+    <span class="cl-tag">AI Dispatch Assistant</span>
+    <span id="cl-ai-user" class="cl-badge-role">Signed in as: Admin</span>
+  </div>
+</header>
+
+<main>
+  <section class="cl-card">
+    <h2>Ask your CareLine AI</h2>
+    <p>
+      Ask about incontinence & wound-care markets, facilities, contracts, pricing, or anything about how
+      CareLine runs — from the app to the binder.
+    </p>
+    <div class="cl-chat-shell">
+      <div id="clChatWindow" class="cl-chat-window">
+        <div class="cl-msg ai">
+          <small>CareLine AI</small>
+          Hey Max 👋 I’m your CareLine dispatch brain. Ask me about your routes, facilities, wound-care
+          supply flow, or how to grow this into a serious medical logistics business.
+        </div>
+      </div>
+      <div class="cl-chat-input-row">
+        <textarea id="clChatInput" placeholder="Example: 'Explain the incontinence market in Maryland and how CareLine can position our service.'"></textarea>
+        <button id="clChatSend" class="cl-btn-primary">Send</button>
+      </div>
+    </div>
+  </section>
+
+  <aside class="cl-card">
+    <h2>Quick CareLine prompts</h2>
+    <p>Tap any shortcut and I’ll pre-fill the chat for you.</p>
+
+    <div class="cl-section-title">Operations</div>
+    <div class="cl-quick-cards">
+      <div class="cl-quick-card" data-prompt="Give me a daily operations summary for CareLine Medical Logistics: highlight any risk in wound-care or incontinence deliveries for today.">
+        <strong>Daily ops summary</strong>
+        <span>Risks, delays, key actions.</span>
+      </div>
+      <div class="cl-quick-card" data-prompt="Look at typical wound-care and incontinence delivery patterns and suggest one coaching tip for each driver profile to improve on-time performance.">
+        <strong>Driver coaching tips</strong>
+        <span>One tip per driver type.</span>
+      </div>
+    </div>
+
+    <div class="cl-section-title">Facilities & contracts</div>
+    <div class="cl-quick-cards" style="margin-top: 4px;">
+      <div class="cl-quick-card" data-prompt="Draft a professional email from CareLine Medical Logistics to a new wound-care clinic explaining our same-day and next-day supply model, HIPAA handling, and proof-of-delivery.">
+        <strong>New wound-care clinic email</strong>
+        <span>Ready for Lena to send.</span>
+      </div>
+      <div class="cl-quick-card" data-prompt="Write a one-page pitch to a nursing home showing how CareLine’s tracking, incontinence supply management, and proof-of-delivery reduce risk and staff time.">
+        <strong>Facility pitch</strong>
+        <span>Value story for administrators.</span>
+      </div>
+    </div>
+
+    <div class="cl-section-title">Money & strategy</div>
+    <div class="cl-quick-cards" style="margin-top: 4px;">
+      <div class="cl-quick-card" data-prompt="Design a subscription pricing model for CareLine where wound-care and incontinence programs pay a platinum platform fee plus per-delivery pricing in Baltimore. Include 3 tiers.">
+        <strong>Pricing brainstorm</strong>
+        <span>Platinum + route tiers.</span>
+      </div>
+      <div class="cl-quick-card" data-prompt="Lay out a 90-day growth plan to sign our first 5 platinum facilities in Baltimore using demos of our tracking app, our binder, and our CareLine story.">
+        <strong>90-day growth plan</strong>
+        <span>Action steps for new revenue.</span>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script src="/js/careline-universal.js"></script>
+
+<script>
+  (function () {
+    const chatWindow = document.getElementById('clChatWindow');
+    const input = document.getElementById('clChatInput');
+    const sendBtn = document.getElementById('clChatSend');
+    const quickCards = document.querySelectorAll('.cl-quick-card');
+    const userBadge = document.getElementById('cl-ai-user');
+
+    const user = (window.CareLine && CareLine.currentUser) || {
+      name: 'Unknown',
+      role: 'guest'
+    };
+
+    userBadge.textContent = 'Signed in as: ' + (user.name || 'User') + ' • ' + (user.role || 'role');
+
+    function appendMessage(text, who) {
+      const div = document.createElement('div');
+      div.className = 'cl-msg ' + who;
+      const label = who === 'user' ? (user.name || 'You') : 'CareLine AI';
+      div.innerHTML = '<small>' + label + '</small>' + text;
+      chatWindow.appendChild(div);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+      appendMessage(text, 'user');
+      input.value = '';
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            user: { name: user.name, role: user.role }
+          })
+        });
+
+        if (!res.ok) throw new Error('Bad response from AI endpoint');
+        const data = await res.json();
+        appendMessage(data.reply || '(No reply field found in response.)', 'ai');
+      } catch (err) {
+        console.error(err);
+        appendMessage(
+          "I couldn’t reach the AI server. Make sure /api/ai/chat is wired in server.js with your OpenAI key.",
+          'ai'
+        );
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    quickCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const prompt = card.getAttribute('data-prompt');
+        if (!prompt) return;
+        input.value = prompt;
+        input.focus();
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

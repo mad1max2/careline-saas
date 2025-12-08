@@ -3,234 +3,179 @@
 <head>
   <meta charset="UTF-8" />
   <title>CareLine Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --teal: #0097a7;
-      --dark: #004d40;
-      --bg: #e0f7fa;
-      --card: #ffffff;
-      --muted: #607d8b;
-      --danger: #c62828;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--dark);
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: radial-gradient(circle at top, #f4fbfd 0, #e0f2f4 45%, #d3eaf0 100%);
+      color: #064b5a;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 14px;
     }
-
-    .card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 18px 20px;
-      max-width: 420px;
+    .shell {
       width: 100%;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      max-width: 420px;
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 22px 22px 18px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+      border: 1px solid #d6e8ee;
     }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 10px;
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
     }
-
-    .logo-title {
-      font-weight: bold;
+    .bus {
+      width: 48px;
+      height: 30px;
+      border-radius: 10px;
+      background: #ffffff;
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      padding-left: 6px;
+      overflow: hidden;
+    }
+    .bus::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 60%;
+      height: 100%;
+      background: #00a6b8;
+    }
+    .bus-eyes {
+      display: flex;
+      gap: 4px;
+      position: relative;
+      z-index: 2;
+    }
+    .eye {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #064b5a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .eye-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #064b5a;
+    }
+    .bus-mouth {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      width: 16px;
+      height: 9px;
+      margin-left: -8px;
+      border-radius: 0 0 16px 16px;
+      border-bottom: 3px solid #064b5a;
+      border-left: 3px solid transparent;
+      border-right: 3px solid transparent;
+    }
+    .logo-text-main {
+      font-weight: 700;
       font-size: 18px;
     }
-
-    .logo-subtitle {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    h1 {
-      font-size: 18px;
-      text-align: center;
-      margin-bottom: 4px;
-    }
-
-    .small {
-      font-size: 11px;
-      color: var(--muted);
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    label {
+    .logo-text-sub {
       font-size: 12px;
-      color: #455a64;
-      display: block;
-      margin-top: 6px;
-      margin-bottom: 3px;
+      color: #486975;
     }
-
+    .field {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 3px;
+      color: #35515b;
+    }
     input, select {
       width: 100%;
-      padding: 8px 10px;
+      padding: 7px 9px;
       border-radius: 8px;
-      border: 1px solid #b0bec5;
+      border: 1px solid #c2d8e0;
       font-size: 13px;
+      box-sizing: border-box;
     }
-
     button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 9px 12px;
       border-radius: 999px;
       border: none;
-      font-size: 13px;
+      padding: 9px 14px;
+      font-size: 14px;
       font-weight: 600;
-      background: var(--teal);
-      color: #ffffff;
       cursor: pointer;
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    .error {
-      padding: 8px;
-      background: #ffebee;
-      color: var(--danger);
-      border-radius: 8px;
-      font-size: 12px;
+      width: 100%;
+      background: #00a6b8;
+      color: #ffffff;
       margin-top: 8px;
-      display: none;
     }
-
-    .footer {
+    .hint {
+      font-size: 11px;
+      color: #607b86;
+      margin-top: 6px;
       text-align: center;
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 8px;
     }
   </style>
 </head>
+
 <body>
-  <div class="card">
-    <div class="logo">
-      <div class="logo-title">CareLine Medical Logistics</div>
-      <div class="logo-subtitle">Care That Moves. Logistics That Deliver.</div>
+
+<div class="shell">
+  <div class="logo-row">
+    <div class="bus" aria-hidden="true">
+      <div class="bus-eyes">
+        <div class="eye"><div class="eye-dot"></div></div>
+        <div class="eye"><div class="eye-dot"></div></div>
+      </div>
+      <div class="bus-mouth"></div>
     </div>
-
-    <h1>Sign In</h1>
-    <p class="small">
-      Secure access for drivers, dispatch, and facility partners.
-    </p>
-
-    <label for="emailInput">Email</label>
-    <input id="emailInput" type="email" placeholder="you@example.com" />
-
-    <label for="passwordInput">Password</label>
-    <input id="passwordInput" type="password" placeholder="••••••••" />
-
-    <label for="roleSelect">Role</label>
-    <select id="roleSelect">
-      <option value="">Select role…</option>
-      <option value="driver">Driver</option>
-      <option value="admin">Admin / Dispatch</option>
-      <option value="facility">Facility</option>
-    </select>
-
-    <button id="loginBtn">Log In</button>
-
-    <div id="loginError" class="error"></div>
-
-    <div class="footer">
-      If you need help signing in, contact your CareLine administrator.
+    <div>
+      <div class="logo-text-main">CareLine Medical Logistics</div>
+      <div class="logo-text-sub">Admin • Drivers • Platinum Facilities</div>
     </div>
   </div>
 
-  <!-- Shared helpers (for token + user management) -->
-  <script src="/js/careline-universal.js"></script>
-  <script>
-    async function handleLogin() {
-      const email = document.getElementById('emailInput').value.trim();
-      const password = document.getElementById('passwordInput').value;
-      const role = document.getElementById('roleSelect').value;
-      const errorBox = document.getElementById('loginError');
+  <div class="field">
+    <label for="loginEmail">Email</label>
+    <input id="loginEmail" type="email" placeholder="you@example.com" />
+  </div>
 
-      errorBox.style.display = 'none';
-      errorBox.textContent = '';
+  <div class="field">
+    <label for="loginRole">Sign in as</label>
+    <select id="loginRole">
+      <option value="driver">Driver</option>
+      <option value="admin">Admin</option>
+      <option value="owner">Owner (Max)</option>
+      <option value="platinum">Platinum Facility</option>
+    </select>
+  </div>
 
-      if (!email || !password || !role) {
-        errorBox.style.display = 'block';
-        errorBox.textContent = 'Please enter email, password, and role.';
-        return;
-      }
+  <div class="field">
+    <label for="loginPassword">Password</label>
+    <input id="loginPassword" type="password" placeholder="••••••••" />
+  </div>
 
-      try {
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, role })
-        });
+  <button id="loginBtn">Sign in</button>
 
-        if (!res.ok) {
-          throw new Error('Invalid credentials or role.');
-        }
+  <div class="hint">
+    After login, the CareLine bus AI appears only for owners, admins, and platinum subscribers.
+  </div>
+</div>
 
-        const data = await res.json();
-        const token = data.token;
-        const user = data.user || { id: email, email, role };
+<script src="/js/careline-universal.js"></script>
 
-        if (!token) {
-          throw new Error('No token returned from server.');
-        }
-
-        CareLine.setToken(token);
-        CareLine.setUser(user);
-
-        // Role-based redirect
-        let target = 'control-center.html';
-        if (user.role === 'driver') {
-          target = 'driver-stops.html';
-        } else if (user.role === 'facility') {
-          target = 'facility-portal.html';
-        } else if (user.role === 'admin') {
-          target = 'control-center.html';
-        }
-
-        carelineShowToast('Welcome back, ' + (user.email || user.id || 'CareLine user') + '!');
-        window.location.href = target;
-      } catch (err) {
-        console.error('Login error', err);
-        errorBox.style.display = 'block';
-        errorBox.textContent = err.message || 'Login failed.';
-      }
-    }
-
-    document.getElementById('loginBtn').addEventListener('click', handleLogin);
-
-    document.getElementById('passwordInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') handleLogin();
-    });
-
-    document.getElementById('emailInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') handleLogin();
-    });
-
-    // If already logged in, bounce them to their home
-    window.addEventListener('load', () => {
-      const token = CareLine.getToken();
-      const user = CareLine.getUser();
-      if (token && user && user.role) {
-        let target = 'control-center.html';
-        if (user.role === 'driver') target = 'driver-stops.html';
-        if (user.role === 'facility') target = 'facility-portal.html';
-        window.location.href = target;
-      }
-    });
-  </script>
 </body>
 </html>

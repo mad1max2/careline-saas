@@ -3,573 +3,116 @@
 <head>
   <meta charset="UTF-8" />
   <title>CareLine Driver Map</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --teal: #0097a7;
-      --dark: #004d40;
-      --bg: #e0f7fa;
-      --card: #ffffff;
-      --muted: #607d8b;
-      --danger: #c62828;
-      --warn: #e65100;
-      --ok: #2e7d32;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--dark);
-      min-height: 100vh;
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #f4fbfd;
+      color: #064b5a;
       display: flex;
       flex-direction: column;
+      min-height: 100vh;
     }
-
     header {
-      background: var(--teal);
+      background: linear-gradient(90deg, #00a6b8, #064b5a);
+      padding: 14px 16px;
       color: #fff;
-      padding: 12px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .brand {
-      font-weight: bold;
-      font-size: 17px;
-    }
-
-    .subtitle {
-      font-size: 11px;
-      opacity: 0.9;
-    }
-
-    .nav {
-      display: flex;
-      gap: 10px;
-      font-size: 12px;
-    }
-
-    .nav a {
-      color: #e0f7fa;
-      text-decoration: none;
-      padding: 4px 8px;
-      border-radius: 999px;
-    }
-
-    .nav a:hover {
-      background: rgba(255,255,255,0.15);
-    }
-
-    .nav a.active {
-      background: rgba(255,255,255,0.2);
-    }
-
-    main {
-      flex: 1;
-      padding: 12px;
-      max-width: 1200px;
-      width: 100%;
-      margin: 0 auto;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .left-col {
-      flex: 1 1 260px;
-      min-width: 260px;
-    }
-
-    .right-col {
-      flex: 2 1 420px;
-      min-width: 320px;
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 10px 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-size: 20px;
-      margin-bottom: 4px;
-    }
-
-    .small {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .session-pill {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .error {
-      padding: 8px;
-      background: #ffebee;
-      color: var(--danger);
-      border-radius: 8px;
-      font-size: 12px;
-      margin-bottom: 8px;
-      display: none;
-    }
-
-    button {
-      font-size: 12px;
-      padding: 7px 11px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-    }
-
-    button.secondary {
-      background: #eceff1;
-      color: var(--dark);
-    }
-
-    button.primary {
-      background: var(--teal);
-      color: #ffffff;
+      font-size: 18px;
       font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
     }
-
-    button:active {
-      transform: scale(0.98);
+    .layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 0;
+      flex: 1;
+      min-height: 0;
     }
-
-    .live-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      border-radius: 999px;
-      padding: 3px 8px;
-      background: #e3f2fd;
-      color: #1565c0;
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
     }
-
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #d32f2f;
-      animation: pulse 1s infinite;
+    .map-pane {
+      background: #e0edf2;
+      position: relative;
     }
-
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.3); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.8; }
-    }
-
-    .driver-list {
-      max-height: 360px;
-      overflow-y: auto;
-      margin-top: 6px;
-    }
-
-    .driver-card {
-      border-radius: 10px;
-      padding: 8px 9px;
-      background: #f5f5f5;
-      margin-bottom: 6px;
-      cursor: pointer;
-    }
-
-    .driver-card.active {
-      border: 1px solid var(--teal);
-      box-shadow: 0 0 0 1px rgba(0,151,167,0.3);
-    }
-
-    .driver-name {
-      font-size: 13px;
-      font-weight: bold;
-    }
-
-    .driver-status {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .driver-badge {
-      display: inline-block;
-      padding: 2px 7px;
-      border-radius: 999px;
-      font-size: 11px;
-      background: #e0f7fa;
-      color: #006064;
-      margin-right: 4px;
-    }
-
-    .map-shell {
-      height: 420px;
+    .map-placeholder {
+      position: absolute;
+      inset: 10px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #b2ebf2, #e1f5fe);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .map-header {
-      position: absolute;
-      top: 8px;
-      left: 10px;
-      right: 10px;
-      font-size: 11px;
-      color: #004d40;
+      background: #c5dde7;
       display: flex;
-      justify-content: space-between;
-      pointer-events: none;
+      align-items: center;
+      justify-content: center;
+      color: #4b6773;
+      font-size: 14px;
+      font-style: italic;
     }
-
-    .map-footer {
-      position: absolute;
-      bottom: 8px;
-      left: 10px;
-      right: 10px;
-      font-size: 11px;
-      color: #004d40;
-      pointer-events: none;
+    .side-pane {
+      border-left: 1px solid #d6e8ee;
+      background: #ffffff;
+      padding: 12px 14px;
+      font-size: 13px;
     }
-
-    .map-body {
-      position: absolute;
-      inset: 0;
-      padding: 26px 10px 24px 10px;
+    .side-pane h2 {
+      margin-top: 0;
+      margin-bottom: 6px;
+      font-size: 16px;
     }
-
-    .map-grid {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.65);
-      overflow: hidden;
+    .driver-card {
+      border-radius: 8px;
+      border: 1px solid #e0edf2;
+      padding: 8px 10px;
+      margin-bottom: 8px;
     }
-
-    .map-driver-dot {
-      position: absolute;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: var(--teal);
-      border: 2px solid #ffffff;
-      box-shadow: 0 0 0 2px rgba(0, 151, 167, 0.4);
-      transform: translate(-50%, -50%);
-      cursor: pointer;
-    }
-
-    .map-driver-dot.selected {
-      background: #ffca28;
-      box-shadow: 0 0 0 2px rgba(255, 202, 40, 0.6);
-    }
-
-    .map-driver-label {
-      position: absolute;
-      font-size: 10px;
-      background: rgba(0,0,0,0.65);
-      color: #fff;
-      padding: 2px 4px;
-      border-radius: 3px;
-      transform: translate(-50%, -170%);
-      white-space: nowrap;
-    }
-
-    .info-card {
-      margin-top: 8px;
-      font-size: 12px;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
+    .driver-card strong {
+      display: block;
       margin-bottom: 2px;
     }
-
-    .info-label {
-      color: var(--muted);
-    }
-
-    .info-value {
-      font-weight: 600;
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #e0f7f9;
+      font-size: 11px;
+      color: #006a76;
+      margin-top: 4px;
     }
   </style>
 </head>
+
 <body>
-  <header>
-    <div>
-      <div class="brand">CareLine Medical Logistics</div>
-      <div class="subtitle">Driver Map</div>
+
+<header>CareLine Driver Map</header>
+
+<div class="layout">
+  <div class="map-pane">
+    <div class="map-placeholder">
+      Real-time map goes here (linked to /api/driver-locations).
     </div>
-    <nav class="nav" id="mainNav"></nav>
-  </header>
+  </div>
+  <div class="side-pane">
+    <h2>Active Drivers</h2>
 
-  <main>
-    <div class="left-col">
-      <section class="card">
-        <h1>Live Driver View</h1>
-        <p class="small">
-          Dispatcher-style view of all active drivers. Locations auto-refresh using secure tokens.
-        </p>
-        <p class="session-pill" id="sessionUser">Checking current session…</p>
-
-        <div id="dmError" class="error"></div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-          <span id="liveIndicator" class="live-pill">
-            <span class="live-dot"></span> Live: ON
-          </span>
-          <div>
-            <button id="refreshBtn" class="secondary">Refresh now</button>
-          </div>
-        </div>
-
-        <div style="margin-top:4px;">
-          <label style="font-size:11px;">
-            <input type="checkbox" id="liveToggle" checked style="transform:scale(0.9);margin-right:4px;" />
-            Auto-refresh every 8 seconds
-          </label>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2 style="font-size:14px;margin-bottom:4px;">Drivers</h2>
-        <p class="small">
-          Tap a driver to highlight them on the map and see more details.
-        </p>
-        <div class="driver-list" id="driverList"></div>
-      </section>
+    <div class="driver-card">
+      <strong>Driver One</strong>
+      Last update: just now<br />
+      Status: Out for deliveries<br />
+      <span class="pill">Route: ROUTE-1001</span>
     </div>
 
-    <div class="right-col">
-      <section class="card">
-        <div class="map-shell">
-          <div class="map-header">
-            <div>CareLine — Metro Coverage View</div>
-            <div id="lastUpdatedText">Last updated: —</div>
-          </div>
-          <div class="map-body">
-            <div class="map-grid" id="mapGrid"></div>
-          </div>
-          <div class="map-footer">
-            Approximate locations only — for internal dispatch use.
-          </div>
-        </div>
-
-        <div class="info-card" id="driverInfo" style="display:none;">
-          <div class="info-row">
-            <span class="info-label">Driver</span>
-            <span class="info-value" id="infoDriverId"></span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Status</span>
-            <span class="info-value" id="infoStatus"></span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Last update</span>
-            <span class="info-value" id="infoLastUpdate"></span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Route / Stop</span>
-            <span class="info-value" id="infoRouteStop"></span>
-          </div>
-        </div>
-      </section>
+    <div class="driver-card">
+      <strong>Driver Two</strong>
+      Last update: 5 min ago<br />
+      Status: Headed to next facility<br />
+      <span class="pill">Route: ROUTE-1002</span>
     </div>
-  </main>
+  </div>
+</div>
 
-  <footer>
-    CareLine Medical Logistics — Care That Moves. Logistics That Deliver.
-  </footer>
+<script src="/js/careline-universal.js"></script>
 
-  <script src="/js/careline-universal.js"></script>
-  <script src="nav.js"></script>
-  <script>
-    let latestDrivers = [];
-    let liveIntervalId = null;
-    let selectedDriverId = null;
-
-    function normalizeToGrid(lat, lng) {
-      // Simple fake mapping so dots spread nicely, not real GPS math.
-      if (typeof lat !== 'number' || typeof lng !== 'number') {
-        lat = Math.random() * 0.5 + 39.2;   // around MD range
-        lng = Math.random() * 0.5 - 76.8;
-      }
-
-      // Map lat/lng range to 5–95% for nicer padding
-      const y = 95 - ((lat - 39) / 1.0) * 90;   // rough scale
-      const x = 5 + ((lng + 77.5) / 1.0) * 90;  // rough scale
-      return {
-        x: Math.max(5, Math.min(95, x)),
-        y: Math.max(5, Math.min(95, y))
-      };
-    }
-
-    function renderDriverList() {
-      const container = document.getElementById('driverList');
-      container.innerHTML = '';
-
-      if (!latestDrivers.length) {
-        container.innerHTML = '<p class="small">No active driver locations yet.</p>';
-        return;
-      }
-
-      latestDrivers.forEach(d => {
-        const div = document.createElement('div');
-        div.className = 'driver-card' + (d.driverId === selectedDriverId ? ' active' : '');
-        div.dataset.driverId = d.driverId || '';
-
-        const last = d.lastUpdate ? carelineFormatDateTimeShort(d.lastUpdate) : '—';
-        const status = d.status || 'Unknown status';
-
-        div.innerHTML = `
-          <div class="driver-name">
-            <span class="driver-badge">${d.driverId || 'Driver'}</span>
-            ${d.name || ''}
-          </div>
-          <div class="driver-status">
-            ${status} · Last update: ${last}
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function renderMap() {
-      const grid = document.getElementById('mapGrid');
-      grid.innerHTML = '';
-
-      if (!latestDrivers.length) return;
-
-      latestDrivers.forEach(d => {
-        const pos = normalizeToGrid(d.lat, d.lng);
-        const dot = document.createElement('div');
-        dot.className = 'map-driver-dot' + (d.driverId === selectedDriverId ? ' selected' : '');
-        dot.style.left = pos.x + '%';
-        dot.style.top = pos.y + '%';
-        dot.dataset.driverId = d.driverId || '';
-
-        const label = document.createElement('div');
-        label.className = 'map-driver-label';
-        const last = d.lastUpdate ? carelineFormatDateTimeShort(d.lastUpdate) : '—';
-        label.textContent = (d.driverId || 'Driver') + ' · ' + last;
-
-        dot.appendChild(label);
-        grid.appendChild(dot);
-      });
-    }
-
-    function updateInfoPanel(driver) {
-      const panel = document.getElementById('driverInfo');
-      if (!driver) {
-        panel.style.display = 'none';
-        return;
-      }
-
-      panel.style.display = 'block';
-      document.getElementById('infoDriverId').textContent = driver.driverId || '—';
-      document.getElementById('infoStatus').textContent = driver.status || 'Unknown';
-
-      const last = driver.lastUpdate ? carelineFormatDateTimeShort(driver.lastUpdate) : '—';
-      document.getElementById('infoLastUpdate').textContent = last;
-
-      const routeStop =
-        (driver.routeId ? 'Route: ' + driver.routeId : '') +
-        (driver.currentStopId ? ' · Stop: ' + driver.currentStopId : '');
-      document.getElementById('infoRouteStop').textContent =
-        routeStop || '—';
-    }
-
-    function selectDriver(driverId) {
-      selectedDriverId = driverId || null;
-      renderDriverList();
-      renderMap();
-      const driver = latestDrivers.find(d => d.driverId === selectedDriverId);
-      updateInfoPanel(driver || null);
-    }
-
-    async function fetchDriverLocations() {
-      const errBox = document.getElementById('dmError');
-      errBox.style.display = 'none';
-      errBox.textContent = '';
-
-      try {
-        const data = await carelineApiGet('/api/driver-locations');
-        latestDrivers = data.drivers || [];
-
-        latestDrivers.sort((a, b) => {
-          const ta = a.lastUpdate ? new Date(a.lastUpdate).getTime() : 0;
-          const tb = b.lastUpdate ? new Date(b.lastUpdate).getTime() : 0;
-          return tb - ta;
-        });
-
-        document.getElementById('lastUpdatedText').textContent =
-          'Last updated: ' + carelineFormatDateTimeShort(new Date());
-
-        renderDriverList();
-        renderMap();
-
-        if (!selectedDriverId && latestDrivers.length) {
-          selectDriver(latestDrivers[0].driverId);
-        }
-      } catch (err) {
-        console.error('Driver locations error', err);
-        errBox.style.display = 'block';
-        errBox.textContent = 'Error loading driver locations: ' + err.message;
-      }
-    }
-
-    function startLiveUpdates() {
-      const liveIndicator = document.getElementById('liveIndicator');
-      if (liveIntervalId) clearInterval(liveIntervalId);
-      liveIndicator.innerHTML = '<span class="live-dot"></span> Live: ON';
-      fetchDriverLocations();
-      liveIntervalId = setInterval(fetchDriverLocations, 8000);
-    }
-
-    function stopLiveUpdates() {
-      const liveIndicator = document.getElementById('liveIndicator');
-      if (liveIntervalId) {
-        clearInterval(liveIntervalId);
-        liveIntervalId = null;
-      }
-      liveIndicator.innerHTML = 'Live: OFF';
-    }
-
-    document.getElementById('refreshBtn').addEventListener('click', fetchDriverLocations);
-    document.getElementById('liveToggle').addEventListener('change', e => {
-      if (e.target.checked) startLiveUpdates();
-      else stopLiveUpdates();
-    });
-
-    document.getElementById('driverList').addEventListener('click', e => {
-      const card = e.target.closest('.driver-card');
-      if (!card) return;
-      const driverId = card.dataset.driverId || '';
-      selectDriver(driverId);
-    });
-
-    document.getElementById('mapGrid').addEventListener('click', e => {
-      const dot = e.target.closest('.map-driver-dot');
-      if (!dot) return;
-      const driverId = dot.dataset.driverId || '';
-      selectDriver(driverId);
-    });
-
-    // Boot
-    requireLoggedIn();
-    buildRoleAwareNav('driver-map');
-    updateSessionLabel();
-
-    startLiveUpdates();
-  </script>
 </body>
 </html>

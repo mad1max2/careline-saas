@@ -1,345 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CareLine Driver Route</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #e7f7f9;
-            margin: 0;
-            padding: 0;
-        }
-
-        header {
-            background-color: #0097a7;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            font-size: 22px;
-            font-weight: bold;
-        }
-
-        .driver-select {
-            max-width: 700px;
-            margin: 40px auto 10px auto;
-            background: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
-        }
-
-        select {
-            width: 100%;
-            padding: 12px;
-            font-size: 15px;
-            border-radius: 5px;
-            border: 1px solid #00bec5;
-            margin-top: 8px;
-        }
-
-        .share-location-bar {
-            margin-top: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .route-box {
-            max-width: 700px;
-            margin: 10px auto 40px auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
-        }
-
-        .route-card {
-            margin-top: 18px;
-            padding: 15px;
-            background: #f5f9fa;
-            border-radius: 8px;
-            border-left: 6px solid #00bec5;
-        }
-
-        .route-card h2 {
-            margin: 0 0 6px 0;
-            font-size: 18px;
-        }
-
-        .upload-button {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 8px 12px;
-            background: #0097a7;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-        }
-
-        .complete-button {
-            display: inline-block;
-            margin-top: 10px;
-            margin-left: 8px;
-            padding: 8px 12px;
-            background: #ff9800;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .complete-button:disabled {
-            background: #2e7d32;
-            cursor: default;
-        }
-
-        .share-btn {
-            padding: 8px 14px;
-            border-radius: 6px;
-            border: none;
-            background: #00bec5;
-            color: #fff;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .share-status {
-            font-size: 13px;
-            color: #555;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>CareLine Driver Route</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #f4fbfd;
+      color: #064b5a;
+    }
+    header {
+      background: linear-gradient(90deg, #00a6b8, #064b5a);
+      padding: 14px 16px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .container {
+      padding: 14px 16px 20px;
+    }
+    .driver-meta {
+      font-size: 13px;
+      color: #35515b;
+      margin-bottom: 10px;
+    }
+    .stop-card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid #d6e8ee;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    .stop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .stop-name {
+      font-weight: 600;
+    }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #e0f7f9;
+      font-size: 11px;
+      color: #006a76;
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-right: 6px;
+      margin-top: 4px;
+    }
+    .btn-done {
+      background: #00a6b8;
+      color: #fff;
+      font-weight: 600;
+    }
+    .btn-issue {
+      background: #ffcdd2;
+      color: #b71c1c;
+    }
+  </style>
 </head>
 
 <body>
-<header>🚚 CareLine Driver Route</header>
 
-<div class="driver-select">
-    <label><strong>Who is driving?</strong></label>
-    <select id="driverSelect"></select>
+<header>CareLine Driver Route</header>
 
-    <div class="share-location-bar">
-        <button id="shareBtn" class="share-btn">
-            Start Sharing Location
-        </button>
-        <span id="shareStatus" class="share-status">
-            Location not sharing yet.
-        </span>
+<div class="container">
+  <div class="driver-meta">
+    Driver: <strong>Demo Driver</strong> • Route: <strong>ROUTE-1001</strong> • Date: <span>Today</span>
+  </div>
+
+  <!-- Sample stop 1 -->
+  <div class="stop-card">
+    <div class="stop-header">
+      <div class="stop-name">Harborview Nursing Home</div>
+      <span class="pill">Stop 1 of 5</span>
     </div>
+    <div>Patient: J.D. • Wound-care kit & dressings</div>
+    <div>Instructions: Leave at nurse station, get signature.</div>
+    <div>
+      <button class="btn-done">Mark Delivered</button>
+      <button class="btn-issue">Report Issue</button>
+    </div>
+  </div>
+
+  <!-- Sample stop 2 -->
+  <div class="stop-card">
+    <div class="stop-header">
+      <div class="stop-name">Dialysis Center B</div>
+      <span class="pill">Stop 2 of 5</span>
+    </div>
+    <div>Patient: T.R. • Incontinence supplies, monthly pack</div>
+    <div>Instructions: Call on arrival, main entrance.</div>
+    <div>
+      <button class="btn-done">Mark Delivered</button>
+      <button class="btn-issue">Report Issue</button>
+    </div>
+  </div>
+
 </div>
 
-<div class="route-box">
-    <p id="routeSummary"></p>
-    <div id="routeContainer"></div>
-</div>
-
-<script>
-let routesData = null;
-let locationInterval = null;
-let currentDriverId = null;
-
-// Load routes.json from server
-async function loadRoutesJSON() {
-    try {
-        const res = await fetch("/routes.json");
-        if (!res.ok) throw new Error("Failed to load routes.json");
-        return await res.json();
-    } catch (err) {
-        console.error("Error loading routes:", err);
-        return null;
-    }
-}
-
-// Populate driver dropdown
-function populateDrivers(data) {
-    const driverSelect = document.getElementById("driverSelect");
-    driverSelect.innerHTML = "";
-
-    data.drivers.forEach(driver => {
-        const opt = document.createElement("option");
-        opt.value = driver.id;      // must match driver.id in routes.json
-        opt.textContent = driver.name;
-        driverSelect.appendChild(opt);
-    });
-
-    if (data.drivers.length > 0) {
-        currentDriverId = data.drivers[0].id;
-        driverSelect.value = currentDriverId;
-        renderRouteForDriver(currentDriverId);
-    }
-
-    driverSelect.addEventListener("change", e => {
-        currentDriverId = e.target.value;
-        renderRouteForDriver(currentDriverId);
-    });
-}
-
-// Render route for selected driver
-function renderRouteForDriver(driverId) {
-    const container = document.getElementById("routeContainer");
-    const summary = document.getElementById("routeSummary");
-    container.innerHTML = "";
-    summary.innerHTML = "";
-
-    if (!routesData) return;
-
-    const driver = routesData.drivers.find(d => d.id === driverId);
-    const route = routesData.routes.find(r => r.driverId === driverId);
-
-    if (!driver || !route || !route.stops || route.stops.length === 0) {
-        summary.textContent = `No stops assigned to ${driver ? driver.name : 'this driver'} on this route.`;
-        return;
-    }
-
-    summary.innerHTML = `<strong>Assigned driver:</strong> ${driver.name} • <strong>Stops on this route:</strong> ${route.stops.length}`;
-
-    route.stops.forEach((stop, index) => {
-        const card = document.createElement("div");
-        card.className = "route-card";
-
-        const title = document.createElement("h2");
-        title.textContent = `Stop ${index + 1} — Delivery #${index + 1}`;
-        card.appendChild(title);
-
-        const loc = document.createElement("p");
-        loc.innerHTML = `<strong>Location:</strong> ${stop.location}`;
-        card.appendChild(loc);
-
-        const items = document.createElement("p");
-        items.innerHTML = `<strong>Items:</strong> ${stop.items}`;
-        card.appendChild(items);
-
-        const status = document.createElement("p");
-        status.id = `status-${stop.stopId}`;
-        status.innerHTML = `<strong>Status:</strong> ${stop.status}`;
-        card.appendChild(status);
-
-        const uploadLink = document.createElement("a");
-        uploadLink.className = "upload-button";
-        uploadLink.href = `/proof-upload.html?stopId=${encodeURIComponent(stop.stopId)}`;
-        uploadLink.textContent = "Upload Proof";
-        card.appendChild(uploadLink);
-
-        const completeBtn = document.createElement("button");
-        completeBtn.className = "complete-button";
-        completeBtn.id = `complete-${stop.stopId}`;
-        completeBtn.textContent = "Mark Complete";
-        completeBtn.onclick = () => markComplete(stop.stopId);
-        card.appendChild(completeBtn);
-
-        container.appendChild(card);
-    });
-}
-
-// Mark stop complete (update UI + send to server)
-function markComplete(stopId) {
-    if (!routesData) return;
-
-    routesData.routes.forEach(route => {
-        route.stops.forEach(stop => {
-            if (stop.stopId === stopId) {
-                stop.status = "Completed";
-            }
-        });
-    });
-
-    const statusEl = document.getElementById(`status-${stopId}`);
-    if (statusEl) {
-        statusEl.innerHTML = "<strong>Status:</strong> Completed";
-        statusEl.style.color = "green";
-    }
-
-    const btn = document.getElementById(`complete-${stopId}`);
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = "Completed";
-    }
-
-    fetch("/update-stop", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stopId })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (!data.success) {
-            console.error("Server failed to update stop:", data);
-        }
-    })
-    .catch(err => {
-        console.error("Error calling /update-stop:", err);
-    });
-}
-
-// ---------------------------
-// LIVE LOCATION SHARING
-// ---------------------------
-function startLocationSharing() {
-    const statusEl = document.getElementById("shareStatus");
-    const btn = document.getElementById("shareBtn");
-
-    if (!currentDriverId) {
-        statusEl.textContent = "No driver selected.";
-        return;
-    }
-
-    if (!navigator.geolocation) {
-        statusEl.textContent = "Geolocation not supported on this device.";
-        return;
-    }
-
-    if (locationInterval) {
-        clearInterval(locationInterval);
-        locationInterval = null;
-    }
-
-    // Ping immediately, then every 15s
-    const sendLocation = () => {
-        navigator.geolocation.getCurrentPosition(
-            pos => {
-                const lat = pos.coords.latitude;
-                const lng = pos.coords.longitude;
-
-                fetch("/api/location", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ driverId: currentDriverId, lat, lng })
-                }).then(() => {
-                    statusEl.textContent = `Sharing location… Last update: ${new Date().toLocaleTimeString()}`;
-                }).catch(err => {
-                    console.error("Error sending location:", err);
-                    statusEl.textContent = "Error sending location.";
-                });
-            },
-            err => {
-                console.error("Geolocation error:", err);
-                statusEl.textContent = "Unable to read GPS location.";
-            }
-        );
-    };
-
-    sendLocation();
-    locationInterval = setInterval(sendLocation, 15000);
-
-    btn.textContent = "Location Sharing ON";
-    statusEl.textContent = "Starting location sharing…";
-}
-
-// Startup
-async function start() {
-    routesData = await loadRoutesJSON();
-    if (!routesData) return;
-    populateDrivers(routesData);
-
-    const shareBtn = document.getElementById("shareBtn");
-    shareBtn.addEventListener("click", startLocationSharing);
-}
-
-start();
-</script>
+<script src="/js/careline-universal.js"></script>
 
 </body>
 </html>

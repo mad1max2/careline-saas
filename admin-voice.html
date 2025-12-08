@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CareLine AI Voice Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+    body {
+        font-family: 'Montserrat', sans-serif;
+        background: #e7f8ff;
+        text-align: center;
+        padding: 40px;
+    }
+    h1 {
+        color: #008c9e;
+        font-weight: 700;
+    }
+    #status {
+        margin-top: 20px;
+        font-size: 20px;
+        color: #333;
+    }
+    button {
+        background: #00b4c6;
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        border-radius: 8px;
+        font-size: 18px;
+        margin-top: 25px;
+        cursor: pointer;
+    }
+    button:hover { background: #0092a3; }
+
+    .bus-avatar {
+        width: 180px;
+        margin-bottom: 20px;
+        animation: float 3s infinite ease-in-out;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+</style>
+</head>
+
+<body>
+
+<h1>🚍 CareLine AI Voice Login</h1>
+
+<!-- FIXED BUS IMAGE — replace with your own if needed -->
+<img src="bus.png" class="bus-avatar" alt="CareLine AI Bus" />
+
+<p>Hello admin — press the button and say your name.</p>
+
+<button onclick="startListening()">Start Voice Login</button>
+
+<div id="status">Waiting for voice input...</div>
+
+<script>
+// --------------------------------------------------------
+//  VOICE RECOGNITION SETUP
+// --------------------------------------------------------
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+
+recognition.continuous = false;
+recognition.lang = "en-US";
+recognition.interimResults = false;
+
+// --------------------------------------------------------
+//  TEXT-TO-SPEECH (the bus talks back)
+// --------------------------------------------------------
+function busSpeak(text) {
+    const message = new SpeechSynthesisUtterance(text);
+    message.pitch = 1;
+    message.rate = 1;
+    message.voice = speechSynthesis.getVoices().find(v => v.name.includes("Female") || v.name.includes("Google"));
+    speechSynthesis.speak(message);
+}
+
+// --------------------------------------------------------
+//  START LISTENING
+// --------------------------------------------------------
+function startListening() {
+    document.getElementById("status").innerText = "Listening...";
+    busSpeak("I'm listening. Please say your name.");
+    recognition.start();
+}
+
+// --------------------------------------------------------
+//  WHEN USER SPEAKS
+// --------------------------------------------------------
+recognition.onresult = function(event) {
+    const text = event.results[0][0].transcript.toLowerCase();
+    console.log("Heard:", text);
+
+    if (text.includes("keith") || text.includes("max")) {
+        verifyUser("Keith");
+    }
+    else if (text.includes("lena") || text.includes("lean")) {
+        verifyUser("Lena");
+    }
+    else if (text.includes("nyjhai") || text.includes("nai jai")) {
+        verifyUser("Nyjhai");
+    }
+    else {
+        document.getElementById("status").innerText = "I didn't recognize that name. Try again.";
+        busSpeak("I didn’t recognize your voice. Please try again.");
+    }
+};
+
+// --------------------------------------------------------
+//  LOGIN CONFIRMATION
+// --------------------------------------------------------
+function verifyUser(name) {
+    document.getElementById("status").innerText = 
+        "Welcome, " + name + "! Logging you in...";
+    
+    busSpeak(`Hello ${name}. Welcome back. I’m unlocking the CareLine control center for you.`);
+
+    setTimeout(() => {
+        window.location.href = "/control-center.html?admin=" + name;
+    }, 2500);
+}
+</script>
+
+</body>
+</html>

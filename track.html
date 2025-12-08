@@ -3,394 +3,123 @@
 <head>
   <meta charset="UTF-8" />
   <title>CareLine Delivery Tracking</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --teal: #0097a7;
-      --dark: #004d40;
-      --bg: #e0f7fa;
-      --card: #ffffff;
-      --muted: #607d8b;
-      --danger: #c62828;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--dark);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 14px;
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #f4fbfd;
+      color: #064b5a;
     }
-
-    .wrapper {
-      max-width: 480px;
+    header {
+      background: linear-gradient(90deg, #00a6b8, #064b5a);
+      padding: 16px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid #d6e8ee;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+    label {
+      font-size: 13px;
+      color: #35515b;
+    }
+    input {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #c2d8e0;
+      font-size: 13px;
+      box-sizing: border-box;
+      margin-top: 3px;
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .btn-primary {
+      background: #00a6b8;
+      color: #fff;
+      font-weight: 600;
       width: 100%;
     }
-
-    .card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 16px 18px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .logo-title {
-      font-weight: bold;
-      font-size: 18px;
-    }
-
-    .logo-subtitle {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    h1 {
-      font-size: 18px;
-      text-align: center;
-      margin-bottom: 4px;
-    }
-
-    .small {
-      font-size: 11px;
-      color: var(--muted);
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .error {
-      padding: 8px;
-      background: #ffebee;
-      color: var(--danger);
-      border-radius: 8px;
-      font-size: 12px;
-      margin-bottom: 8px;
-      display: none;
-    }
-
     .status-pill {
       display: inline-block;
       padding: 4px 10px;
       border-radius: 999px;
       font-size: 12px;
-      background: #e8f5e9;
-      color: #2e7d32;
+      background: #e0f7f9;
+      color: #006a76;
       margin-bottom: 6px;
     }
-
-    .status-pill.pending {
-      background: #fff3e0;
-      color: #e65100;
-    }
-
-    .status-pill.exception {
-      background: #ffebee;
-      color: #c62828;
-    }
-
-    .field-label {
-      font-size: 12px;
-      color: #455a64;
-      margin-top: 4px;
-    }
-
-    .field-value {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .progress {
-      margin-top: 10px;
-      margin-bottom: 2px;
-      font-size: 12px;
-      color: #455a64;
-    }
-
-    .bar {
-      height: 8px;
+    .progress-bar {
+      height: 10px;
       border-radius: 999px;
-      background: #b2ebf2;
+      background: #e0edf2;
       overflow: hidden;
+      margin: 8px 0 4px;
     }
-
-    .bar-fill {
+    .progress-fill {
+      width: 40%;
       height: 100%;
-      border-radius: 999px;
-      background: var(--teal);
-      width: 0%;
-      transition: width 0.4s ease;
+      background: #00a6b8;
     }
-
-    .events {
-      margin-top: 12px;
-    }
-
-    .events-title {
+    .eta {
       font-size: 13px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .event-item {
-      font-size: 12px;
-      margin-bottom: 4px;
-    }
-
-    .event-time {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .code-input {
-      margin-top: 10px;
-      display: flex;
-      gap: 6px;
-    }
-
-    .code-input input {
-      flex: 1;
-      padding: 7px 9px;
-      border-radius: 8px;
-      border: 1px solid #b0bec5;
-      font-size: 13px;
-    }
-
-    .code-input button {
-      padding: 7px 11px;
-      border-radius: 8px;
-      border: none;
-      font-size: 12px;
-      background: var(--teal);
-      color: #ffffff;
-      cursor: pointer;
-    }
-
-    .code-input button:active {
-      transform: scale(0.97);
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 8px;
-      font-size: 10px;
-      color: var(--muted);
+      color: #2a4e58;
     }
   </style>
 </head>
+
 <body>
-  <div class="wrapper">
-    <div class="card">
-      <div class="logo">
-        <div class="logo-title">CareLine Medical Logistics</div>
-        <div class="logo-subtitle">Care That Moves. Logistics That Deliver.</div>
-      </div>
 
-      <h1>Your Delivery Status</h1>
-      <p class="small">
-        Enter your CareLine tracking code, or use the secure link provided by your clinic.
-      </p>
+<header>CareLine Delivery Tracking</header>
 
-      <div id="trackError" class="error"></div>
+<div class="container">
 
-      <div class="code-input">
-        <input id="codeInput" type="text" placeholder="Tracking code (e.g. CL-ABC123)" />
-        <button id="codeBtn">Track</button>
-      </div>
+  <div class="card">
+    <h2>Enter your tracking code</h2>
+    <label for="trkCode">Tracking code (from your clinic or CareLine text)</label>
+    <input id="trkCode" type="text" placeholder="e.g. CL-TRACK-12345" />
+    <button class="btn-primary" id="trkBtn">Check Status</button>
+  </div>
 
-      <div id="contentArea" style="margin-top:12px; display:none;">
-        <div id="statusPill" class="status-pill">Loading…</div>
-
-        <div class="field-label">Patient</div>
-        <div class="field-value" id="patientName">—</div>
-
-        <div class="field-label">Facility</div>
-        <div class="field-value" id="facilityName">—</div>
-
-        <div class="field-label">Estimated Delivery</div>
-        <div class="field-value" id="etaText">—</div>
-
-        <div class="progress" id="progressText">Progress: —</div>
-        <div class="bar">
-          <div class="bar-fill" id="progressBar"></div>
-        </div>
-
-        <div class="events">
-          <div class="events-title">Recent Activity</div>
-          <div id="eventsList"></div>
-        </div>
-      </div>
+  <div class="card" id="trkResult">
+    <h2>Delivery Status</h2>
+    <div class="status-pill" id="trkStatus">Waiting for code...</div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="trkProgressFill"></div>
     </div>
-
-    <div class="footer">
-      If anything looks wrong, call your clinic or CareLine dispatcher.
+    <div class="eta" id="trkEta">ETA will appear here once we link the backend.</div>
+    <div style="margin-top: 8px; font-size: 13px;" id="trkDetails">
+      This section will show the patient initials, facility, and delivery notes securely.
     </div>
   </div>
 
-  <!-- Shared helpers (for formatting + query params) -->
-  <script src="/js/careline-universal.js"></script>
-  <script>
-    function resolveTrackingCode() {
-      const fromUrl =
-        carelineGetQueryParam('code') ||
-        carelineGetQueryParam('tracking') ||
-        carelineGetQueryParam('id') ||
-        '';
-      const input = document.getElementById('codeInput').value.trim();
-      return input || fromUrl;
-    }
+</div>
 
-    function applyStatusPill(status) {
-      const pill = document.getElementById('statusPill');
-      const s = (status || '').toLowerCase();
-      pill.className = 'status-pill';
-      if (!s) {
-        pill.textContent = 'Status: Pending';
-        pill.classList.add('pending');
-        return;
-      }
+<script src="/js/careline-universal.js"></script>
 
-      if (s.includes('exception') || s.includes('failed') || s.includes('issue')) {
-        pill.textContent = status;
-        pill.classList.add('exception');
-      } else if (s.includes('out') || s.includes('en route') || s.includes('pending')) {
-        pill.textContent = status;
-        pill.classList.add('pending');
-      } else {
-        pill.textContent = status;
-      }
-    }
-
-    function setProgress(pct, label) {
-      const bar = document.getElementById('progressBar');
-      const txt = document.getElementById('progressText');
-      const safePct = Math.max(0, Math.min(100, pct || 0));
-      bar.style.width = safePct + '%';
-      txt.textContent = 'Progress: ' + safePct + '% ' + (label || '');
-    }
-
-    async function fetchTracking(code) {
-      const errorBox = document.getElementById('trackError');
-      const contentArea = document.getElementById('contentArea');
-      const eventsList = document.getElementById('eventsList');
-
-      errorBox.style.display = 'none';
-      errorBox.textContent = '';
-      contentArea.style.display = 'none';
-      eventsList.innerHTML = '';
-
-      if (!code) {
-        errorBox.style.display = 'block';
-        errorBox.textContent = 'Please enter or use a valid tracking code.';
-        return;
-      }
-
-      try {
-        // Public-style endpoint; adjust path to match your server.
-        // Example server route: GET /api/track?code=CL-ABC123
-        const res = await fetch('/api/track?code=' + encodeURIComponent(code), {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          cache: 'no-store'
-        });
-
-        if (!res.ok) {
-          throw new Error('Tracking code not found or expired.');
-        }
-
-        const data = await res.json();
-
-        document.getElementById('patientName').textContent =
-          data.patientName || data.patient || '—';
-        document.getElementById('facilityName').textContent =
-          data.facilityName || data.facility || '—';
-
-        const etaStr = data.eta
-          ? carelineFormatDateTimeShort(data.eta)
-          : (data.etaText || '—');
-        document.getElementById('etaText').textContent = etaStr;
-
-        applyStatusPill(data.status || 'Pending');
-
-        const pct =
-          typeof data.progressPercent === 'number'
-            ? data.progressPercent
-            : (data.stage === 'delivered'
-                ? 100
-                : data.stage === 'out_for_delivery'
-                  ? 70
-                  : data.stage === 'packed'
-                    ? 40
-                    : 10);
-        setProgress(pct, '');
-
-        const events = (data.events || []).slice().sort((a, b) => {
-          const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-          const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-          return tb - ta;
-        });
-
-        if (!events.length) {
-          eventsList.innerHTML =
-            '<div class="event-item">No events yet. Your order may still be getting prepared.</div>';
-        } else {
-          events.forEach(ev => {
-            const div = document.createElement('div');
-            div.className = 'event-item';
-            const time = ev.timestamp
-              ? carelineFormatDateTimeShort(ev.timestamp)
-              : '';
-            const msg =
-              ev.message ||
-              ev.status ||
-              ev.eventType ||
-              'Update recorded.';
-            div.innerHTML =
-              '<div>' + msg + '</div>' +
-              (time
-                ? '<div class="event-time">' + time + '</div>'
-                : '');
-            eventsList.appendChild(div);
-          });
-        }
-
-        contentArea.style.display = 'block';
-      } catch (err) {
-        console.error('Tracking error', err);
-        errorBox.style.display = 'block';
-        errorBox.textContent = err.message || 'Error loading tracking info.';
-      }
-    }
-
-    document.getElementById('codeBtn').addEventListener('click', () => {
-      const code = resolveTrackingCode();
-      fetchTracking(code);
-    });
-
-    document.getElementById('codeInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const code = resolveTrackingCode();
-        fetchTracking(code);
-      }
-    });
-
-    // Auto-run if link already has ?code=...
-    window.addEventListener('load', () => {
-      const autoCode = resolveTrackingCode();
-      if (autoCode) {
-        document.getElementById('codeInput').value = autoCode;
-        fetchTracking(autoCode);
-      }
-    });
-  </script>
 </body>
 </html>
